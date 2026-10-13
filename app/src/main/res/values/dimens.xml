@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="radius_panel">20dp</dimen>
+    <dimen name="radius_button">16dp</dimen>
+    <dimen name="gap">12dp</dimen>
+    <dimen name="panel_pad">16dp</dimen>
+    <dimen name="touch_min">56dp</dimen>
+</resources>

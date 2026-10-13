@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MG4Dash</string>
+    <string name="title_climate">CLIMATISATION</string>
+    <string name="title_energy">ÉNERGIE</string>
+    <string name="title_weather">MÉTÉO</string>
+    <string name="title_media">MÉDIA</string>
+    <string name="title_trip">TRAJET</string>
+    <string name="title_status">STATUT</string>
+    <string name="aa_title">ANDROID AUTO</string>
+    <string name="aa_ready">Téléphone connecté · Appuyer pour ouvrir</string>
+    <string name="aa_waiting">Branchez votre téléphone en USB</string>
+    <string name="dock_home">Accueil</string>
+    <string name="dock_vehicle">Véhicule</string>
+    <string name="dock_climate">Clim</string>
+    <string name="dock_energy">Énergie</string>
+    <string name="dock_aa">Android Auto</string>
+    <string name="dock_settings">Paramètres</string>
+    <string name="chip_auto">AUTO</string>
+    <string name="chip_ac">A/C</string>
+    <string name="chip_recirc">RECYCL.</string>
+    <string name="chip_front">DÉG. AV</string>
+    <string name="chip_rear">DÉG. AR</string>
+    <string name="unit_kwh100">kWh/100</string>
+    <string name="no_media">Aucune lecture en cours</string>
+    <string name="no_data">—</string>
+</resources>

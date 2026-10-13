@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Repère de position : flèche bleue cerclée, pointant vers le cap. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="44dp" android:height="44dp"
+    android:viewportWidth="44" android:viewportHeight="44">
+    <path android:fillColor="#402979FF" android:pathData="M22,2a20,20 0,1 1,0 40a20,20 0,1 1,0 -40z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M22,8a14,14 0,1 1,0 28a14,14 0,1 1,0 -28z" />
+    <path android:fillColor="#FF2979FF" android:pathData="M22,10.5a11.5,11.5 0,1 1,0 23a11.5,11.5 0,1 1,0 -23z" />
+    <path android:fillColor="#FFFFFFFF" android:pathData="M22,13.5L15.5,29l6.5,-3.2 6.5,3.2z" />
+</vector>

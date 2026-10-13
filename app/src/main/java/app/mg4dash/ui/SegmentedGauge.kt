@@ -1,0 +1,45 @@
+package app.mg4dash.ui
+
+import android.content.Context
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.RectF
+import android.util.AttributeSet
+import android.view.View
+import androidx.core.content.ContextCompat
+import app.mg4dash.R
+
+/** Jauge horizontale segmentée (ventilation, batterie, KERS). */
+class SegmentedGauge @JvmOverloads constructor(
+    context: Context, attrs: AttributeSet? = null,
+) : View(context, attrs) {
+
+    var segments: Int = 10
+        set(v) { field = v.coerceAtLeast(1); invalidate() }
+
+    /** Nombre de segments allumés, 0..segments ; négatif = inconnu (tout éteint, grisé). */
+    var value: Int = 0
+        set(v) { field = v; invalidate() }
+
+    var onColor: Int = ContextCompat.getColor(context, R.color.accent_cold)
+        set(v) { field = v; invalidate() }
+
+    private val offColor = ContextCompat.getColor(context, R.color.gauge_off)
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val rect = RectF()
+    private val gap = resources.displayMetrics.density * 4f
+    private val radius = resources.displayMetrics.density * 3f
+
+    override fun onDraw(canvas: Canvas) {
+        val w = width - paddingLeft - paddingRight
+        val h = height - paddingTop - paddingBottom
+        if (w <= 0 || h <= 0) return
+        val segW = (w - gap * (segments - 1)) / segments
+        for (i in 0 until segments) {
+            val left = paddingLeft + i * (segW + gap)
+            rect.set(left, paddingTop.toFloat(), left + segW, (paddingTop + h).toFloat())
+            paint.color = if (value > i) onColor else offColor
+            canvas.drawRoundRect(rect, radius, radius, paint)
+        }
+    }
+}

@@ -1,0 +1,779 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Accueil 3 colonnes, zone appli de la MG4 : 1778 × 640 dp (160 dpi), sous la barre SAIC. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_root"
+    android:orientation="vertical"
+    android:paddingLeft="16dp"
+    android:paddingTop="12dp"
+    android:paddingRight="16dp"
+    android:paddingBottom="12dp">
+
+    <!-- ═══ Trois colonnes ═══ -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginBottom="12dp"
+        android:layout_weight="1"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
+
+        <!-- ─── Colonne 1 : Clim + Énergie ─── -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginRight="6dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/climateCard"
+                style="@style/Panel"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="58"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <!-- Marge gauche : zone du bouton antibrouillards superposé par MG. -->
+                    <TextView
+                        style="@style/CardTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="64dp"
+                        android:layout_weight="1"
+                        android:text="@string/title_climate" />
+
+                    <TextView
+                        android:id="@+id/climOutside"
+                        style="@style/Sub"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="12dp"
+                        android:textSize="17sp"
+                        tools:text="Ext. 13°" />
+
+                    <ImageButton
+                        android:id="@+id/climPower"
+                        style="@style/RoundButton"
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        android:contentDescription="Marche / arrêt clim"
+                        android:padding="12dp"
+                        android:src="@drawable/ic_power" />
+                </LinearLayout>
+
+                <!-- Température -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:orientation="horizontal">
+
+                    <ImageButton
+                        android:id="@+id/tempDown"
+                        style="@style/RoundButton"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
+                        android:contentDescription="Baisser la température"
+                        android:padding="20dp"
+                        android:src="@drawable/ic_minus"
+                        android:tint="@color/accent_cold" />
+
+                    <TextView
+                        android:id="@+id/temp"
+                        style="@style/ValueBig"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:textSize="64sp"
+                        tools:text="21.5°" />
+
+                    <ImageButton
+                        android:id="@+id/tempUp"
+                        style="@style/RoundButton"
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
+                        android:contentDescription="Monter la température"
+                        android:padding="20dp"
+                        android:src="@drawable/ic_plus"
+                        android:tint="@color/accent_heat" />
+                </LinearLayout>
+
+                <!-- Ventilation -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageButton
+                        android:id="@+id/fanDown"
+                        style="@style/RoundButton"
+                        android:contentDescription="Moins de ventilation"
+                        android:src="@drawable/ic_minus" />
+
+                    <ImageView
+                        android:id="@+id/fanIcon"
+                        android:layout_width="28dp"
+                        android:layout_height="28dp"
+                        android:layout_marginLeft="14dp"
+                        android:src="@drawable/ic_fan"
+                        android:tint="@color/accent_cold" />
+
+                    <app.mg4dash.ui.SegmentedGauge
+                        android:id="@+id/fanGauge"
+                        android:layout_width="0dp"
+                        android:layout_height="18dp"
+                        android:layout_marginLeft="12dp"
+                        android:layout_marginRight="12dp"
+                        android:layout_weight="1" />
+
+                    <TextView
+                        android:id="@+id/fanValue"
+                        android:layout_width="64dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="10dp"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:textColor="@color/text_value"
+                        android:textSize="20sp"
+                        tools:text="4" />
+
+                    <ImageButton
+                        android:id="@+id/fanUp"
+                        style="@style/RoundButton"
+                        android:contentDescription="Plus de ventilation"
+                        android:src="@drawable/ic_plus" />
+                </LinearLayout>
+
+                <!-- Bascules -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:orientation="horizontal">
+
+                    <TextView android:id="@+id/chipAuto" style="@style/Chip" android:text="@string/chip_auto" />
+                    <TextView android:id="@+id/chipAc" style="@style/Chip" android:layout_marginLeft="8dp" android:text="@string/chip_ac" />
+                    <TextView android:id="@+id/chipRecirc" style="@style/Chip" android:layout_marginLeft="8dp" android:text="@string/chip_recirc" />
+                    <TextView android:id="@+id/chipFront" style="@style/Chip" android:layout_marginLeft="8dp" android:background="@drawable/bg_chip_heat" android:text="@string/chip_front" />
+                    <TextView android:id="@+id/chipRear" style="@style/Chip" android:layout_marginLeft="8dp" android:background="@drawable/bg_chip_heat" android:text="@string/chip_rear" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Énergie -->
+            <LinearLayout
+                android:id="@+id/energyCard"
+                style="@style/Panel"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="@dimen/gap"
+                android:layout_weight="42"
+                android:background="@drawable/bg_aa_tile_idle"
+                android:clickable="true"
+                android:focusable="true"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/CardTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/title_energy" />
+
+                    <TextView
+                        android:id="@+id/chargeState"
+                        style="@style/Sub"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginRight="10dp"
+                        android:textColor="@color/accent_energy"
+                        android:textSize="17sp"
+                        tools:text="En charge · 1 h 20" />
+
+                    <!-- Charger / Arrêter, ou Lancer / Arrêter le V2L quand un adaptateur est branché -->
+                    <TextView
+                        android:id="@+id/chargeAction"
+                        style="@style/Chip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:layout_weight="0"
+                        android:paddingLeft="18dp"
+                        android:paddingRight="18dp"
+                        android:text="CHARGER"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/battery"
+                        style="@style/ValueBig"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="52sp"
+                        tools:text="78 %" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="20dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/range"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/text_value"
+                            android:textSize="24sp"
+                            tools:text="284 km" />
+
+                        <TextView
+                            style="@style/Sub"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="autonomie"
+                            android:textSize="16sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:gravity="right"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/consumption"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/text_value"
+                            android:textSize="24sp"
+                            tools:text="15,8" />
+
+                        <TextView
+                            style="@style/Sub"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="kWh/100 moy."
+                            android:textSize="16sp" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <app.mg4dash.ui.SegmentedGauge
+                    android:id="@+id/batteryGauge"
+                    android:layout_width="match_parent"
+                    android:layout_height="12dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/CardTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="MODE"
+                        android:textSize="15sp" />
+
+                    <TextView
+                        android:id="@+id/driveMode"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="8dp"
+                        android:textColor="@color/text_value"
+                        android:textSize="18sp"
+                        tools:text="Normal" />
+
+                    <TextView
+                        style="@style/CardTitle"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="24dp"
+                        android:text="KERS"
+                        android:textSize="15sp" />
+
+                    <app.mg4dash.ui.SegmentedGauge
+                        android:id="@+id/kersGauge"
+                        android:layout_width="0dp"
+                        android:layout_height="12dp"
+                        android:layout_marginLeft="10dp"
+                        android:layout_weight="1" />
+
+                    <TextView
+                        android:id="@+id/kersLabel"
+                        style="@style/Sub"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="10dp"
+                        android:textSize="17sp"
+                        tools:text="Fort" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ─── Colonne 2 : Position + Météo ─── -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="6dp"
+            android:layout_marginRight="6dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <FrameLayout
+                android:id="@+id/mapCard"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="60"
+                android:background="@drawable/bg_panel"
+                android:elevation="6dp">
+
+                <app.mg4dash.ui.RoundedFrame
+                    android:id="@+id/mapHolder"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <TextView
+                    android:id="@+id/mapEmpty"
+                    style="@style/Sub"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:text="Recherche de la position…"
+                    android:visibility="gone" />
+
+                <TextView
+                    style="@style/CardTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="14dp"
+                    android:background="@drawable/bg_pill"
+                    android:paddingLeft="12dp"
+                    android:paddingTop="4dp"
+                    android:paddingRight="12dp"
+                    android:paddingBottom="4dp"
+                    android:text="POSITION" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|left"
+                    android:layout_margin="14dp"
+                    android:background="@drawable/bg_pill"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingLeft="14dp"
+                    android:paddingTop="6dp"
+                    android:paddingRight="14dp"
+                    android:paddingBottom="6dp">
+
+                    <TextView
+                        android:id="@+id/mapSpeed"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:textColor="@color/text_value"
+                        android:textSize="22sp"
+                        tools:text="0 km/h" />
+
+                    <TextView
+                        android:id="@+id/mapInfo"
+                        style="@style/Sub"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="14dp"
+                        android:textSize="17sp"
+                        tools:text="Cap S · alt. 91 m" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right|center_vertical"
+                    android:layout_marginRight="14dp"
+                    android:orientation="vertical">
+
+                    <ImageButton
+                        android:id="@+id/mapZoomIn"
+                        style="@style/RoundButton"
+                        android:contentDescription="Zoom avant"
+                        android:src="@drawable/ic_plus" />
+
+                    <ImageButton
+                        android:id="@+id/mapCenter"
+                        style="@style/RoundButton"
+                        android:layout_marginTop="8dp"
+                        android:contentDescription="Recentrer"
+                        android:src="@drawable/ic_navigation"
+                        android:tint="@color/accent_action" />
+
+                    <ImageButton
+                        android:id="@+id/mapZoomOut"
+                        style="@style/RoundButton"
+                        android:layout_marginTop="8dp"
+                        android:contentDescription="Zoom arrière"
+                        android:src="@drawable/ic_minus" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|right"
+                    android:layout_margin="10dp"
+                    android:text="© OpenStreetMap"
+                    android:textColor="@color/text_title"
+                    android:textSize="13sp" />
+            </FrameLayout>
+
+            <LinearLayout
+                android:id="@+id/weatherCard"
+                style="@style/Panel"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="@dimen/gap"
+                android:layout_weight="40"
+                android:background="@drawable/bg_aa_tile_idle"
+                android:clickable="true"
+                android:focusable="true"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/CardTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/title_weather" />
+
+                    <TextView
+                        android:id="@+id/weatherPlace"
+                        style="@style/Sub"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textSize="17sp"
+                        tools:text="Paris" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:id="@+id/weatherIcon"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:src="@drawable/ic_cloud"
+                        android:tint="@color/text_value" />
+
+                    <TextView
+                        android:id="@+id/weatherTemp"
+                        style="@style/ValueBig"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="14dp"
+                        android:textSize="46sp"
+                        tools:text="14°" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="18dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/weatherLabel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:maxLines="1"
+                            android:textColor="@color/text_value"
+                            android:textSize="19sp"
+                            tools:text="Partiellement nuageux" />
+
+                        <TextView
+                            android:id="@+id/weatherDetails"
+                            style="@style/Sub"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:textSize="17sp"
+                            tools:text="Ressenti 12° · Vent 18 km/h · 72 %" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/weatherHours"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ─── Colonne 3 : Média + widget secondaire ─── -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="6dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:id="@+id/mediaCard"
+                style="@style/Panel"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="60"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/mediaSource"
+                        style="@style/CardTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/title_media" />
+
+                    <TextView
+                        android:id="@+id/srcRadio"
+                        style="@style/Chip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:layout_weight="0"
+                        android:paddingLeft="16dp"
+                        android:paddingRight="16dp"
+                        android:text="RADIO"
+                        android:textSize="15sp" />
+
+                    <TextView
+                        android:id="@+id/srcMedia"
+                        style="@style/Chip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:layout_marginLeft="8dp"
+                        android:layout_weight="0"
+                        android:paddingLeft="16dp"
+                        android:paddingRight="16dp"
+                        android:text="USB / BT"
+                        android:textSize="15sp" />
+                </LinearLayout>
+
+                <!-- Pochette grand format à gauche (carré sur toute la hauteur), infos et commandes à droite -->
+                <LinearLayout
+                    android:id="@+id/mediaInfo"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_weight="1"
+                    android:baselineAligned="false"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:orientation="horizontal">
+
+                    <app.mg4dash.ui.SquareFrame
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_art">
+
+                        <ImageView
+                            android:id="@+id/mediaArtPlaceholder"
+                            android:layout_width="112dp"
+                            android:layout_height="112dp"
+                            android:layout_gravity="center"
+                            android:src="@drawable/ic_music"
+                            android:tint="@color/text_title" />
+
+                        <app.mg4dash.ui.RoundedFrame
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent">
+
+                            <ImageView
+                                android:id="@+id/mediaArt"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:scaleType="centerCrop" />
+                        </app.mg4dash.ui.RoundedFrame>
+                    </app.mg4dash.ui.SquareFrame>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="18dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/mediaTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:ellipsize="end"
+                            android:maxLines="2"
+                            android:textColor="@color/text_value"
+                            android:textSize="22sp"
+                            tools:text="France Inter" />
+
+                        <TextView
+                            android:id="@+id/mediaArtist"
+                            style="@style/Sub"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="4dp"
+                            android:textSize="19sp"
+                            tools:text="Le 7/9" />
+
+                        <TextView
+                            android:id="@+id/mediaAlbum"
+                            style="@style/Sub"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="2dp"
+                            android:textColor="@color/text_title"
+                            android:textSize="17sp"
+                            tools:text="DAB+" />
+
+                        <Space
+                            android:layout_width="1dp"
+                            android:layout_height="0dp"
+                            android:layout_weight="1" />
+
+                        <ProgressBar
+                            android:id="@+id/mediaProgress"
+                            style="?android:attr/progressBarStyleHorizontal"
+                            android:layout_width="match_parent"
+                            android:layout_height="4dp"
+                            android:max="1000"
+                            android:progressBackgroundTint="@color/gauge_off"
+                            android:progressTint="@color/accent_action" />
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="10dp"
+                            android:gravity="center"
+                            android:orientation="horizontal">
+
+                            <ImageButton
+                                android:id="@+id/mediaPrev"
+                                style="@style/RoundButton"
+                                android:layout_width="60dp"
+                                android:layout_height="60dp"
+                                android:contentDescription="Précédent"
+                                android:src="@drawable/ic_prev" />
+
+                            <ImageButton
+                                android:id="@+id/mediaPlay"
+                                android:layout_width="72dp"
+                                android:layout_height="72dp"
+                                android:layout_marginLeft="20dp"
+                                android:layout_marginRight="20dp"
+                                android:background="@drawable/bg_play"
+                                android:contentDescription="Lecture / pause"
+                                android:padding="18dp"
+                                android:scaleType="fitCenter"
+                                android:src="@drawable/ic_play"
+                                android:tint="@color/text_value" />
+
+                            <ImageButton
+                                android:id="@+id/mediaNext"
+                                style="@style/RoundButton"
+                                android:layout_width="60dp"
+                                android:layout_height="60dp"
+                                android:contentDescription="Suivant"
+                                android:src="@drawable/ic_next" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Widget secondaire paramétrable : toucher pour changer (trajet / statut / météo) -->
+            <LinearLayout
+                android:id="@+id/secondaryCard"
+                style="@style/Panel"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="@dimen/gap"
+                android:layout_weight="40"
+                android:background="@drawable/bg_aa_tile_idle"
+                android:clickable="true"
+                android:focusable="true"
+                android:orientation="vertical">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/secondaryTitle"
+                        style="@style/CardTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/title_trip" />
+
+                    <TextView
+                        android:id="@+id/secondaryDots"
+                        style="@style/Sub"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:letterSpacing="0.3"
+                        android:textSize="17sp"
+                        tools:text="● ○ ○" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/secondaryGrid"
+                    android:layout_width="match_parent"
+                    android:layout_height="0dp"
+                    android:layout_weight="1"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal" />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- ═══ Dock inférieur ═══ -->
+    <!-- Apparence fixée par Dock.build(), commune à toutes les pages. -->
+    <LinearLayout
+        android:id="@+id/dock"
+        android:layout_width="match_parent"
+        android:layout_height="84dp"
+        android:orientation="horizontal" />
+</LinearLayout>
