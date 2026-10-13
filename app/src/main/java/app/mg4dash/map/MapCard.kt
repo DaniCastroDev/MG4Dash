@@ -5,13 +5,11 @@ import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.location.Location
 import android.os.Build
+import android.view.MotionEvent
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import app.mg4dash.R
 import org.osmdroid.config.Configuration
-import org.osmdroid.events.MapListener
-import org.osmdroid.events.ScrollEvent
-import org.osmdroid.events.ZoomEvent
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.CustomZoomButtonsController
@@ -29,7 +27,8 @@ class MapCard(private val context: Context, holder: ViewGroup) {
     private val map: MapView?
     private val marker: Marker?
     private var follow = true
-    private var programmaticMove = false
+    private var lastTouch = 0L
+    private companion object { const val RESUME_FOLLOW_MS = 20_000L }
 
     init {
         // Robolectric (captures sur PC) ne sait pas dessiner osmdroid : on laisse le fond.
@@ -60,13 +59,18 @@ class MapCard(private val context: Context, holder: ViewGroup) {
                 setInfoWindow(null)
             }
             m.overlays.add(mk)
-            m.addMapListener(object : MapListener {
-                override fun onScroll(event: ScrollEvent?): Boolean {
-                    if (!programmaticMove) follow = false
-                    return false
+            // Le suivi ne s'arrête que sur un vrai déplacement au doigt (les événements de défilement
+            // de l'animation coupaient le suivi en roulant), et reprend tout seul après 20 s.
+            var downX = 0f; var downY = 0f
+            m.setOnTouchListener { _, ev ->
+                when (ev.actionMasked) {
+                    MotionEvent.ACTION_DOWN -> { downX = ev.x; downY = ev.y }
+                    MotionEvent.ACTION_MOVE -> if (Math.hypot((ev.x - downX).toDouble(), (ev.y - downY).toDouble()) > 24) {
+                        follow = false; lastTouch = System.currentTimeMillis()
+                    }
                 }
-                override fun onZoom(event: ZoomEvent?): Boolean = false
-            })
+                false
+            }
             holder.addView(m, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
             map = m; marker = mk
         }
@@ -99,11 +103,8 @@ class MapCard(private val context: Context, holder: ViewGroup) {
         val p = GeoPoint(location.latitude, location.longitude)
         marker?.position = p
         if (location.hasBearing()) marker?.rotation = -location.bearing
-        if (follow) {
-            programmaticMove = true
-            m.controller.animateTo(p)
-            m.postDelayed({ programmaticMove = false }, 1200)
-        }
+        if (!follow && System.currentTimeMillis() - lastTouch > RESUME_FOLLOW_MS) follow = true
+        if (follow) m.controller.animateTo(p, m.zoomLevelDouble, 800L)
         m.invalidate()
     }
 

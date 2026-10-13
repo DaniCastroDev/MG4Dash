@@ -1,4 +1,4 @@
-﻿plugins {
+plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
 }
@@ -10,21 +10,21 @@ android {
     defaultConfig {
         applicationId = "app.mg4dash"
         minSdk = 28
-        // Cible Android 9 comme le reste du systÃ¨me : pas de restrictions d'arriÃ¨re-plan
-        // ni de permissions d'exÃ©cution Ã  gÃ©rer pour une appli au uid systÃ¨me.
+        // Cible Android 9 comme le reste du système : pas de restrictions d'arrière-plan
+        // ni de permissions d'exécution à gérer pour une appli au uid système.
         targetSdk = 28
-        versionCode = 14
-        versionName = "0.4.6"
+        versionCode = 15
+        versionName = "0.4.7"
     }
 
     flavorDimensions += "target"
     productFlavors {
-        // Voiture : uid systÃ¨me (src/car/AndroidManifest.xml), vraies donnÃ©es carapi.
+        // Voiture : uid système (src/car/AndroidManifest.xml), vraies données carapi.
         create("car") {
             dimension = "target"
             buildConfigField("boolean", "MOCK", "false")
         }
-        // Ã‰mulateur : mÃªme appli sans uid systÃ¨me, donnÃ©es simulÃ©es.
+        // Émulateur : même appli sans uid système, données simulées.
         create("emulator") {
             dimension = "target"
             applicationIdSuffix = ".emu"
