@@ -58,7 +58,7 @@ object MediaHub {
     fun start(context: Context) {
         appContext = context.applicationContext
         if (BuildConfig.MOCK) {
-            _now.value = NowPlaying(true, "com.saicmotor.radio", "RADIO DAB", "France Inter", "Le 7/9", "DAB+ · 11B", null, true)
+            _now.value = NowPlaying(true, "com.saicmotor.radio", "RADIO DAB", "Radio Example", "Morning show", "DAB+ · 11B", mockLogo(), true)
             return
         }
         val msm = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
@@ -145,6 +145,29 @@ object MediaHub {
             reg.invoke(am, cb, *extra.toTypedArray())
             Log.i(TAG, "suivi de la source audio actif")
         } catch (e: Throwable) { Log.w(TAG, "registerAudioSourceChange indisponible : ${e.message}") }
+    }
+
+    /** Logo de station fictif pour les captures d'écran (comme une image diffusée en DAB+). */
+    private fun mockLogo(): Bitmap {
+        val size = 320
+        val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val c = android.graphics.Canvas(bmp)
+        val p = android.graphics.Paint(android.graphics.Paint.ANTI_ALIAS_FLAG)
+        p.shader = android.graphics.LinearGradient(0f, 0f, size.toFloat(), size.toFloat(),
+            0xFFFF5F6D.toInt(), 0xFF6A11CB.toInt(), android.graphics.Shader.TileMode.CLAMP)
+        c.drawRect(0f, 0f, size.toFloat(), size.toFloat(), p)
+        p.shader = null
+        p.color = 0x33FFFFFF
+        c.drawCircle(size * 0.82f, size * 0.18f, size * 0.38f, p)
+        p.color = 0xFFFFFFFF.toInt()
+        p.textAlign = android.graphics.Paint.Align.CENTER
+        p.typeface = android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.BOLD)
+        p.textSize = size * 0.30f
+        c.drawText("RADIO", size / 2f, size * 0.52f, p)
+        p.textSize = size * 0.20f
+        p.typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL)
+        c.drawText("DAB+  FM", size / 2f, size * 0.76f, p)
+        return bmp
     }
 
     private val BROWSERS = listOf(
