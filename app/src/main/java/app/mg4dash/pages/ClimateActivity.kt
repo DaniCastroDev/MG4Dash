@@ -17,7 +17,7 @@ import app.mg4dash.ui.SegmentedGauge
 
 /** Page Climatisation : température, ventilation, direction de l'air et modes. */
 class ClimateActivity : PageActivity() {
-    override val pageTitle = "CLIMATISATION"
+    override val pageTitle get() = getString(R.string.title_climate)
     override val page = app.mg4dash.ui.Dock.Page.CLIMATE
 
     private val handler = Handler(Looper.getMainLooper())
@@ -46,7 +46,7 @@ class ClimateActivity : PageActivity() {
         header.addView(power)
 
         // ── Température ──
-        val tPanel = kit.panel("TEMPÉRATURE CONDUCTEUR")
+        val tPanel = kit.panel(getString(R.string.cl_driver_temp))
         temp = kit.text("—", 120f, light = true).apply { gravity = Gravity.CENTER }
         val tRow = kit.row().apply { gravity = Gravity.CENTER }
         val down = kit.roundButton(R.drawable.ic_minus, 96, R.color.accent_cold) {}
@@ -69,7 +69,7 @@ class ClimateActivity : PageActivity() {
         controls += listOf(down, up)
 
         // ── Ventilation et direction ──
-        val fPanel = kit.panel("VENTILATION")
+        val fPanel = kit.panel(getString(R.string.cl_fan))
         fanValue = kit.text("—", 72f, light = true).apply { gravity = Gravity.CENTER }
         fPanel.addView(fanValue, kit.lp(-1, 0, 1f))
         fanGauge = SegmentedGauge(this).apply { segments = VehicleState.FAN_MAX }
@@ -80,32 +80,32 @@ class ClimateActivity : PageActivity() {
         fRow.addView(fanGauge, kit.lp(0, kit.dp(26), 1f, l = 16, r = 16))
         fRow.addView(fUp)
         fPanel.addView(fRow, kit.lp(-1, -2))
-        fPanel.addView(kit.title("DIRECTION DE L'AIR"), kit.lp(-1, -2, t = 22))
+        fPanel.addView(kit.title(getString(R.string.cl_airflow)), kit.lp(-1, -2, t = 22))
         val dRow = kit.row()
-        face = kit.toggleTile("VISAGE") { toggleFlow(0) }
-        feet = kit.toggleTile("PIEDS") { toggleFlow(1) }
-        screen = kit.toggleTile("PARE-BRISE") { toggleFlow(2) }
+        face = kit.toggleTile(getString(R.string.cl_face)) { toggleFlow(0) }
+        feet = kit.toggleTile(getString(R.string.cl_feet)) { toggleFlow(1) }
+        screen = kit.toggleTile(getString(R.string.cl_windshield)) { toggleFlow(2) }
         listOf(face, feet, screen).forEachIndexed { i, v -> dRow.addView(v, kit.lp(0, kit.dp(72), 1f, l = if (i > 0) 10 else 0)) }
         fPanel.addView(dRow, kit.lp(-1, -2, t = 10))
         controls += listOf(fDown, fUp, face, feet, screen)
 
         // ── Modes ──
-        val mPanel = kit.panel("MODES")
+        val mPanel = kit.panel(getString(R.string.cl_modes))
         auto = kit.toggleTile("AUTO") { CarBridge.toggleAuto() }
         ac = kit.toggleTile("A/C") { CarBridge.toggleAc() }
         eco = kit.toggleTile("ECO") { CarBridge.toggleEco() }
-        recirc = kit.toggleTile("RECYCLAGE") { CarBridge.toggleRecirc() }
-        defFront = kit.toggleTile("DÉGIVRAGE AV", heat = true) { CarBridge.toggleDefrostFront() }
-        defRear = kit.toggleTile("DÉGIVRAGE AR", heat = true) { CarBridge.toggleDefrostRear() }
+        recirc = kit.toggleTile(getString(R.string.cl_recirc)) { CarBridge.toggleRecirc() }
+        defFront = kit.toggleTile(getString(R.string.cl_def_front), heat = true) { CarBridge.toggleDefrostFront() }
+        defRear = kit.toggleTile(getString(R.string.cl_def_rear), heat = true) { CarBridge.toggleDefrostRear() }
         val grid = listOf(listOf(auto, ac), listOf(eco, recirc), listOf(defFront, defRear))
         grid.forEach { pair ->
             val r = kit.row()
             pair.forEachIndexed { i, v -> r.addView(v, kit.lp(0, -1, 1f, l = if (i > 0) 10 else 0)) }
             mPanel.addView(r, kit.lp(-1, 0, 1f, t = 10))
         }
-        val origin = kit.text("Écran clim d'origine  ›", 18f, R.color.accent_action).apply {
+        val origin = kit.text(getString(R.string.cl_stock), 18f, R.color.accent_action).apply {
             gravity = Gravity.CENTER; setPadding(0, kit.dp(14), 0, kit.dp(4))
-            setOnClickListener { Apps.open(this@ClimateActivity, Apps.HVAC, "Clim SAIC") }
+            setOnClickListener { Apps.open(this@ClimateActivity, Apps.HVAC, "SAIC") }
         }
         mPanel.addView(origin, kit.lp(-1, -2))
         controls += listOf(auto, ac, eco, recirc, defFront, defRear, power)
@@ -150,7 +150,7 @@ class ClimateActivity : PageActivity() {
         controls.forEach { it.isEnabled = known }
         power.isSelected = on
         power.setColorFilter(kit.color(if (on) R.color.accent_energy else R.color.text_sub))
-        outside.text = s.outsideTemp?.let { "Extérieur ${Math.round(it)}°" } ?: ""
+        outside.text = s.outsideTemp?.let { getString(R.string.cl_outside, Math.round(it)) } ?: ""
         temp.text = VehicleState.tempLabel(s.driverTemp)
         temp.setTextColor(kit.color(if (on) R.color.text_value else R.color.text_disabled))
         val t = s.driverTemp
@@ -162,7 +162,7 @@ class ClimateActivity : PageActivity() {
             else -> (Math.round(t) - 16).coerceIn(1, 17)
         }
         val autoOn = on && s.autoOn == true
-        fanValue.text = when { !on -> "OFF"; autoOn -> "AUTO"; else -> s.fanSpeed?.toString() ?: "—" }
+        fanValue.text = when { !on -> getString(R.string.off); autoOn -> "AUTO"; else -> s.fanSpeed?.toString() ?: "—" }
         fanValue.setTextColor(kit.color(when { !on -> R.color.text_disabled; autoOn -> R.color.accent_cold; else -> R.color.text_value }))
         fanGauge.onColor = kit.color(if (autoOn) R.color.text_disabled else R.color.accent_cold)
         fanGauge.value = if (on && !autoOn) s.fanSpeed ?: 0 else 0
@@ -174,7 +174,7 @@ class ClimateActivity : PageActivity() {
         ac.isSelected = s.acOn == true
         eco.isSelected = s.ecoOn == true
         recirc.isSelected = s.recirc == 0
-        recirc.text = when (s.recirc) { 0 -> "AIR RECYCLÉ"; 1 -> "AIR EXTÉRIEUR"; 2 -> "AIR AUTO"; else -> "RECYCLAGE" }
+        recirc.text = when (s.recirc) { 0 -> getString(R.string.cl_air_recirc); 1 -> getString(R.string.cl_air_outside); 2 -> getString(R.string.cl_air_auto); else -> getString(R.string.cl_recirc) }
         defFront.isSelected = s.defrostFront == true
         defRear.isSelected = s.defrostRear == true
     }

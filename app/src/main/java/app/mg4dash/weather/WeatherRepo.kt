@@ -5,6 +5,7 @@ import android.content.Context
 import android.location.LocationManager
 import app.mg4dash.BuildConfig
 import app.mg4dash.R
+import app.mg4dash.Tr
 import app.mg4dash.system.Log
 import app.mg4dash.system.Prefs
 import app.mg4dash.system.StatusMonitor
@@ -85,7 +86,7 @@ object WeatherRepo {
         val loc = lastLocation(context)
         val lat = loc?.first ?: prefs.weatherLat.toDouble()
         val lon = loc?.second ?: prefs.weatherLon.toDouble()
-        val place = if (loc != null) "Position actuelle" else prefs.weatherCity
+        val place = if (loc != null) Tr.s(R.string.weather_here) else prefs.weatherCity
         val url = String.format(
             Locale.US,
             "https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f" +
@@ -118,7 +119,7 @@ object WeatherRepo {
         val hours = (1..5).mapNotNull { k ->
             val i = start + k
             if (i >= hTimes.length()) null
-            else Hour(hTimes.getString(i).substring(11, 13).trimStart('0').ifEmpty { "0" } + "h", hCodes.getInt(i), Math.round(hTemps.getDouble(i)).toInt())
+            else Hour(hourLabel(hTimes.getString(i)), hCodes.getInt(i), Math.round(hTemps.getDouble(i)).toInt())
         }
         val daily = json.getJSONObject("daily")
         val dTimes = daily.getJSONArray("time")
@@ -144,9 +145,14 @@ object WeatherRepo {
     }
 
     private fun dayLabel(iso: String): String = try {
-        val d = java.text.SimpleDateFormat("yyyy-MM-dd", Locale.FRANCE).parse(iso)
-        java.text.SimpleDateFormat("EEE", Locale.FRANCE).format(d!!).trimEnd('.').replaceFirstChar { it.uppercase() }
+        val d = java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).parse(iso)
+        java.text.SimpleDateFormat("EEE", Locale.getDefault()).format(d!!).trimEnd('.').replaceFirstChar { it.uppercase() }
     } catch (_: Exception) { iso.takeLast(5) }
+
+    /** « 14h » en français, « 14:00 » ailleurs. */
+    private fun hourLabel(iso: String): String =
+        if (Locale.getDefault().language == "fr") iso.substring(11, 13).trimStart('0').ifEmpty { "0" } + "h"
+        else iso.substring(11, 16)
 
     @SuppressLint("MissingPermission")
     private fun lastLocation(context: Context): Pair<Double, Double>? = try {
@@ -160,15 +166,15 @@ object WeatherRepo {
 
     /** Codes WMO → libellé français. */
     fun label(code: Int): String = when (code) {
-        0 -> "Ensoleillé"
-        1 -> "Plutôt dégagé"
-        2 -> "Partiellement nuageux"
-        3 -> "Couvert"
-        45, 48 -> "Brouillard"
-        51, 53, 55, 56, 57 -> "Bruine"
-        61, 63, 65, 66, 67, 80, 81, 82 -> "Pluie"
-        71, 73, 75, 77, 85, 86 -> "Neige"
-        95, 96, 99 -> "Orage"
+        0 -> Tr.s(R.string.wx_sunny)
+        1 -> Tr.s(R.string.wx_mostly_clear)
+        2 -> Tr.s(R.string.wx_partly)
+        3 -> Tr.s(R.string.wx_overcast)
+        45, 48 -> Tr.s(R.string.wx_fog)
+        51, 53, 55, 56, 57 -> Tr.s(R.string.wx_drizzle)
+        61, 63, 65, 66, 67, 80, 81, 82 -> Tr.s(R.string.wx_rain)
+        71, 73, 75, 77, 85, 86 -> Tr.s(R.string.wx_snow)
+        95, 96, 99 -> Tr.s(R.string.wx_storm)
         else -> "—"
     }
 

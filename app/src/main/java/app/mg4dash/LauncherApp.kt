@@ -12,6 +12,7 @@ class LauncherApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        Tr.app = this
         installCrashGuard()
         Log.i("App", "démarrage ${BuildConfig.VERSION_NAME} (${BuildConfig.FLAVOR})")
         CarBridge.start(this)
@@ -53,4 +54,10 @@ class LauncherApp : Application() {
         private const val CRASH_LIMIT = 3
         private const val CRASH_WINDOW_MS = 3 * 60 * 1000L
     }
+}
+
+/** Accès aux textes traduits depuis du code sans Context (états véhicule, météo…). */
+object Tr {
+    lateinit var app: Application
+    fun s(id: Int, vararg args: Any): String = app.getString(id, *args)
 }

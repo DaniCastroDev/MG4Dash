@@ -1,5 +1,7 @@
 package app.mg4dash.car
 
+import app.mg4dash.R
+import app.mg4dash.Tr
 import java.util.Locale
 
 /**
@@ -60,24 +62,24 @@ data class VehicleState(
          * 0 = débranché, 1..10 et 12 = recharge, 11 et 13..15 = décharge (V2L).
          */
         fun chargeStatusLabel(v: Int?): String = when (v) {
-            0 -> "Câble débranché"
-            1 -> "Charge lente"
-            2 -> "Charge terminée"
-            3 -> "Charge d'entretien"
-            4 -> "Échec de la charge"
-            5 -> "Connexion…"
-            6 -> "Connecté, non reconnu"
-            7 -> "Connecté, ne charge pas"
-            8 -> "Charge arrêtée"
-            9 -> "Charge programmée"
-            10 -> "Charge rapide"
-            11 -> "Charge ultra-rapide"
-            12 -> "Charge en cours"
-            13 -> "V2L : décharge en cours"
-            14 -> "V2L : décharge arrêtée"
-            15 -> "V2L : décharge terminée"
+            0 -> Tr.s(R.string.cs_0)
+            1 -> Tr.s(R.string.cs_1)
+            2 -> Tr.s(R.string.cs_2)
+            3 -> Tr.s(R.string.cs_3)
+            4 -> Tr.s(R.string.cs_4)
+            5 -> Tr.s(R.string.cs_5)
+            6 -> Tr.s(R.string.cs_6)
+            7 -> Tr.s(R.string.cs_7)
+            8 -> Tr.s(R.string.cs_8)
+            9 -> Tr.s(R.string.cs_9)
+            10 -> Tr.s(R.string.cs_10)
+            11 -> Tr.s(R.string.cs_11)
+            12 -> Tr.s(R.string.cs_12)
+            13 -> Tr.s(R.string.cs_13)
+            14 -> Tr.s(R.string.cs_14)
+            15 -> Tr.s(R.string.cs_15)
             null -> "—"
-            else -> "État $v"
+            else -> Tr.s(R.string.cs_other, v)
         }
 
         /** Mode V2L : même règle que le launcher d'origine (11 et ≥ 13 = écran de décharge). */
@@ -86,13 +88,13 @@ data class VehicleState(
         fun isCharging(v: Int?): Boolean = v == 1 || v == 3 || v == 10 || v == 12
 
         fun driveModeLabel(v: Int?): String = when (v) {
-            2 -> "Éco"
-            3 -> "Normal"
-            4 -> "Sport"
-            6 -> "Neige"
-            7 -> "Perso"
+            2 -> Tr.s(R.string.dm_eco)
+            3 -> Tr.s(R.string.dm_normal)
+            4 -> Tr.s(R.string.dm_sport)
+            6 -> Tr.s(R.string.dm_snow)
+            7 -> Tr.s(R.string.dm_custom)
             null -> "—"
-            else -> "Mode $v"
+            else -> Tr.s(R.string.mode_n, v)
         }
 
         /** Niveau de récupération (KERS) en index de jauge 1..4, 0 si inconnu. */
@@ -105,48 +107,48 @@ data class VehicleState(
         }
 
         fun regenLabel(v: Int?, onePedal: Int?): String = when {
-            onePedal == 1 -> "1 pédale"
-            v == 0 -> "Faible"
-            v == 1 -> "Moyen"
-            v == 2 -> "Fort"
-            v == 3 -> "Adaptatif"
+            onePedal == 1 -> Tr.s(R.string.rg_one_pedal)
+            v == 0 -> Tr.s(R.string.rg_low)
+            v == 1 -> Tr.s(R.string.rg_medium)
+            v == 2 -> Tr.s(R.string.rg_high)
+            v == 3 -> Tr.s(R.string.rg_adaptive)
             v == null -> "—"
-            else -> "Niveau $v"
+            else -> Tr.s(R.string.level_n, v)
         }
 
         fun recircLabel(v: Int?): String = when (v) {
-            0 -> "Recyclé"
-            1 -> "Extérieur"
-            2 -> "Auto"
+            0 -> Tr.s(R.string.rc_inner)
+            1 -> Tr.s(R.string.rc_outer)
+            2 -> Tr.s(R.string.rc_auto)
             else -> "—"
         }
 
         /** Direction : 1 = confort, 2 = normal, 3 = sport (échelle A9 relevée par MG4Control). */
-        fun steeringLabel(v: Int?): String = when (v) { 1 -> "Confort"; 2 -> "Normal"; 3 -> "Sport"; null -> "—"; else -> "Mode $v" }
+        fun steeringLabel(v: Int?): String = when (v) { 1 -> Tr.s(R.string.cf_comfort); 2 -> Tr.s(R.string.dm_normal); 3 -> Tr.s(R.string.dm_sport); null -> "—"; else -> Tr.s(R.string.mode_n, v) }
 
         /** Pédale de frein : 1 = confort, 0 = normal, 2 = sport (normal vaut zéro). */
-        fun pedalLabel(v: Int?): String = when (v) { 1 -> "Confort"; 0 -> "Normal"; 2 -> "Sport"; null -> "—"; else -> "Mode $v" }
+        fun pedalLabel(v: Int?): String = when (v) { 1 -> Tr.s(R.string.cf_comfort); 0 -> Tr.s(R.string.dm_normal); 2 -> Tr.s(R.string.dm_sport); null -> "—"; else -> Tr.s(R.string.mode_n, v) }
 
         /** Aide au maintien de voie : 1 = arrêt, 2 = alerte, 3 = assistance, 5 = urgence. */
-        fun lasLabel(v: Int?): String = when (v) { 1 -> "Arrêt"; 2 -> "Alerte"; 3 -> "Assistance"; 5 -> "Urgence"; null -> "—"; else -> "Mode $v" }
+        fun lasLabel(v: Int?): String = when (v) { 1 -> Tr.s(R.string.st_off); 2 -> Tr.s(R.string.alert); 3 -> Tr.s(R.string.assist); 5 -> Tr.s(R.string.emergency); null -> "—"; else -> Tr.s(R.string.mode_n, v) }
 
         /** Freinage d'urgence (A9) : état 1 = arrêt, 2 = actif ; mode 1 = alerte, 2 = alerte + freinage. */
         fun aebLabel(state: Int?, mode: Int?): String = when {
-            state == 1 -> "Arrêt"
-            state == 2 && mode == 2 -> "Alerte + freinage"
-            state == 2 && mode == 1 -> "Alerte"
-            state == 2 -> "Actif"
+            state == 1 -> Tr.s(R.string.st_off)
+            state == 2 && mode == 2 -> Tr.s(R.string.aeb_alert_brake)
+            state == 2 && mode == 1 -> Tr.s(R.string.alert)
+            state == 2 -> Tr.s(R.string.active)
             else -> "—"
         }
 
-        fun onOff(v: Int?): String = when (v) { 0 -> "Arrêt"; 1 -> "Marche"; null -> "—"; else -> "Valeur $v" }
+        fun onOff(v: Int?): String = when (v) { 0 -> Tr.s(R.string.st_off); 1 -> Tr.s(R.string.st_on); null -> "—"; else -> Tr.s(R.string.value_n, v) }
 
         fun tempLabel(t: Float?): String = when {
             t == null || t.isNaN() || t <= 0f -> "—"
             t <= TEMP_MIN -> "LO"
             t >= TEMP_MAX -> "HI"
             t % 1f == 0f -> "${t.toInt()}°"
-            else -> String.format(Locale.FRANCE, "%.1f°", t)
+            else -> String.format(Locale.getDefault(), "%.1f°", t)
         }
     }
 }

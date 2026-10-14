@@ -61,8 +61,8 @@ object Dock {
         val tick = object : Runnable {
             override fun run() {
                 val now = Date()
-                clock.text = SimpleDateFormat("HH:mm", Locale.FRANCE).format(now)
-                date.text = SimpleDateFormat("EEE d MMM", Locale.FRANCE).format(now).trimEnd('.')
+                clock.text = SimpleDateFormat("HH:mm", Locale.getDefault()).format(now)
+                date.text = SimpleDateFormat("EEE d MMM", Locale.getDefault()).format(now).trimEnd('.')
                 clock.postDelayed(this, 60_000L - System.currentTimeMillis() % 60_000L)
             }
         }
@@ -96,8 +96,8 @@ object Dock {
 
     private fun open(activity: Activity, item: Item, current: Page) {
         when (item.label) {
-            R.string.dock_aa -> { Apps.open(activity, Apps.ANDROID_AUTO, "Android Auto"); return }
-            R.string.dock_settings -> { Apps.open(activity, Apps.SETTINGS, "Paramètres"); return }
+            R.string.dock_aa -> { Apps.open(activity, Apps.ANDROID_AUTO, activity.getString(R.string.dock_aa)); return }
+            R.string.dock_settings -> { Apps.open(activity, Apps.SETTINGS, activity.getString(R.string.dock_settings)); return }
         }
         val page = item.page ?: return
         if (page == current) return

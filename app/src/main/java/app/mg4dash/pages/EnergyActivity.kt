@@ -28,7 +28,7 @@ import java.util.Locale
  * consommation. Réglages écrits sur les mêmes propriétés que l'appli Énergie SAIC (EH32 EU).
  */
 class EnergyActivity : PageActivity() {
-    override val pageTitle = "ÉNERGIE"
+    override val pageTitle get() = getString(R.string.title_energy)
     override val page = app.mg4dash.ui.Dock.Page.ENERGY
 
     private lateinit var prefs: Prefs
@@ -67,14 +67,14 @@ class EnergyActivity : PageActivity() {
 
     override fun buildBody() {
         prefs = Prefs(this)
-        header.addView(kit.text("Appli Énergie d'origine  ›", 19f, R.color.accent_action).apply {
+        header.addView(kit.text(getString(R.string.en_stock), 19f, R.color.accent_action).apply {
             setPadding(kit.dp(16), kit.dp(12), kit.dp(16), kit.dp(12))
             setBackgroundResource(R.drawable.bg_button)
-            setOnClickListener { Apps.open(this@EnergyActivity, Apps.ENERGY, "Énergie SAIC") }
+            setOnClickListener { Apps.open(this@EnergyActivity, Apps.ENERGY, "SAIC") }
         })
 
         // ── Colonne 1 : recharge ──
-        val c1 = kit.panel("RECHARGE")
+        val c1 = kit.panel(getString(R.string.en_charging))
         val top = kit.row()
         soc = kit.text("—", 72f, light = true)
         top.addView(soc)
@@ -90,7 +90,7 @@ class EnergyActivity : PageActivity() {
         c1.addView(power, kit.lp(-1, -2, t = 8))
         action = kit.toggleTile("—") { onMainAction() }.apply { textSize = 20f }
         c1.addView(action, kit.lp(-1, kit.dp(64), t = 12))
-        c1.addView(kit.title("LIMITE DE CHARGE"), kit.lp(-1, -2, t = 18))
+        c1.addView(kit.title(getString(R.string.en_limit)), kit.lp(-1, -2, t = 18))
         val limits = listOf(50, 60, 70, 80, 90, 100)
         val (lRow, lSet) = kit.segmented(limits.map { "$it %" }) { i ->
             ChargeGuard.setLimit(this, limits[i]); refreshProps()
@@ -100,49 +100,49 @@ class EnergyActivity : PageActivity() {
         val eRow = kit.row()
         limitNote = kit.text("", 16f, R.color.text_title).apply { maxLines = 2 }
         eRow.addView(limitNote, kit.lp(0, -2, 1f))
-        enforce = kit.toggleTile("ARRÊT AUTO") {
+        enforce = kit.toggleTile(getString(R.string.en_auto_stop)) {
             prefs.enforceChargeLimit = !prefs.enforceChargeLimit; renderLimit()
         }.apply { textSize = 16f }
         eRow.addView(enforce, kit.lp(kit.dp(150), kit.dp(48), l = 10))
         c1.addView(eRow, kit.lp(-1, -2, t = 8))
-        c1.addView(kit.title("COURANT DE CHARGE AC"), kit.lp(-1, -2, t = 14))
-        val (cRow, cSet) = kit.segmented(listOf("6 A", "8 A", "16 A", "Max")) { i ->
+        c1.addView(kit.title(getString(R.string.en_ac_current)), kit.lp(-1, -2, t = 14))
+        val (cRow, cSet) = kit.segmented(listOf("6 A", "8 A", "16 A", getString(R.string.en_max))) { i ->
             CarProps.setInt(CarProps.ALTNG_CHRG_CRNT, i + 1, "courant AC"); refreshProps()
         }
         setCurrent = cSet
         c1.addView(cRow, kit.lp(-1, -2, t = 8))
 
         // ── Colonne 2 : programmation + V2L ──
-        val c2 = kit.panel("CHARGE PROGRAMMÉE")
+        val c2 = kit.panel(getString(R.string.en_scheduled))
         val tRow = kit.row()
-        schedule = kit.toggleTile("PROGRAMMATION") {
+        schedule = kit.toggleTile(getString(R.string.en_schedule)) {
             val on = reser == 1 || reser == 3
             CarProps.setInt(CarProps.RESER_CTRL, if (on) 2 else 1, "programmation"); refreshProps()
         }
-        finish = kit.toggleTile("FINIR JUSQU'À LA LIMITE") {
+        finish = kit.toggleTile(getString(R.string.en_finish)) {
             CarProps.setInt(CarProps.RESER_CTRL, if (reser == 3) 1 else 3, "continuer après l'heure de fin"); refreshProps()
         }.apply { textSize = 17f }
         tRow.addView(schedule, kit.lp(0, kit.dp(60), 1f))
         tRow.addView(finish, kit.lp(0, kit.dp(60), 1f, l = 10))
         c2.addView(tRow, kit.lp(-1, -2, t = 10))
-        val (sRow, sText) = kit.timeStepper("Début") { d -> shiftTime(true, d) }
+        val (sRow, sText) = kit.timeStepper(getString(R.string.en_start)) { d -> shiftTime(true, d) }
         startTime = sText
         c2.addView(sRow, kit.lp(-1, -2, t = 14))
-        val (eRow2, eText) = kit.timeStepper("Fin") { d -> shiftTime(false, d) }
+        val (eRow2, eText) = kit.timeStepper(getString(R.string.en_end)) { d -> shiftTime(false, d) }
         endTime = eText
         c2.addView(eRow2, kit.lp(-1, -2, t = 10))
         c2.addView(kit.divider(), kit.lp(-1, 1, t = 18))
-        c2.addView(kit.title("V2L · PRISE EXTÉRIEURE"), kit.lp(-1, -2, t = 16))
+        c2.addView(kit.title(getString(R.string.en_v2l)), kit.lp(-1, -2, t = 16))
         v2lStatus = kit.text("—", 19f, R.color.text_sub)
         c2.addView(v2lStatus, kit.lp(-1, -2, t = 8))
-        c2.addView(kit.text("Arrêt de la décharge à", 17f, R.color.text_title), kit.lp(-1, -2, t = 12))
+        c2.addView(kit.text(getString(R.string.en_v2l_stop_at), 17f, R.color.text_title), kit.lp(-1, -2, t = 12))
         val v2ls = listOf(20, 30, 40, 50, 60, 70, 80)
         val (vRow, vSet) = kit.segmented(v2ls.map { "$it" }) { i ->
             CarProps.setInt(CarProps.V2X_SP_SOC, CarProps.v2lCode(v2ls[i]), "seuil V2L ${v2ls[i]} %"); refreshProps()
         }
         setV2l = vSet
         c2.addView(vRow, kit.lp(-1, -2, t = 8))
-        v2lAction = kit.toggleTile("LANCER LE V2L", heat = true) {
+        v2lAction = kit.toggleTile(getString(R.string.en_v2l_start), heat = true) {
             val s = CarBridge.state.value
             if (s.dischargeCtrl == 1) CarBridge.stopV2L() else CarBridge.startV2L()
         }.apply { textSize = 18f }
@@ -150,8 +150,8 @@ class EnergyActivity : PageActivity() {
         c2.addView(v2lAction, kit.lp(-1, kit.dp(60), t = 10))
 
         // ── Colonne 3 : consommation ──
-        val c3 = kit.panel("CONSOMMATION")
-        val (pRow, pSet) = kit.segmented(listOf("Depuis la recharge", "Depuis le démarrage")) { i -> period = i; setPeriod(i); refreshProps() }
+        val c3 = kit.panel(getString(R.string.en_consumption))
+        val (pRow, pSet) = kit.segmented(listOf(getString(R.string.en_since_charge), getString(R.string.en_since_start))) { i -> period = i; setPeriod(i); refreshProps() }
         setPeriod = pSet
         pSet(0)
         c3.addView(pRow, kit.lp(-1, -2, t = 10))
@@ -163,7 +163,7 @@ class EnergyActivity : PageActivity() {
         c3.addView(legend, kit.lp(-1, -2, t = 8))
         regen = kit.text("", 18f, R.color.accent_energy)
         c3.addView(regen, kit.lp(-1, -2, t = 6))
-        c3.addView(kit.title("CONSO RÉCENTE (kWh/100 km)"), kit.lp(-1, -2, t = 18))
+        c3.addView(kit.title(getString(R.string.en_recent)), kit.lp(-1, -2, t = 18))
         chart = LineChart(this)
         c3.addView(chart, kit.lp(-1, 0, 1f, t = 8))
         chartNote = kit.text("", 15f, R.color.text_title)
@@ -226,7 +226,7 @@ class EnergyActivity : PageActivity() {
         p.sp.first?.let { spH = it }; p.sp.second?.let { spM = it }
         startTime.text = if (p.st.first != null) hhmm(stH, stM) else "--:--"
         endTime.text = when {
-            p.reser == 3 -> "limite"
+            p.reser == 3 -> getString(R.string.en_limit_word)
             p.sp.first != null -> hhmm(spH, spM)
             else -> "--:--"
         }
@@ -235,9 +235,9 @@ class EnergyActivity : PageActivity() {
         val kw = if (p.volt != null && p.amp != null) p.volt * p.amp / 1000f else null
         val s = CarBridge.state.value
         power.text = listOfNotNull(
-            kw?.takeIf { kotlin.math.abs(it) >= 0.1f }?.let { String.format(Locale.FRANCE, "Puissance %.1f kW", kotlin.math.abs(it)) },
+            kw?.takeIf { kotlin.math.abs(it) >= 0.1f }?.let { getString(R.string.en_power, String.format(Locale.getDefault(), "%.1f", kotlin.math.abs(it))) },
             s.chargeRemainMin?.takeIf { VehicleState.isCharging(s.chargeStatus) && it in 1..2000 }
-                ?.let { "fin dans ${it / 60} h ${String.format(Locale.FRANCE, "%02d", it % 60)}" },
+                ?.let { getString(R.string.en_ends_in, it / 60, it % 60) },
         ).joinToString(" · ")
         renderConsumption(p.cons)
     }
@@ -247,10 +247,10 @@ class EnergyActivity : PageActivity() {
         setLimit(listOf(50, 60, 70, 80, 90, 100).indexOf(wanted).takeIf { it >= 0 })
         enforce.isSelected = prefs.enforceChargeLimit
         limitNote.text = when {
-            wanted >= 100 -> "Pas de limite : charge jusqu'à 100 %."
-            prefs.enforceChargeLimit -> "MG4Dash arrête la charge à $wanted % (écran allumé)." +
-                (carLimit?.let { " Voiture : $it %." } ?: "")
-            else -> "Limite transmise à la voiture uniquement" + (carLimit?.let { " ($it %)." } ?: ".")
+            wanted >= 100 -> getString(R.string.en_no_limit)
+            prefs.enforceChargeLimit -> getString(R.string.en_enforced, wanted) +
+                (carLimit?.let { getString(R.string.en_car_limit, it) } ?: "")
+            else -> getString(R.string.en_car_only) + (carLimit?.let { " ($it %)." } ?: ".")
         }
     }
 
@@ -258,26 +258,26 @@ class EnergyActivity : PageActivity() {
         val (total, clim, acc, rgn) = c.toList()
         val ok = total > 0f
         val drive = if (ok) (total - clim.coerceAtLeast(0f) - acc.coerceAtLeast(0f)).coerceAtLeast(0f) else 0f
-        consTotal.text = if (ok) String.format(Locale.FRANCE, "%.1f kWh", total) else "—"
+        consTotal.text = if (ok) String.format(Locale.getDefault(), "%.1f kWh", total) else "—"
         val green = kit.color(R.color.accent_energy); val cyan = kit.color(R.color.accent_cold); val orange = kit.color(R.color.accent_heat)
         bar.parts = if (ok) listOf(
             StackedBar.Part(drive, green), StackedBar.Part(clim.coerceAtLeast(0f), cyan), StackedBar.Part(acc.coerceAtLeast(0f), orange),
         ) else emptyList()
         legend.removeAllViews()
-        listOf(Triple("Conduite", drive, green), Triple("Climatisation", clim, cyan), Triple("Accessoires", acc, orange)).forEach { (l, v, col) ->
+        listOf(Triple(getString(R.string.en_drive), drive, green), Triple(getString(R.string.en_climate), clim, cyan), Triple(getString(R.string.en_accessories), acc, orange)).forEach { (l, v, col) ->
             val r = kit.row()
             r.addView(android.view.View(this).apply { setBackgroundColor(col) }, kit.lp(kit.dp(12), kit.dp(12)))
             r.addView(kit.text(l, 18f, R.color.text_sub), kit.lp(0, -2, 1f, l = 10))
-            r.addView(kit.text(if (ok && v >= 0f) String.format(Locale.FRANCE, "%.1f kWh · %d %%", v, Math.round(v / total * 100)) else "—", 18f))
+            r.addView(kit.text(if (ok && v >= 0f) String.format(Locale.getDefault(), "%.1f kWh · %d %%", v, Math.round(v / total * 100)) else "—", 18f))
             legend.addView(r, kit.lp(-1, -2, t = 6))
         }
-        regen.text = if (rgn > 0f) String.format(Locale.FRANCE, "+ %.1f kWh récupérés au freinage", rgn) else ""
+        regen.text = if (rgn > 0f) getString(R.string.en_regen, String.format(Locale.getDefault(), "%.1f", rgn)) else ""
     }
 
     private fun renderHistory(values: List<Float>) {
         chart.values = values
         chartNote.text = if (values.size >= 2)
-            String.format(Locale.FRANCE, "%d derniers km · moyenne %.1f (pointillés)", values.size, values.average()) else ""
+            getString(R.string.en_history_note, values.size, String.format(Locale.getDefault(), "%.1f", values.average())) else ""
     }
 
     override fun render(s: VehicleState) {
@@ -297,18 +297,18 @@ class EnergyActivity : PageActivity() {
         action.isEnabled = VehicleState.isPlugged(s.chargeStatus)
         action.isSelected = s.chargeCtrl == 1 || s.dischargeCtrl == 1
         v2lStatus.text = if (discharge) VehicleState.chargeStatusLabel(s.chargeStatus) +
-            (s.dischargeRemainMin?.takeIf { it in 1..6000 }?.let { " · ${it / 60} h ${it % 60} min restantes" } ?: "")
-        else "Branchez un adaptateur V2L sur la prise de charge"
+            (s.dischargeRemainMin?.takeIf { it in 1..6000 }?.let { getString(R.string.en_remaining, it / 60, it % 60) } ?: "")
+        else getString(R.string.en_plug_v2l)
         v2lAction.isEnabled = discharge
         v2lAction.isSelected = s.dischargeCtrl == 1
-        v2lAction.text = if (s.dischargeCtrl == 1) "ARRÊTER LE V2L" else "LANCER LE V2L"
+        v2lAction.text = getString(if (s.dischargeCtrl == 1) R.string.en_v2l_stopbtn else R.string.en_v2l_start)
     }
 
     private fun mainActionLabel(s: VehicleState): String = when {
-        !VehicleState.isPlugged(s.chargeStatus) -> "CÂBLE DÉBRANCHÉ"
-        VehicleState.isDischargeMode(s.chargeStatus) -> if (s.dischargeCtrl == 1) "ARRÊTER LE V2L" else "LANCER LE V2L"
-        s.chargeCtrl == 1 -> "ARRÊTER LA CHARGE"
-        else -> "CHARGER MAINTENANT"
+        !VehicleState.isPlugged(s.chargeStatus) -> getString(R.string.en_unplugged)
+        VehicleState.isDischargeMode(s.chargeStatus) -> getString(if (s.dischargeCtrl == 1) R.string.en_v2l_stopbtn else R.string.en_v2l_start)
+        s.chargeCtrl == 1 -> getString(R.string.en_stop_charge)
+        else -> getString(R.string.en_charge_now)
     }
 
     private fun onMainAction() {
@@ -340,5 +340,5 @@ class EnergyActivity : PageActivity() {
         }
     }
 
-    private fun hhmm(h: Int, m: Int) = String.format(Locale.FRANCE, "%02d:%02d", h, m)
+    private fun hhmm(h: Int, m: Int) = String.format(Locale.getDefault(), "%02d:%02d", h, m)
 }

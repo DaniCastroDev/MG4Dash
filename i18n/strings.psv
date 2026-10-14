@@ -1,0 +1,226 @@
+key|en|fr|de|es|it|nl
+app_name|MG4Dash|MG4Dash|MG4Dash|MG4Dash|MG4Dash|MG4Dash
+title_climate|CLIMATE|CLIMATISATION|KLIMA|CLIMATIZACIÓN|CLIMATIZZAZIONE|KLIMAAT
+title_energy|ENERGY|ÉNERGIE|ENERGIE|ENERGÍA|ENERGIA|ENERGIE
+title_weather|WEATHER|MÉTÉO|WETTER|TIEMPO|METEO|WEER
+title_media|MEDIA|MÉDIA|MEDIEN|MULTIMEDIA|MULTIMEDIA|MEDIA
+title_trip|TRIP|TRAJET|FAHRT|TRAYECTO|VIAGGIO|RIT
+title_status|STATUS|STATUT|STATUS|ESTADO|STATO|STATUS
+title_vehicle|VEHICLE|VÉHICULE|FAHRZEUG|VEHÍCULO|VEICOLO|VOERTUIG
+title_position|POSITION|POSITION|POSITION|POSICIÓN|POSIZIONE|POSITIE
+dock_home|Home|Accueil|Start|Inicio|Home|Start
+dock_vehicle|Vehicle|Véhicule|Fahrzeug|Vehículo|Veicolo|Voertuig
+dock_climate|Climate|Clim|Klima|Clima|Clima|Klimaat
+dock_energy|Energy|Énergie|Energie|Energía|Energia|Energie
+dock_aa|Android Auto|Android Auto|Android Auto|Android Auto|Android Auto|Android Auto
+dock_settings|Settings|Paramètres|Einstellungen|Ajustes|Impostazioni|Instellingen
+chip_auto|AUTO|AUTO|AUTO|AUTO|AUTO|AUTO
+chip_ac|A/C|A/C|A/C|A/C|A/C|A/C
+chip_recirc|RECIRC.|RECYCL.|UMLUFT|RECIRC.|RICIRC.|RECIRC.
+chip_air_ext|FRESH AIR|AIR EXT.|FRISCHLUFT|AIRE EXT.|ARIA EST.|BUITENLUCHT
+chip_air_auto|AIR AUTO|AIR AUTO|LUFT AUTO|AIRE AUTO|ARIA AUTO|LUCHT AUTO
+chip_front|FRONT DEF.|DÉG. AV|FRONT|DESEMP. DEL.|SBRIN. ANT.|VOORRUIT
+chip_rear|REAR DEF.|DÉG. AR|HECK|DESEMP. TRAS.|SBRIN. POST.|ACHTERRUIT
+off|OFF|OFF|AUS|OFF|OFF|UIT
+no_media|Nothing playing|Aucune lecture en cours|Keine Wiedergabe|Nada en reproducción|Nessuna riproduzione|Niets wordt afgespeeld
+media_hint|Tap RADIO or USB / BT|Touchez RADIO ou USB / BT|RADIO oder USB / BT antippen|Pulse RADIO o USB / BT|Tocca RADIO o USB / BT|Tik op RADIO of USB / BT
+src_radio|RADIO|RADIO|RADIO|RADIO|RADIO|RADIO
+src_media|USB / BT|USB / BT|USB / BT|USB / BT|USB / BT|USB / BT
+map_unavailable|Map unavailable|Carte indisponible|Karte nicht verfügbar|Mapa no disponible|Mappa non disponibile|Kaart niet beschikbaar
+map_searching|Locating…|Recherche de la position…|Position wird gesucht…|Buscando posición…|Ricerca posizione…|Positie zoeken…
+heading|Heading %1$s|Cap %1$s|Richtung %1$s|Rumbo %1$s|Direzione %1$s|Koers %1$s
+altitude|alt. %1$d m|alt. %1$d m|Höhe %1$d m|alt. %1$d m|alt. %1$d m|hoogte %1$d m
+outside_short|Out. %1$d°|Ext. %1$d°|Außen %1$d°|Ext. %1$d°|Est. %1$d°|Buiten %1$d°
+range_label|range|autonomie|Reichweite|autonomía|autonomia|bereik
+cons_avg|kWh/100 avg.|kWh/100 moy.|kWh/100 Ø|kWh/100 med.|kWh/100 media|kWh/100 gem.
+mode|MODE|MODE|MODUS|MODO|MODALITÀ|MODUS
+kers|KERS|KERS|KERS|KERS|KERS|KERS
+charge_btn|CHARGE|CHARGER|LADEN|CARGAR|RICARICA|LADEN
+stop_btn|STOP|ARRÊTER|STOPP|DETENER|STOP|STOP
+v2l_start|START V2L|LANCER V2L|V2L STARTEN|INICIAR V2L|AVVIA V2L|V2L STARTEN
+v2l_stop|STOP V2L|ARRÊTER V2L|V2L STOPPEN|DETENER V2L|FERMA V2L|V2L STOPPEN
+charging_eta|Charging · %1$d h %2$02d|En charge · %1$d h %2$02d|Lädt · %1$d h %2$02d|Cargando · %1$d h %2$02d|In carica · %1$d h %2$02d|Laden · %1$d u %2$02d
+weather_pending|Forecast pending|Prévisions en attente|Vorhersage folgt|Previsión pendiente|Previsioni in attesa|Voorspelling volgt
+weather_outside_vehicle|Vehicle outside temperature|Température extérieure du véhicule|Außentemperatur des Fahrzeugs|Temperatura exterior del vehículo|Temperatura esterna del veicolo|Buitentemperatuur van het voertuig
+weather_details|Feels like %1$d° · Wind %2$d km/h · %3$d %%|Ressenti %1$d° · Vent %2$d km/h · %3$d %%|Gefühlt %1$d° · Wind %2$d km/h · %3$d %%|Sensación %1$d° · Viento %2$d km/h · %3$d %%|Percepita %1$d° · Vento %2$d km/h · %3$d %%|Gevoel %1$d° · Wind %2$d km/h · %3$d %%
+weather_here|Current position|Position actuelle|Aktuelle Position|Posición actual|Posizione attuale|Huidige positie
+trip_distance|DISTANCE|DISTANCE|STRECKE|DISTANCIA|DISTANZA|AFSTAND
+trip_duration|DURATION|DURÉE|DAUER|DURACIÓN|DURATA|DUUR
+trip_cons|CONS.|CONSO|VERBR.|CONSUMO|CONSUMO|VERBR.
+status_odometer|ODOMETER|ODOMÈTRE|KILOMETERSTAND|ODÓMETRO|CONTACHILOMETRI|KILOMETERSTAND
+status_outside|OUTSIDE|EXTÉRIEUR|AUSSEN|EXTERIOR|ESTERNO|BUITEN
+status_connected|Connected|Connecté|Verbunden|Conectado|Connesso|Verbonden
+status_offline|Offline|Hors ligne|Offline|Sin conexión|Offline|Offline
+w_now|NOW|MAINTENANT|JETZT|AHORA|ORA|NU
+w_tomorrow|TOMORROW|DEMAIN|MORGEN|MAÑANA|DOMANI|MORGEN
+w_wind|WIND|VENT|WIND|VIENTO|VENTO|WIND
+wx_sunny|Sunny|Ensoleillé|Sonnig|Soleado|Soleggiato|Zonnig
+wx_mostly_clear|Mostly clear|Plutôt dégagé|Überwiegend klar|Mayormente despejado|Prevalentemente sereno|Overwegend helder
+wx_partly|Partly cloudy|Partiellement nuageux|Teilweise bewölkt|Parcialmente nublado|Parzialmente nuvoloso|Gedeeltelijk bewolkt
+wx_overcast|Overcast|Couvert|Bedeckt|Cubierto|Coperto|Bewolkt
+wx_fog|Fog|Brouillard|Nebel|Niebla|Nebbia|Mist
+wx_drizzle|Drizzle|Bruine|Nieselregen|Llovizna|Pioviggine|Motregen
+wx_rain|Rain|Pluie|Regen|Lluvia|Pioggia|Regen
+wx_snow|Snow|Neige|Schnee|Nieve|Neve|Sneeuw
+wx_storm|Thunderstorm|Orage|Gewitter|Tormenta|Temporale|Onweer
+chart_empty|Collecting history (1 point per km)|Historique en cours de collecte (1 point par km)|Verlauf wird erfasst (1 Punkt pro km)|Recopilando historial (1 punto por km)|Raccolta dello storico (1 punto per km)|Geschiedenis wordt verzameld (1 punt per km)
+app_unavailable|%1$s unavailable|%1$s indisponible|%1$s nicht verfügbar|%1$s no disponible|%1$s non disponibile|%1$s niet beschikbaar
+cs_0|Cable unplugged|Câble débranché|Kabel nicht eingesteckt|Cable desconectado|Cavo scollegato|Kabel losgekoppeld
+cs_1|Slow charging|Charge lente|Langsames Laden|Carga lenta|Ricarica lenta|Langzaam laden
+cs_2|Charging complete|Charge terminée|Laden abgeschlossen|Carga completa|Ricarica completata|Laden voltooid
+cs_3|Trickle charging|Charge d'entretien|Erhaltungsladung|Carga de mantenimiento|Ricarica di mantenimento|Druppelladen
+cs_4|Charging failed|Échec de la charge|Ladefehler|Error de carga|Errore di ricarica|Laden mislukt
+cs_5|Connecting…|Connexion…|Verbindung…|Conectando…|Connessione…|Verbinden…
+cs_6|Connected, not recognised|Connecté, non reconnu|Verbunden, nicht erkannt|Conectado, no reconocido|Connesso, non riconosciuto|Verbonden, niet herkend
+cs_7|Connected, not charging|Connecté, ne charge pas|Verbunden, lädt nicht|Conectado, sin cargar|Connesso, non in carica|Verbonden, laadt niet
+cs_8|Charging stopped|Charge arrêtée|Laden gestoppt|Carga detenida|Ricarica interrotta|Laden gestopt
+cs_9|Charging scheduled|Charge programmée|Laden geplant|Carga programada|Ricarica programmata|Laden gepland
+cs_10|Fast charging|Charge rapide|Schnellladen|Carga rápida|Ricarica rapida|Snelladen
+cs_11|Ultra-fast charging|Charge ultra-rapide|Ultraschnellladen|Carga ultrarrápida|Ricarica ultrarapida|Ultrasnelladen
+cs_12|Charging|Charge en cours|Lädt|Cargando|In carica|Laden
+cs_13|V2L: discharging|V2L : décharge en cours|V2L: Entladung läuft|V2L: descargando|V2L: scarica in corso|V2L: ontladen
+cs_14|V2L: discharge stopped|V2L : décharge arrêtée|V2L: Entladung gestoppt|V2L: descarga detenida|V2L: scarica interrotta|V2L: ontladen gestopt
+cs_15|V2L: discharge complete|V2L : décharge terminée|V2L: Entladung beendet|V2L: descarga completa|V2L: scarica completata|V2L: ontladen voltooid
+cs_other|State %1$d|État %1$d|Status %1$d|Estado %1$d|Stato %1$d|Status %1$d
+dm_eco|Eco|Éco|Eco|Eco|Eco|Eco
+dm_normal|Normal|Normal|Normal|Normal|Normale|Normaal
+dm_sport|Sport|Sport|Sport|Sport|Sport|Sport
+dm_snow|Snow|Neige|Schnee|Nieve|Neve|Sneeuw
+dm_custom|Custom|Perso|Individuell|Personal.|Personal.|Eigen
+mode_n|Mode %1$d|Mode %1$d|Modus %1$d|Modo %1$d|Modalità %1$d|Modus %1$d
+rg_one_pedal|One pedal|1 pédale|One Pedal|Un pedal|Un pedale|Eén pedaal
+rg_low|Low|Faible|Gering|Bajo|Basso|Laag
+rg_medium|Medium|Moyen|Mittel|Medio|Medio|Gemiddeld
+rg_high|High|Fort|Stark|Alto|Alto|Hoog
+rg_adaptive|Adaptive|Adaptatif|Adaptiv|Adaptativo|Adattivo|Adaptief
+level_n|Level %1$d|Niveau %1$d|Stufe %1$d|Nivel %1$d|Livello %1$d|Niveau %1$d
+rc_inner|Recirculated|Recyclé|Umluft|Recirculado|Ricircolo|Recirculatie
+rc_outer|Outside|Extérieur|Frischluft|Exterior|Esterna|Buiten
+rc_auto|Auto|Auto|Auto|Auto|Auto|Auto
+cf_comfort|Comfort|Confort|Komfort|Confort|Comfort|Comfort
+st_off|Off|Arrêt|Aus|Apagado|Spento|Uit
+st_on|On|Marche|Ein|Encendido|Acceso|Aan
+alert|Alert|Alerte|Warnung|Alerta|Avviso|Waarschuwing
+assist|Assist|Assistance|Assistent|Asistencia|Assistenza|Assistentie
+emergency|Emergency|Urgence|Notfall|Emergencia|Emergenza|Noodgeval
+aeb_alert_brake|Alert + braking|Alerte + freinage|Warnung + Bremsen|Alerta + frenado|Avviso + frenata|Waarschuwing + remmen
+active|Active|Actif|Aktiv|Activo|Attivo|Actief
+value_n|Value %1$d|Valeur %1$d|Wert %1$d|Valor %1$d|Valore %1$d|Waarde %1$d
+cl_driver_temp|DRIVER TEMPERATURE|TEMPÉRATURE CONDUCTEUR|FAHRERTEMPERATUR|TEMPERATURA CONDUCTOR|TEMPERATURA CONDUCENTE|TEMPERATUUR BESTUURDER
+cl_fan|FAN|VENTILATION|GEBLÄSE|VENTILACIÓN|VENTILAZIONE|VENTILATIE
+cl_airflow|AIR DIRECTION|DIRECTION DE L'AIR|LUFTVERTEILUNG|DIRECCIÓN DEL AIRE|DIREZIONE ARIA|LUCHTRICHTING
+cl_face|FACE|VISAGE|GESICHT|CARA|VISO|GEZICHT
+cl_feet|FEET|PIEDS|FÜSSE|PIES|PIEDI|VOETEN
+cl_windshield|WINDSCREEN|PARE-BRISE|SCHEIBE|PARABRISAS|PARABREZZA|VOORRUIT
+cl_modes|MODES|MODES|MODI|MODOS|MODALITÀ|MODI
+cl_eco|ECO|ECO|ECO|ECO|ECO|ECO
+cl_recirc|RECIRCULATION|RECYCLAGE|UMLUFT|RECIRCULACIÓN|RICIRCOLO|RECIRCULATIE
+cl_air_recirc|RECIRCULATED AIR|AIR RECYCLÉ|UMLUFT|AIRE RECIRCULADO|ARIA RICIRCOLATA|RECIRCULATIELUCHT
+cl_air_outside|FRESH AIR|AIR EXTÉRIEUR|FRISCHLUFT|AIRE EXTERIOR|ARIA ESTERNA|BUITENLUCHT
+cl_air_auto|AIR AUTO|AIR AUTO|LUFT AUTO|AIRE AUTO|ARIA AUTO|LUCHT AUTO
+cl_def_front|FRONT DEFROST|DÉGIVRAGE AV|FRONTSCHEIBE|DESEMPAÑADO DEL.|SBRINAMENTO ANT.|ONTWASEMEN VOOR
+cl_def_rear|REAR DEFROST|DÉGIVRAGE AR|HECKSCHEIBE|DESEMPAÑADO TRAS.|SBRINAMENTO POST.|ONTWASEMEN ACHTER
+cl_stock|Stock climate screen  ›|Écran clim d'origine  ›|Original-Klimaanzeige  ›|Pantalla de clima original  ›|Schermata clima originale  ›|Origineel klimaatscherm  ›
+cl_outside|Outside %1$d°|Extérieur %1$d°|Außen %1$d°|Exterior %1$d°|Esterno %1$d°|Buiten %1$d°
+en_stock|Stock Energy app  ›|Appli Énergie d'origine  ›|Original-Energie-App  ›|App de energía original  ›|App Energia originale  ›|Originele energie-app  ›
+en_charging|CHARGING|RECHARGE|LADEN|CARGA|RICARICA|LADEN
+en_limit|CHARGE LIMIT|LIMITE DE CHARGE|LADELIMIT|LÍMITE DE CARGA|LIMITE DI RICARICA|LAADLIMIET
+en_auto_stop|AUTO STOP|ARRÊT AUTO|AUTO-STOPP|PARADA AUTO|STOP AUTO|AUTO-STOP
+en_ac_current|AC CHARGING CURRENT|COURANT DE CHARGE AC|AC-LADESTROM|CORRIENTE DE CARGA AC|CORRENTE DI RICARICA AC|AC-LAADSTROOM
+en_max|Max|Max|Max|Máx|Max|Max
+en_scheduled|SCHEDULED CHARGING|CHARGE PROGRAMMÉE|GEPLANTES LADEN|CARGA PROGRAMADA|RICARICA PROGRAMMATA|GEPLAND LADEN
+en_schedule|SCHEDULE|PROGRAMMATION|ZEITPLAN|PROGRAMACIÓN|PROGRAMMAZIONE|PLANNING
+en_finish|FINISH TO THE LIMIT|FINIR JUSQU'À LA LIMITE|BIS ZUM LIMIT LADEN|TERMINAR HASTA EL LÍMITE|COMPLETA FINO AL LIMITE|TOT LIMIET AFMAKEN
+en_start|Start|Début|Beginn|Inicio|Inizio|Begin
+en_end|End|Fin|Ende|Fin|Fine|Einde
+en_limit_word|limit|limite|Limit|límite|limite|limiet
+en_v2l|V2L · EXTERNAL SOCKET|V2L · PRISE EXTÉRIEURE|V2L · EXTERNE STECKDOSE|V2L · TOMA EXTERIOR|V2L · PRESA ESTERNA|V2L · EXTERN STOPCONTACT
+en_v2l_stop_at|Stop discharging at|Arrêt de la décharge à|Entladung stoppen bei|Detener descarga al|Interrompi scarica al|Ontladen stoppen bij
+en_v2l_start|START V2L|LANCER LE V2L|V2L STARTEN|INICIAR V2L|AVVIA V2L|V2L STARTEN
+en_v2l_stopbtn|STOP V2L|ARRÊTER LE V2L|V2L STOPPEN|DETENER V2L|FERMA V2L|V2L STOPPEN
+en_consumption|CONSUMPTION|CONSOMMATION|VERBRAUCH|CONSUMO|CONSUMO|VERBRUIK
+en_since_charge|Since last charge|Depuis la recharge|Seit dem Laden|Desde la recarga|Dalla ricarica|Sinds laden
+en_since_start|Since start|Depuis le démarrage|Seit dem Start|Desde el arranque|Dall'avvio|Sinds start
+en_recent|RECENT CONSUMPTION (kWh/100 km)|CONSO RÉCENTE (kWh/100 km)|AKTUELLER VERBRAUCH (kWh/100 km)|CONSUMO RECIENTE (kWh/100 km)|CONSUMO RECENTE (kWh/100 km)|RECENT VERBRUIK (kWh/100 km)
+en_power|Power %1$s kW|Puissance %1$s kW|Leistung %1$s kW|Potencia %1$s kW|Potenza %1$s kW|Vermogen %1$s kW
+en_ends_in|ends in %1$d h %2$02d|fin dans %1$d h %2$02d|fertig in %1$d h %2$02d|termina en %1$d h %2$02d|termina tra %1$d h %2$02d|klaar over %1$d u %2$02d
+en_no_limit|No limit: charges to 100 %%.|Pas de limite : charge jusqu'à 100 %%.|Kein Limit: lädt bis 100 %%.|Sin límite: carga hasta el 100 %%.|Nessun limite: ricarica fino al 100 %%.|Geen limiet: laadt tot 100 %%.
+en_enforced|MG4Dash stops charging at %1$d %% (screen on).|MG4Dash arrête la charge à %1$d %% (écran allumé).|MG4Dash stoppt das Laden bei %1$d %% (Bildschirm an).|MG4Dash detiene la carga al %1$d %% (pantalla encendida).|MG4Dash interrompe la ricarica al %1$d %% (schermo acceso).|MG4Dash stopt het laden bij %1$d %% (scherm aan).
+en_car_limit| Car: %1$d %%.| Voiture : %1$d %%.| Fahrzeug: %1$d %%.| Coche: %1$d %%.| Auto: %1$d %%.| Auto: %1$d %%.
+en_car_only|Limit sent to the car only|Limite transmise à la voiture uniquement|Limit nur an das Fahrzeug übermittelt|Límite enviado solo al coche|Limite inviato solo all'auto|Limiet alleen naar de auto gestuurd
+en_drive|Driving|Conduite|Fahren|Conducción|Guida|Rijden
+en_climate|Climate control|Climatisation|Klimaanlage|Climatización|Climatizzazione|Klimaatregeling
+en_accessories|Accessories|Accessoires|Zubehör|Accesorios|Accessori|Accessoires
+en_regen|+ %1$s kWh recovered by braking|+ %1$s kWh récupérés au freinage|+ %1$s kWh durch Bremsen zurückgewonnen|+ %1$s kWh recuperados al frenar|+ %1$s kWh recuperati in frenata|+ %1$s kWh teruggewonnen bij remmen
+en_remaining| · %1$d h %2$d min left| · %1$d h %2$d min restantes| · noch %1$d h %2$d min| · quedan %1$d h %2$d min| · %1$d h %2$d min rimanenti| · nog %1$d u %2$d min
+en_plug_v2l|Plug a V2L adapter into the charging socket|Branchez un adaptateur V2L sur la prise de charge|V2L-Adapter an der Ladebuchse anschließen|Conecte un adaptador V2L a la toma de carga|Collega un adattatore V2L alla presa di ricarica|Sluit een V2L-adapter aan op de laadaansluiting
+en_unplugged|CABLE UNPLUGGED|CÂBLE DÉBRANCHÉ|KABEL GETRENNT|CABLE DESCONECTADO|CAVO SCOLLEGATO|KABEL LOS
+en_stop_charge|STOP CHARGING|ARRÊTER LA CHARGE|LADEN STOPPEN|DETENER CARGA|FERMA RICARICA|LADEN STOPPEN
+en_charge_now|CHARGE NOW|CHARGER MAINTENANT|JETZT LADEN|CARGAR AHORA|RICARICA ORA|NU LADEN
+en_history_note|last %1$d km · average %2$s (dashed)|%1$d derniers km · moyenne %2$s (pointillés)|letzte %1$d km · Durchschnitt %2$s (gestrichelt)|últimos %1$d km · media %2$s (discontinua)|ultimi %1$d km · media %2$s (tratteggiata)|laatste %1$d km · gemiddelde %2$s (gestippeld)
+vh_saic|SAIC settings  ›|Réglages SAIC  ›|SAIC-Einstellungen  ›|Ajustes SAIC  ›|Impostazioni SAIC  ›|SAIC-instellingen  ›
+vh_mg4control|Open MG4 Control  ›|Ouvrir MG4 Control  ›|MG4 Control öffnen  ›|Abrir MG4 Control  ›|Apri MG4 Control  ›|MG4 Control openen  ›
+vh_driving|DRIVING|CONDUITE|FAHREN|CONDUCCIÓN|GUIDA|RIJDEN
+vh_drive_mode|Drive mode|Mode de conduite|Fahrmodus|Modo de conducción|Modalità di guida|Rijmodus
+vh_regen|Energy recovery (KERS)|Récupération d'énergie (KERS)|Energierückgewinnung (KERS)|Recuperación de energía (KERS)|Recupero di energia (KERS)|Energieterugwinning (KERS)
+vh_one_pedal|One-pedal driving|Conduite à une pédale|One-Pedal-Fahren|Conducción con un pedal|Guida con un pedale|Rijden met één pedaal
+vh_steering|Steering|Direction|Lenkung|Dirección|Sterzo|Stuurinrichting
+vh_brake|Brake pedal|Pédale de frein|Bremspedal|Pedal de freno|Pedale del freno|Rempedaal
+vh_endurance|Range+|Autonomie+|Reichweite+|Autonomía+|Autonomia+|Bereik+
+vh_adas|DRIVER ASSISTANCE|AIDES À LA CONDUITE|FAHRASSISTENZ|ASISTENCIA A LA CONDUCCIÓN|ASSISTENZA ALLA GUIDA|RIJHULPSYSTEMEN
+vh_lane|Lane keeping|Maintien de voie|Spurhalteassistent|Mantenimiento de carril|Mantenimento corsia|Rijstrookassistent
+vh_aeb|Emergency braking|Freinage d'urgence|Notbremsung|Frenado de emergencia|Frenata di emergenza|Noodremming
+vh_overspeed|Overspeed alert|Alerte de survitesse|Geschwindigkeitswarnung|Alerta de exceso de velocidad|Avviso di eccesso di velocità|Snelheidswaarschuwing
+vh_limit_beep|Speed limit beep|Bip limite de vitesse|Tempolimit-Signal|Aviso de límite de velocidad|Segnale limite di velocità|Pieptoon snelheidslimiet
+vh_use_mg4control|Use MG4 Control to change these settings.|Pour modifier ces réglages, utilisez MG4 Control.|Diese Einstellungen in MG4 Control ändern.|Use MG4 Control para cambiar estos ajustes.|Usa MG4 Control per modificare queste impostazioni.|Gebruik MG4 Control om deze instellingen te wijzigen.
+vh_state|VEHICLE STATUS|ÉTAT DU VÉHICULE|FAHRZEUGSTATUS|ESTADO DEL VEHÍCULO|STATO DEL VEICOLO|VOERTUIGSTATUS
+vh_battery|Battery|Batterie|Batterie|Batería|Batteria|Batterij
+vh_range|Range|Autonomie|Reichweite|Autonomía|Autonomia|Bereik
+vh_avg_cons|Average consumption|Conso moyenne|Durchschnittsverbrauch|Consumo medio|Consumo medio|Gemiddeld verbruik
+vh_odometer|Odometer|Odomètre|Kilometerstand|Odómetro|Contachilometri|Kilometerstand
+vh_speed|Speed|Vitesse|Geschwindigkeit|Velocidad|Velocità|Snelheid
+vh_outside|Outside temperature|Température extérieure|Außentemperatur|Temperatura exterior|Temperatura esterna|Buitentemperatuur
+vh_charge|Charging|Charge|Laden|Carga|Ricarica|Laden
+st_home|HOME SCREEN|ÉCRAN D'ACCUEIL|STARTBILDSCHIRM|PANTALLA DE INICIO|SCHERMATA HOME|STARTSCHERM
+st_home_desc|"Replace SAIC home" disables only the original home screen (its service keeps running). Maintenance mode re-enables it, e.g. before a dealer service.|« Remplacer l'accueil SAIC » désactive uniquement l'écran d'accueil d'origine (son service reste actif). Le mode Entretien le réactive, par exemple avant une révision en concession.|„SAIC-Startbildschirm ersetzen“ deaktiviert nur den originalen Startbildschirm (sein Dienst läuft weiter). Der Wartungsmodus aktiviert ihn wieder, z. B. vor einem Werkstatttermin.|«Sustituir inicio SAIC» desactiva solo la pantalla de inicio original (su servicio sigue activo). El modo mantenimiento la reactiva, por ejemplo antes de una revisión.|«Sostituisci home SAIC» disattiva solo la schermata home originale (il suo servizio resta attivo). La modalità manutenzione la riattiva, ad esempio prima di un tagliando.|"SAIC-start vervangen" schakelt alleen het originele startscherm uit (de dienst blijft actief). De onderhoudsmodus zet het weer aan, bijvoorbeeld voor een onderhoudsbeurt.
+st_replace|Replace SAIC home|Remplacer l'accueil SAIC|SAIC-Startbildschirm ersetzen|Sustituir inicio SAIC|Sostituisci home SAIC|SAIC-start vervangen
+st_valet|Maintenance mode|Mode Entretien|Wartungsmodus|Modo mantenimiento|Modalità manutenzione|Onderhoudsmodus
+st_adb|ADB recovery: adb shell pm enable com.saicmotor.launcher/.view.MainActivity|Secours ADB : adb shell pm enable com.saicmotor.launcher/.view.MainActivity|ADB-Wiederherstellung: adb shell pm enable com.saicmotor.launcher/.view.MainActivity|Recuperación ADB: adb shell pm enable com.saicmotor.launcher/.view.MainActivity|Ripristino ADB: adb shell pm enable com.saicmotor.launcher/.view.MainActivity|ADB-herstel: adb shell pm enable com.saicmotor.launcher/.view.MainActivity
+st_capacity|Usable battery capacity: %1$s kWh|Capacité utile de la batterie : %1$s kWh|Nutzbare Batteriekapazität: %1$s kWh|Capacidad útil de la batería: %1$s kWh|Capacità utile della batteria: %1$s kWh|Bruikbare batterijcapaciteit: %1$s kWh
+st_capacity_desc|Used for the kWh/100 estimate (MG4 Standard 51 kWh: about 49 kWh usable).|Sert à l'estimation kWh/100 (MG4 Standard 51 kWh : environ 49 kWh utiles).|Für die kWh/100-Schätzung (MG4 Standard 51 kWh: ca. 49 kWh nutzbar).|Para la estimación de kWh/100 (MG4 Standard 51 kWh: unos 49 kWh útiles).|Per la stima kWh/100 (MG4 Standard 51 kWh: circa 49 kWh utili).|Voor de kWh/100-schatting (MG4 Standard 51 kWh: ongeveer 49 kWh bruikbaar).
+st_city|Fallback city: %1$s (if the car provides no position)|Ville de repli : %1$s (si la voiture ne fournit pas de position)|Ersatzstadt: %1$s (falls das Auto keine Position liefert)|Ciudad de respaldo: %1$s (si el coche no da la posición)|Città di riserva: %1$s (se l'auto non fornisce la posizione)|Reservestad: %1$s (als de auto geen positie geeft)
+st_change_city|Change city|Changer de ville|Stadt ändern|Cambiar ciudad|Cambia città|Stad wijzigen
+st_startup|STARTUP|DÉMARRAGE|START|ARRANQUE|AVVIO|OPSTARTEN
+st_warm|Briefly open the SAIC launcher at startup: %1$s|Ouverture brève du launcher SAIC au démarrage : %1$s|SAIC-Launcher beim Start kurz öffnen: %1$s|Abrir brevemente el launcher SAIC al arrancar: %1$s|Apri brevemente il launcher SAIC all'avvio: %1$s|SAIC-launcher kort openen bij opstarten: %1$s
+st_warm_desc|Lets the SAIC service (audio sources, camera, system bar commands) register its interface.|Permet au service SAIC (sources audio, caméra, commandes de la barre système) d'enregistrer son interface.|Damit der SAIC-Dienst (Audioquellen, Kamera, Systemleisten-Befehle) seine Oberfläche registriert.|Permite al servicio SAIC (fuentes de audio, cámara, comandos de la barra del sistema) registrar su interfaz.|Permette al servizio SAIC (sorgenti audio, telecamera, comandi della barra di sistema) di registrare la sua interfaccia.|Laat de SAIC-dienst (audiobronnen, camera, systeembalkopdrachten) zijn interface registreren.
+st_toggle|Toggle|Basculer|Umschalten|Cambiar|Cambia|Wisselen
+st_display|DISPLAY|AFFICHAGE|ANZEIGE|PANTALLA|DISPLAY|WEERGAVE
+st_fullscreen|Full screen (hides the SAIC side bar and banner): %1$s|Plein écran (masque la barre latérale et le bandeau SAIC) : %1$s|Vollbild (blendet SAIC-Seitenleiste und Banner aus): %1$s|Pantalla completa (oculta la barra lateral y el banner SAIC): %1$s|Schermo intero (nasconde la barra laterale e il banner SAIC): %1$s|Volledig scherm (verbergt de SAIC-zijbalk en -banner): %1$s
+st_fullscreen_desc|Swipe from the left or top edge to bring the SAIC bars back.|Un glissement depuis le bord gauche ou le haut de l'écran fait réapparaître les barres SAIC.|Vom linken oder oberen Rand wischen, um die SAIC-Leisten einzublenden.|Deslice desde el borde izquierdo o superior para mostrar las barras SAIC.|Scorri dal bordo sinistro o superiore per mostrare le barre SAIC.|Veeg vanaf de linker- of bovenrand om de SAIC-balken terug te halen.
+yes|YES|OUI|JA|SÍ|SÌ|JA
+no|NO|NON|NEIN|NO|NO|NEE
+st_log|LOG|JOURNAL|PROTOKOLL|REGISTRO|REGISTRO|LOGBOEK
+st_refresh|Refresh|Actualiser|Aktualisieren|Actualizar|Aggiorna|Vernieuwen
+st_close|Close|Fermer|Schließen|Cerrar|Chiudi|Sluiten
+st_replace_msg|The SAIC home screen will be disabled and MG4Dash will become the home screen. Maintenance mode restores it at any time. Continue?|L'écran d'accueil SAIC sera désactivé et MG4Dash deviendra l'accueil. Le mode Entretien le rétablit à tout moment. Continuer ?|Der SAIC-Startbildschirm wird deaktiviert und MG4Dash wird zum Startbildschirm. Der Wartungsmodus stellt ihn jederzeit wieder her. Fortfahren?|La pantalla de inicio SAIC se desactivará y MG4Dash será la pantalla de inicio. El modo mantenimiento la restaura en cualquier momento. ¿Continuar?|La schermata home SAIC verrà disattivata e MG4Dash diventerà la home. La modalità manutenzione la ripristina in qualsiasi momento. Continuare?|Het SAIC-startscherm wordt uitgeschakeld en MG4Dash wordt het startscherm. De onderhoudsmodus herstelt het op elk moment. Doorgaan?
+st_replace_btn|Replace|Remplacer|Ersetzen|Sustituir|Sostituisci|Vervangen
+cancel|Cancel|Annuler|Abbrechen|Cancelar|Annulla|Annuleren
+st_valet_msg|The original SAIC launcher will become the default home screen again. Continue?|Le launcher SAIC d'origine va redevenir l'écran d'accueil par défaut. Continuer ?|Der originale SAIC-Launcher wird wieder Standard-Startbildschirm. Fortfahren?|El launcher SAIC original volverá a ser la pantalla de inicio predeterminada. ¿Continuar?|Il launcher SAIC originale tornerà la schermata home predefinita. Continuare?|De originele SAIC-launcher wordt weer het standaard startscherm. Doorgaan?
+activate|Activate|Activer|Aktivieren|Activar|Attiva|Activeren
+st_home_changed|Home screen changed|Accueil modifié|Startbildschirm geändert|Inicio cambiado|Home modificata|Startscherm gewijzigd
+st_failed|Failed (see the log)|Échec (voir le journal)|Fehlgeschlagen (siehe Protokoll)|Error (ver el registro)|Errore (vedi registro)|Mislukt (zie logboek)
+st_current_home|Current home screen: %1$s|Accueil actuel : %1$s|Aktueller Startbildschirm: %1$s|Inicio actual: %1$s|Home attuale: %1$s|Huidig startscherm: %1$s
+st_home_stock|original SAIC launcher|launcher SAIC d'origine|originaler SAIC-Launcher|launcher SAIC original|launcher SAIC originale|originele SAIC-launcher
+st_home_none|no default (choice requested)|aucun par défaut (choix demandé)|kein Standard (Auswahl erforderlich)|ninguno por defecto (se pide elegir)|nessuno predefinito (scelta richiesta)|geen standaard (keuze gevraagd)
+cd_temp_down|Lower temperature|Baisser la température|Temperatur senken|Bajar temperatura|Abbassa temperatura|Temperatuur omlaag
+cd_temp_up|Raise temperature|Monter la température|Temperatur erhöhen|Subir temperatura|Alza temperatura|Temperatuur omhoog
+cd_power|Climate on / off|Marche / arrêt clim|Klima ein / aus|Clima encendido / apagado|Clima on / off|Klimaat aan / uit
+cd_fan_down|Less fan|Moins de ventilation|Weniger Gebläse|Menos ventilación|Meno ventilazione|Minder ventilatie
+cd_fan_up|More fan|Plus de ventilation|Mehr Gebläse|Más ventilación|Più ventilazione|Meer ventilatie
+cd_play|Play / pause|Lecture / pause|Wiedergabe / Pause|Reproducir / pausa|Riproduci / pausa|Afspelen / pauze
+cd_prev|Previous|Précédent|Zurück|Anterior|Precedente|Vorige
+cd_next|Next|Suivant|Weiter|Siguiente|Successivo|Volgende
+cd_recenter|Recenter|Recentrer|Zentrieren|Recentrar|Ricentra|Centreren
+cd_zoom_in|Zoom in|Zoom avant|Vergrößern|Acercar|Ingrandisci|Inzoomen
+cd_zoom_out|Zoom out|Zoom arrière|Verkleinern|Alejar|Riduci|Uitzoomen
+cardinals|N,NE,E,SE,S,SW,W,NW|N,NE,E,SE,S,SO,O,NO|N,NO,O,SO,S,SW,W,NW|N,NE,E,SE,S,SO,O,NO|N,NE,E,SE,S,SO,O,NO|N,NO,O,ZO,Z,ZW,W,NW

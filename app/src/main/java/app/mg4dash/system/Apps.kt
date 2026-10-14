@@ -45,7 +45,7 @@ object Apps {
             true
         } else {
             Log.w(TAG, "$label introuvable ($pkg)")
-            Toast.makeText(context, "$label indisponible", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, context.getString(app.mg4dash.R.string.app_unavailable, label), Toast.LENGTH_SHORT).show()
             false
         }
     }

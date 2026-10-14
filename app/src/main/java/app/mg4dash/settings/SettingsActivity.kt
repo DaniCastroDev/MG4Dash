@@ -54,33 +54,32 @@ class SettingsActivity : AppCompatActivity() {
         setContentView(root)
 
         // ── Mode Entretien ──
-        val valet = panel(left, "ÉCRAN D'ACCUEIL")
+        val valet = panel(left, getString(R.string.st_home))
         homeState = text(valet, "", 19f, R.color.text_sub)
-        text(valet, "« Remplacer l'accueil SAIC » désactive uniquement l'écran d'accueil d'origine (son service reste actif). " +
-            "Le mode Entretien le réactive, par exemple avant une révision en concession.", 17f, R.color.text_title)
+        text(valet, getString(R.string.st_home_desc), 17f, R.color.text_title)
         row(valet,
-            button("Remplacer l'accueil SAIC", R.color.accent_action) { confirmReplace() },
-            button("Mode Entretien", R.color.accent_heat) { confirmValet() },
+            button(getString(R.string.st_replace), R.color.accent_action) { confirmReplace() },
+            button(getString(R.string.st_valet), R.color.accent_heat) { confirmValet() },
         )
-        text(valet, "Secours ADB : adb shell pm enable com.saicmotor.launcher/.view.MainActivity", 15f, R.color.text_title)
+        text(valet, getString(R.string.st_adb), 15f, R.color.text_title)
 
         // ── Énergie ──
-        val energy = panel(left, "ÉNERGIE")
+        val energy = panel(left, getString(R.string.title_energy))
         val cap = text(energy, "", 18f, R.color.text_value)
-        fun showCap() { cap.text = String.format(Locale.FRANCE, "Capacité utile de la batterie : %.1f kWh", prefs.batteryKwh) }
+        fun showCap() { cap.text = getString(R.string.st_capacity, String.format(Locale.getDefault(), "%.1f", prefs.batteryKwh)) }
         showCap()
         row(energy,
-            button("− 0,5 kWh") { prefs.batteryKwh = (prefs.batteryKwh - 0.5f).coerceAtLeast(30f); showCap() },
-            button("+ 0,5 kWh") { prefs.batteryKwh = (prefs.batteryKwh + 0.5f).coerceAtMost(80f); showCap() },
+            button("− 0.5 kWh") { prefs.batteryKwh = (prefs.batteryKwh - 0.5f).coerceAtLeast(30f); showCap() },
+            button("+ 0.5 kWh") { prefs.batteryKwh = (prefs.batteryKwh + 0.5f).coerceAtMost(80f); showCap() },
         )
-        text(energy, "Sert à l'estimation kWh/100 (MG4 Standard 51 kWh : environ 49 kWh utiles).", 16f, R.color.text_title)
+        text(energy, getString(R.string.st_capacity_desc), 16f, R.color.text_title)
 
         // ── Météo ──
-        val weather = panel(left, "MÉTÉO")
+        val weather = panel(left, getString(R.string.title_weather))
         val city = text(weather, "", 18f, R.color.text_value)
-        fun showCity() { city.text = "Ville de repli : ${prefs.weatherCity} (si la voiture ne fournit pas de position)" }
+        fun showCity() { city.text = getString(R.string.st_city, prefs.weatherCity) }
         showCity()
-        row(weather, button("Changer de ville") {
+        row(weather, button(getString(R.string.st_change_city)) {
             val idx = (cities.indexOfFirst { it.first == prefs.weatherCity } + 1) % cities.size
             val c = cities[idx]
             prefs.weatherCity = c.first; prefs.weatherLat = c.second; prefs.weatherLon = c.third
@@ -88,28 +87,28 @@ class SettingsActivity : AppCompatActivity() {
         })
 
         // ── Démarrage ──
-        val boot = panel(left, "DÉMARRAGE")
+        val boot = panel(left, getString(R.string.st_startup))
         val warm = text(boot, "", 18f, R.color.text_value)
         fun showWarm() {
-            warm.text = "Ouverture brève du launcher SAIC au démarrage : " + if (prefs.warmUpStock) "OUI" else "NON"
+            warm.text = getString(R.string.st_warm, getString(if (prefs.warmUpStock) R.string.yes else R.string.no))
         }
         showWarm()
-        text(boot, "Permet au service SAIC (sources audio, caméra, commandes de la barre système) d'enregistrer son interface.", 16f, R.color.text_title)
-        row(boot, button("Basculer") { prefs.warmUpStock = !prefs.warmUpStock; showWarm() })
+        text(boot, getString(R.string.st_warm_desc), 16f, R.color.text_title)
+        row(boot, button(getString(R.string.st_toggle)) { prefs.warmUpStock = !prefs.warmUpStock; showWarm() })
 
         // ── Affichage ──
-        val display = panel(left, "AFFICHAGE")
+        val display = panel(left, getString(R.string.st_display))
         val fs = text(display, "", 18f, R.color.text_value)
-        fun showFs() { fs.text = "Plein écran (masque la barre latérale et le bandeau SAIC) : " + if (prefs.fullscreen) "OUI" else "NON" }
+        fun showFs() { fs.text = getString(R.string.st_fullscreen, getString(if (prefs.fullscreen) R.string.yes else R.string.no)) }
         showFs()
-        text(display, "Un glissement depuis le bord gauche ou le haut de l'écran fait réapparaître les barres SAIC.", 16f, R.color.text_title)
-        row(display, button("Basculer") { prefs.fullscreen = !prefs.fullscreen; showFs(); Fullscreen.apply(this) })
+        text(display, getString(R.string.st_fullscreen_desc), 16f, R.color.text_title)
+        row(display, button(getString(R.string.st_toggle)) { prefs.fullscreen = !prefs.fullscreen; showFs(); Fullscreen.apply(this) })
 
         // ── Journal ──
-        val logs = panel(right, "JOURNAL", fill = true)
+        val logs = panel(right, getString(R.string.st_log), fill = true)
         row(logs,
-            button("Actualiser") { refreshLog() },
-            button("Fermer", R.color.accent_action) { finish() },
+            button(getString(R.string.st_refresh)) { refreshLog() },
+            button(getString(R.string.st_close), R.color.accent_action) { finish() },
         )
         logView = TextView(this).apply {
             setTextColor(color(R.color.text_sub)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
@@ -128,43 +127,42 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun confirmReplace() {
         AlertDialog.Builder(this)
-            .setTitle("Remplacer l'accueil SAIC")
-            .setMessage("L'écran d'accueil SAIC sera désactivé et MG4Dash deviendra l'accueil. " +
-                "Le mode Entretien le rétablit à tout moment. Continuer ?")
-            .setPositiveButton("Remplacer") { _, _ ->
+            .setTitle(R.string.st_replace)
+            .setMessage(R.string.st_replace_msg)
+            .setPositiveButton(R.string.st_replace_btn) { _, _ ->
                 val ok = HomeSwitcher.replaceStock(this)
                 Log.i("Valet", "remplacement de l'accueil SAIC → $ok")
                 refreshHome(); toastState(ok)
             }
-            .setNegativeButton("Annuler", null)
+            .setNegativeButton(R.string.cancel, null)
             .show()
     }
 
     private fun confirmValet() {
         AlertDialog.Builder(this)
-            .setTitle("Mode Entretien")
-            .setMessage("Le launcher SAIC d'origine va redevenir l'écran d'accueil par défaut. Continuer ?")
-            .setPositiveButton("Activer") { _, _ ->
+            .setTitle(R.string.st_valet)
+            .setMessage(R.string.st_valet_msg)
+            .setPositiveButton(R.string.activate) { _, _ ->
                 val ok = HomeSwitcher.switchToStock(this)
                 Log.i("Valet", "mode Entretien → $ok")
                 refreshHome(); toastState(ok)
             }
-            .setNegativeButton("Annuler", null)
+            .setNegativeButton(R.string.cancel, null)
             .show()
     }
 
     private fun toastState(ok: Boolean) {
-        android.widget.Toast.makeText(this, if (ok) "Accueil modifié" else "Échec (voir le journal)", android.widget.Toast.LENGTH_SHORT).show()
+        android.widget.Toast.makeText(this, getString(if (ok) R.string.st_home_changed else R.string.st_failed), android.widget.Toast.LENGTH_SHORT).show()
     }
 
     private fun refreshHome() {
         val cur = HomeSwitcher.currentHome(this)
-        homeState.text = "Accueil actuel : " + when (cur) {
-            HomeSwitcher.STOCK -> "launcher SAIC d'origine"
+        homeState.text = getString(R.string.st_current_home, when (cur) {
+            HomeSwitcher.STOCK -> getString(R.string.st_home_stock)
             HomeSwitcher.ours(this) -> "MG4Dash"
-            null -> "aucun par défaut (choix demandé)"
+            null -> getString(R.string.st_home_none)
             else -> cur.flattenToShortString()
-        }
+        })
     }
 
     private fun refreshLog() { logView.text = Log.snapshot().joinToString("\n") }

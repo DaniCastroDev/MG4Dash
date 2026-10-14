@@ -82,7 +82,7 @@ object LocationRepo {
     }
 
     fun cardinal(bearing: Float): String {
-        val dirs = arrayOf("N", "NE", "E", "SE", "S", "SO", "O", "NO")
+        val dirs = app.mg4dash.Tr.s(app.mg4dash.R.string.cardinals).split(",")
         return dirs[(((bearing % 360) + 360 + 22.5f) / 45f).toInt() % 8]
     }
 }

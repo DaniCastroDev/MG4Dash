@@ -98,12 +98,12 @@ class MainActivity : AppCompatActivity() {
 
     private fun renderLocation(loc: Location?, s: VehicleState) {
         b.mapEmpty.visibility = if (loc == null || !mapCard.available) View.VISIBLE else View.GONE
-        if (!mapCard.available) b.mapEmpty.text = "Carte indisponible"
+        if (!mapCard.available) b.mapEmpty.text = getString(R.string.map_unavailable)
         val speed = s.speedKmh?.takeIf { it >= 0f } ?: loc?.takeIf { it.hasSpeed() }?.speed?.times(3.6f)
         b.mapSpeed.text = speed?.let { "${Math.round(it)} km/h" } ?: "— km/h"
         b.mapInfo.text = listOfNotNull(
-            loc?.takeIf { it.hasBearing() }?.let { "Cap ${LocationRepo.cardinal(it.bearing)}" },
-            loc?.takeIf { it.hasAltitude() }?.let { "alt. ${Math.round(it.altitude)} m" },
+            loc?.takeIf { it.hasBearing() }?.let { getString(R.string.heading, LocationRepo.cardinal(it.bearing)) },
+            loc?.takeIf { it.hasAltitude() }?.let { getString(R.string.altitude, Math.round(it.altitude).toInt()) },
         ).joinToString(" · ")
         loc?.let { mapCard.update(it) }
     }
@@ -150,14 +150,14 @@ class MainActivity : AppCompatActivity() {
         b.climPower.setColorFilter(color(if (on) R.color.accent_energy else R.color.text_sub))
         b.temp.text = if (on || s.driverTemp != null) VehicleState.tempLabel(s.driverTemp) else getString(R.string.no_data)
         b.temp.setTextColor(color(if (on) R.color.text_value else R.color.text_disabled))
-        b.climOutside.text = s.outsideTemp?.let { "Ext. ${Math.round(it)}°" } ?: ""
+        b.climOutside.text = s.outsideTemp?.let { getString(R.string.outside_short, Math.round(it)) } ?: ""
         // En mode AUTO, la voiture rapporte une vitesse peu parlante (souvent le maximum) :
         // on affiche « AUTO » et une jauge grisée plutôt qu'un niveau trompeur.
         val auto = on && s.autoOn == true
         b.fanGauge.onColor = color(if (auto) R.color.text_disabled else R.color.accent_cold)
         b.fanGauge.value = if (on && !auto) (s.fanSpeed ?: 0) else 0
         b.fanValue.text = when {
-            !on -> "OFF"
+            !on -> getString(R.string.off)
             auto -> "AUTO"
             else -> s.fanSpeed?.toString() ?: "—"
         }
@@ -166,7 +166,7 @@ class MainActivity : AppCompatActivity() {
         b.chipAuto.isSelected = s.autoOn == true
         b.chipAc.isSelected = s.acOn == true
         b.chipRecirc.isSelected = s.recirc == 0
-        b.chipRecirc.text = when (s.recirc) { 0 -> "RECYCL."; 2 -> "AIR AUTO"; else -> "AIR EXT." }
+        b.chipRecirc.text = when (s.recirc) { 0 -> getString(R.string.chip_recirc); 2 -> getString(R.string.chip_air_auto); else -> getString(R.string.chip_air_ext) }
         b.chipFront.isSelected = s.defrostFront == true
         b.chipRear.isSelected = s.defrostRear == true
         listOf(b.tempDown, b.tempUp, b.fanDown, b.fanUp, b.chipAuto, b.chipAc, b.chipRecirc, b.chipFront, b.chipRear, b.climPower)
@@ -188,7 +188,7 @@ class MainActivity : AppCompatActivity() {
         b.batteryGauge.onColor = color(battColor)
         b.batteryGauge.value = pct?.let { (it + 4) / 5 } ?: 0
         b.range.text = s.rangeKm?.let { "$it km" } ?: "— km"
-        b.consumption.text = avg?.let { String.format(Locale.FRANCE, "%.1f", it) } ?: "—"
+        b.consumption.text = avg?.let { String.format(Locale.getDefault(), "%.1f", it) } ?: "—"
         b.driveMode.text = VehicleState.driveModeLabel(s.driveMode)
         b.kersGauge.value = if (s.onePedal == 1) 4 else VehicleState.regenGauge(s.regenLevel)
         b.kersLabel.text = VehicleState.regenLabel(s.regenLevel, s.onePedal)
@@ -199,7 +199,7 @@ class MainActivity : AppCompatActivity() {
         b.chargeState.text = when {
             !VehicleState.isPlugged(s.chargeStatus) -> ""
             VehicleState.isCharging(s.chargeStatus) && remain != null && remain in 1..2000 ->
-                "En charge · ${remain / 60} h ${String.format(Locale.FRANCE, "%02d", remain % 60)}"
+                getString(R.string.charging_eta, remain / 60, remain % 60)
             else -> VehicleState.chargeStatusLabel(s.chargeStatus)
         }
         b.chargeState.setTextColor(color(if (discharge) R.color.accent_heat else R.color.accent_energy))
@@ -210,9 +210,9 @@ class MainActivity : AppCompatActivity() {
         b.chargeAction.setTextColor(androidx.core.content.ContextCompat.getColorStateList(this, if (discharge) R.color.chip_text_heat else R.color.chip_text))
         b.chargeAction.isSelected = if (discharge) s.dischargeCtrl == 1 else s.chargeCtrl == 1
         b.chargeAction.text = when {
-            discharge -> if (s.dischargeCtrl == 1) "ARRÊTER V2L" else "LANCER V2L"
-            s.chargeCtrl == 1 -> "ARRÊTER"
-            else -> "CHARGER"
+            discharge -> getString(if (s.dischargeCtrl == 1) R.string.v2l_stop else R.string.v2l_start)
+            s.chargeCtrl == 1 -> getString(R.string.stop_btn)
+            else -> getString(R.string.charge_btn)
         }
     }
 
@@ -233,10 +233,10 @@ class MainActivity : AppCompatActivity() {
         b.mediaNext.setOnClickListener { MediaHub.next() }
         b.mediaPrev.setOnClickListener { MediaHub.previous() }
         b.srcRadio.setOnClickListener { Apps.open(this, Apps.RADIO, "Radio") }
-        b.srcMedia.setOnClickListener { Apps.open(this, Apps.MEDIA, "Média") }
+        b.srcMedia.setOnClickListener { Apps.open(this, Apps.MEDIA, "Media") }
         b.mediaInfo.setOnClickListener {
             val owner = MediaHub.ownerComponent()
-            if (owner != null) Apps.open(this, owner, "Lecteur") else Apps.open(this, Apps.RADIO, "Radio")
+            if (owner != null) Apps.open(this, owner, "Media") else Apps.open(this, Apps.RADIO, "Radio")
         }
     }
 
@@ -244,7 +244,7 @@ class MainActivity : AppCompatActivity() {
         if (!m.available) {
             b.mediaSource.text = getString(R.string.title_media)
             b.mediaTitle.text = getString(R.string.no_media)
-            b.mediaArtist.text = "Touchez RADIO ou USB / BT"
+            b.mediaArtist.text = getString(R.string.media_hint)
             b.mediaAlbum.text = ""
         } else {
             b.mediaSource.text = m.source.ifEmpty { getString(R.string.title_media) }
@@ -268,8 +268,8 @@ class MainActivity : AppCompatActivity() {
     private fun renderWeather(w: WeatherRepo.Weather?, s: VehicleState) {
         if (w == null) {
             b.weatherTemp.text = s.outsideTemp?.let { "${Math.round(it)}°" } ?: "—"
-            b.weatherLabel.text = "Prévisions en attente"
-            b.weatherDetails.text = if (s.outsideTemp != null) "Température extérieure du véhicule" else ""
+            b.weatherLabel.text = getString(R.string.weather_pending)
+            b.weatherDetails.text = if (s.outsideTemp != null) getString(R.string.weather_outside_vehicle) else ""
             b.weatherPlace.text = ""
             b.weatherHours.removeAllViews()
             return
@@ -279,7 +279,7 @@ class MainActivity : AppCompatActivity() {
         b.weatherIcon.setColorFilter(color(if (w.code <= 1) R.color.accent_heat else R.color.text_value))
         b.weatherTemp.text = "${w.tempC}°"
         b.weatherLabel.text = WeatherRepo.label(w.code)
-        b.weatherDetails.text = "Ressenti ${w.feelsC}° · Vent ${w.windKmh} km/h · ${w.humidity} %"
+        b.weatherDetails.text = getString(R.string.weather_details, w.feelsC, w.windKmh, w.humidity)
         fillForecast(b.weatherHours, w.hours.map { Triple(it.label, it.code, "${it.tempC}°") })
     }
 
@@ -328,26 +328,26 @@ class MainActivity : AppCompatActivity() {
                 val t = ConsumptionEstimator.trip.value
                 val minutes = ((System.currentTimeMillis() - t.startedAt) / 60_000).toInt()
                 listOf(
-                    "DISTANCE" to "${t.distanceKm} km",
-                    "DURÉE" to (if (minutes >= 60) "${minutes / 60} h ${minutes % 60}" else "$minutes min"),
-                    "CONSO" to (t.kwhPer100?.let { String.format(Locale.FRANCE, "%.1f", it) } ?: "—"),
+                    getString(R.string.trip_distance) to "${t.distanceKm} km",
+                    getString(R.string.trip_duration) to (if (minutes >= 60) "${minutes / 60} h ${minutes % 60}" else "$minutes min"),
+                    getString(R.string.trip_cons) to (t.kwhPer100?.let { String.format(Locale.getDefault(), "%.1f", it) } ?: "—"),
                 )
             }
             1 -> {
                 b.secondaryTitle.text = getString(R.string.title_status)
                 listOf(
-                    "ODOMÈTRE" to (s.odometerKm?.let { String.format(Locale.FRANCE, "%,d km", it) } ?: "—"),
-                    "EXTÉRIEUR" to (s.outsideTemp?.let { "${Math.round(it)}°" } ?: "—"),
-                    "VÉHICULE" to (if (s.connected) "Connecté" else "Hors ligne"),
+                    getString(R.string.status_odometer) to (s.odometerKm?.let { String.format(Locale.getDefault(), "%,d km", it) } ?: "—"),
+                    getString(R.string.status_outside) to (s.outsideTemp?.let { "${Math.round(it)}°" } ?: "—"),
+                    getString(R.string.title_vehicle) to getString(if (s.connected) R.string.status_connected else R.string.status_offline),
                 )
             }
             else -> {
                 b.secondaryTitle.text = getString(R.string.title_weather)
                 val w = WeatherRepo.weather.value
                 listOf(
-                    "MAINTENANT" to (w?.let { "${it.tempC}°" } ?: "—"),
-                    "DEMAIN" to (w?.days?.firstOrNull()?.let { "${it.minC}°/${it.maxC}°" } ?: "—"),
-                    "VENT" to (w?.let { "${it.windKmh} km/h" } ?: "—"),
+                    getString(R.string.w_now) to (w?.let { "${it.tempC}°" } ?: "—"),
+                    getString(R.string.w_tomorrow) to (w?.days?.firstOrNull()?.let { "${it.minC}°/${it.maxC}°" } ?: "—"),
+                    getString(R.string.w_wind) to (w?.let { "${it.windKmh} km/h" } ?: "—"),
                 )
             }
         }

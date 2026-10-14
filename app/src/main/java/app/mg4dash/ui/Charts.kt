@@ -69,7 +69,7 @@ class LineChart @JvmOverloads constructor(context: Context, attrs: AttributeSet?
     override fun onDraw(canvas: Canvas) {
         val left = 34 * d; val top = 6 * d; val bottom = height - 6 * d; val right = width.toFloat()
         if (values.size < 2) {
-            canvas.drawText("Historique en cours de collecte (1 point par km)", width / 2f, height / 2f, empty)
+            canvas.drawText(context.getString(app.mg4dash.R.string.chart_empty), width / 2f, height / 2f, empty)
             return
         }
         val lo = (values.minOrNull()!! - 2f).coerceAtLeast(0f)
@@ -77,7 +77,7 @@ class LineChart @JvmOverloads constructor(context: Context, attrs: AttributeSet?
         fun y(v: Float) = bottom - (v - lo) / (hi - lo) * (bottom - top)
         listOf(lo, (lo + hi) / 2, hi).forEach { v ->
             canvas.drawLine(left, y(v), right, y(v), grid)
-            canvas.drawText(String.format(Locale.FRANCE, "%.0f", v), 0f, y(v) + 4 * d, label)
+            canvas.drawText(String.format(Locale.getDefault(), "%.0f", v), 0f, y(v) + 4 * d, label)
         }
         val step = (right - left) / (values.size - 1)
         val path = Path()
