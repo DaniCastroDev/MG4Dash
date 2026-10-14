@@ -48,6 +48,8 @@ object EnergyLogger {
         "bat_enrg_avg_rate" to 560002081,   // BAT_ELEC_ENRG_AVG_RATE
         "pwr_md" to 356525623,              // PWR_MD
         "ptc_heat" to 557904937,            // DRVNG_PTC_HEAT
+        "side_lights" to 557880099,         // VEH_SIDE_LGHT (feux, constaté sur la voiture)
+        "day_night" to 289442317,           // PMS_SYSTEM_DAY_NIGHT_MODE (3 = feux allumés)
         "headlights" to 289410560,          // HEADLIGHTS_STATE
         "high_beam" to 289410561,           // HIGH_BEAM_LIGHTS_STATE
         "fog" to 289410562,                 // FOG_LIGHTS_STATE

@@ -178,9 +178,11 @@ object EnergyMonitor {
     /** Équipements électriques visibles : feux, essuie-glaces. "off" = rien d'allumé. */
     private fun accessoryKey(s: VehicleState): String {
         val parts = buildList {
-            if (CarProps.readAny(289410560).let { it == "1" || it == "2" || it == "true" }) add("lights")
-            if (CarProps.readAny(289410561).let { it == "1" || it == "2" || it == "true" }) add("high")
-            if (CarProps.readAny(289410562).let { it == "1" || it == "2" || it == "true" }) add("fog")
+            // Feux : VEH_SIDE_LGHT (0 = éteints), sinon mode jour / nuit du système (3 = feux allumés),
+            // relevés sur la voiture le 2026-10-14 ; HEADLIGHTS_STATE n'existe pas sur ce modèle.
+            val side = CarProps.readAny(557880099)
+            val night = CarProps.readAny(289442317)
+            if (side.isNotEmpty() && side != "0" && side != "false" || side.isEmpty() && night == "3") add("lights")
             if (CarProps.readAny(557897511).let { it.isNotEmpty() && it != "0" }) add("wiper")
             if (s.defrostRear == true && s.hvacOn != true) add("rear")
         }
