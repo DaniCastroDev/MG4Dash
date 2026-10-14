@@ -57,6 +57,8 @@ class SimpleHome(private val a: AppCompatActivity) {
     private lateinit var mediaArtist: TextView
     private lateinit var mediaArt: ImageView
     private lateinit var mediaPlay: ImageButton
+    private lateinit var srcRadio: TextView
+    private lateinit var srcMedia: TextView
 
     private lateinit var weatherIcon: ImageView
     private lateinit var weatherTemp: TextView
@@ -161,14 +163,21 @@ class SimpleHome(private val a: AppCompatActivity) {
     private fun buildMedia(): LinearLayout {
         val p = kit.panel()
         mediaSource = title(a.getString(R.string.title_media))
-        p.addView(mediaSource, kit.lp(-1, kit.dp(40)))
+        // Puces de source : elles basculent la source affichée (sans ouvrir l'appli)
+        val head = kit.row()
+        head.addView(mediaSource, kit.lp(0, -2, 1f))
+        srcRadio = kit.toggleTile(a.getString(R.string.src_radio)) { MediaHub.select("com.saicmotor.radio") }.apply { textSize = 18f }
+        srcMedia = kit.toggleTile(a.getString(R.string.src_media)) { MediaHub.selectUsbBt() }.apply { textSize = 18f }
+        head.addView(srcRadio, kit.lp(kit.dp(110), kit.dp(48)))
+        head.addView(srcMedia, kit.lp(kit.dp(130), kit.dp(48), l = 8))
+        p.addView(head, kit.lp(-1, kit.dp(52)))
 
         val info = kit.row().apply { isClickable = true; isFocusable = true }
         val frame = RoundedFrame(a)
         mediaArt = ImageView(a).apply { scaleType = ImageView.ScaleType.CENTER_CROP }
         frame.setBackgroundResource(R.drawable.bg_art)
         frame.addView(mediaArt, android.widget.FrameLayout.LayoutParams(-1, -1))
-        info.addView(frame, kit.lp(kit.dp(236), kit.dp(236)))
+        info.addView(frame, kit.lp(kit.dp(220), kit.dp(220)))
         val texts = kit.column()
         mediaTitle = big("", 34f).apply { maxLines = 3; ellipsize = android.text.TextUtils.TruncateAt.END }
         mediaArtist = kit.text("", 26f, R.color.text_sub).apply { maxLines = 2; ellipsize = android.text.TextUtils.TruncateAt.END }
@@ -341,6 +350,8 @@ class SimpleHome(private val a: AppCompatActivity) {
             mediaTitle.text = m.title.ifEmpty { m.source }
             mediaArtist.text = listOf(m.artist, m.album).filter { it.isNotBlank() }.joinToString(" · ")
         }
+        srcRadio.isSelected = m.packageName == "com.saicmotor.radio"
+        srcMedia.isSelected = m.packageName == "com.saicmotor.media" || m.packageName == "com.android.bluetooth"
         mediaArt.setImageBitmap(m.art)
         mediaPlay.setImageResource(if (m.playing) R.drawable.ic_pause else R.drawable.ic_play)
         mediaPlay.isEnabled = m.available

@@ -13,7 +13,7 @@ Climate (temperature, fan, AUTO, A/C, recirculation, defrost), energy (battery, 
 Long press the Android Auto button in the dock to replace it with the app of your choice.
 
 ### Simple home layout
-![Simple home](docs/screenshots/home_simple.png?v=1)
+![Simple home](docs/screenshots/home_simple.png?v=2)
 An alternative, calmer home screen for those who want fewer buttons and bigger text: three large panels (climate, battery, media), two configurable shortcuts and today's weather, with a reduced dock (Home, Phone, Android Auto, Settings). Choose it in the launcher settings, under "Home layout"; tap a panel to open the matching page.
 
 ### Shortcuts and Home Assistant
