@@ -2,11 +2,19 @@
 
 Launcher plein écran pour MG4 Standard (firmware SWI69, famille A9), dalle 1920 × 720 : style « dark glass », accueil en 3 colonnes et pages Clim, Énergie et Véhicule reliées par un dock commun.
 
+Langues : anglais (par défaut), français, allemand, espagnol, italien et néerlandais, selon la langue de la voiture.
+
 > Captures rendues sur PC avec des données simulées (la carte OpenStreetMap ne s'affiche que sur la voiture).
 
 ### Accueil
 ![Accueil](docs/screenshots/home.png)
-Clim (température, ventilation, AUTO, A/C, recyclage, dégivrage), énergie (batterie, autonomie, conso estimée, mode, KERS, bouton Charger / Lancer V2L), position du véhicule, météo Open-Meteo, lecteur média (radio DAB, Bluetooth, USB, Android Auto) et widget trajet / statut / météo.
+Clim (température, ventilation, AUTO, A/C, recyclage, dégivrage), énergie (batterie, autonomie, conso estimée, mode, KERS, bouton Charger / Lancer V2L), position du véhicule, météo Open-Meteo, lecteur média qui suit la source audio active de la voiture (radio DAB/FM, Bluetooth, USB, Android Auto) et widget trajet / statut / météo.
+
+Appui long sur le bouton Android Auto du dock : le remplacer par l'appli de son choix.
+
+### Raccourcis et Home Assistant
+![Raccourcis](docs/screenshots/home_shortcuts.png)
+Le bouton en haut à droite de la carte la remplace par 2 pages de 4 × 2 raccourcis : applis ou actions Home Assistant (scripts, automatisations, scènes, boutons, portail, porte de garage…). Toucher une case vide ou appui long pour la modifier. Adresse et jeton Home Assistant dans les paramètres du launcher.
 
 ### Climatisation
 ![Climatisation](docs/screenshots/climate.png)
@@ -22,7 +30,7 @@ Mode de conduite, KERS, aides à la conduite et état du véhicule en lecture se
 
 ### Paramètres du launcher
 ![Paramètres](docs/screenshots/settings.png)
-Écran d'accueil (remplacer l'accueil SAIC / mode Entretien), capacité batterie, ville météo, plein écran et journal intégré.
+Écran d'accueil (remplacer l'accueil SAIC / mode Entretien), capacité batterie, ville météo, démarrage, plein écran, Home Assistant et journal intégré.
 
 ## Arborescence
 

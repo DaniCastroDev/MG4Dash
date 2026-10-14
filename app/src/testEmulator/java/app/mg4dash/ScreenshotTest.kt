@@ -32,6 +32,20 @@ class ScreenshotTest {
     @Test fun energy() = shoot(app.mg4dash.pages.EnergyActivity::class.java, "energy.png")
     @Test fun settings() = shoot(SettingsActivity::class.java, "settings.png")
 
+    @Test fun homeShortcuts() {
+        val app = org.robolectric.RuntimeEnvironment.getApplication()
+        app.getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
+            .putInt("home_widget", 1)
+            .putString("sc_0", "ha|cover.gate|Gate")
+            .putString("sc_1", "ha|cover.garage_door|Garage")
+            .putString("sc_2", "ha|script.driveway_lights|Driveway")
+            .putString("sc_3", "ha|scene.arriving_home|Arriving")
+            .putString("sc_4", "ha|switch.heating|Heating")
+            .putString("sc_5", "ha|automation.alarm|Alarm")
+            .apply()
+        shoot(MainActivity::class.java, "home_shortcuts.png")
+    }
+
     @Test @Config(qualifiers = "fr-w1920dp-h720dp-land-mdpi")
     fun homeShortcutsFr() {
         val app = org.robolectric.RuntimeEnvironment.getApplication()
