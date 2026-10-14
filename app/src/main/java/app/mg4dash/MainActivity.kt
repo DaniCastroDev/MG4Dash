@@ -233,8 +233,9 @@ class MainActivity : AppCompatActivity() {
         b.mediaPlay.setOnClickListener { MediaHub.playPause() }
         b.mediaNext.setOnClickListener { MediaHub.next() }
         b.mediaPrev.setOnClickListener { MediaHub.previous() }
-        b.srcRadio.setOnClickListener { Apps.open(this, Apps.RADIO, "Radio") }
-        b.srcMedia.setOnClickListener { Apps.open(this, Apps.MEDIA, "Media") }
+        // Les puces basculent la source affichée ; l'appli ne s'ouvre qu'en touchant la pochette / les infos.
+        b.srcRadio.setOnClickListener { MediaHub.select("com.saicmotor.radio") }
+        b.srcMedia.setOnClickListener { MediaHub.selectUsbBt() }
         b.mediaInfo.setOnClickListener {
             val owner = MediaHub.ownerComponent()
             if (owner != null) Apps.open(this, owner, "Media") else Apps.open(this, Apps.RADIO, "Radio")

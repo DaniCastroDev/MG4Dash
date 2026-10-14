@@ -81,6 +81,22 @@ object MediaHub {
      * c'est elle qui décide du lecteur affiché, la radio restant « en lecture » même muette.
      */
     @Volatile private var sourcePkg: String? = null
+
+    /** Source choisie à la main sur la carte (puces RADIO / USB-BT), jusqu'à ce que la voiture change de source. */
+    @Volatile private var pinnedPkg: String? = null
+
+    /** Affiche la source donnée sans ouvrir son appli. */
+    fun select(pkg: String) {
+        if (BuildConfig.MOCK) return
+        pinnedPkg = pkg
+        main.post { reevaluate() }
+    }
+
+    /** Puce USB / BT : bascule entre le Bluetooth et l'USB, en partant de ce qui est affiché. */
+    fun selectUsbBt() {
+        val bt = "com.android.bluetooth"; val usb = "com.saicmotor.media"
+        select(if (current?.packageName == bt) usb else bt)
+    }
     private const val AA_MBS = "com.allgo.remoteui.mediabrowserservice"
 
     private fun sourceFromCarType(t: Int): String? = when (t) {
@@ -116,7 +132,7 @@ object MediaHub {
                             else -> pkg
                         }
                         Log.i(TAG, "source audio : $pkg ($type) → $src")
-                        main.post { sourcePkg = src; reevaluate() }
+                        main.post { sourcePkg = src; pinnedPkg = null; reevaluate() }
                         null
                     }
                     "hashCode" -> System.identityHashCode(proxy)
@@ -174,10 +190,12 @@ object MediaHub {
             if (watched.add(c.sessionToken)) c.registerCallback(callback, main)
         }
         val playing = candidates.firstOrNull { it.playbackState?.state == PlaybackState.STATE_PLAYING }
+        val pinned = pinnedPkg?.let { browserControllers[it] }
         val fromSource = sourcePkg?.let { src ->
             browserControllers[src] ?: candidates.firstOrNull { it.packageName == src }
         }
-        val chosen = fromSource
+        val chosen = pinned
+            ?: fromSource
             ?: playing
             ?: current?.takeIf { cur -> candidates.any { it.sessionToken == cur.sessionToken } }
             ?: active.firstOrNull()
