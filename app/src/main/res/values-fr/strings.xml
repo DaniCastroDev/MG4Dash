@@ -268,6 +268,7 @@
     <string name="st_style_full">Complet</string>
     <string name="st_style_simple">Épuré</string>
     <string name="st_style_desc">Épuré : trois grands volets (climatisation, batterie, multimédia), deux raccourcis et la météo du jour. Le changement s\'applique au retour sur l\'accueil.</string>
+    <string name="en_heating">RÉCHAUFFAGE BATTERIE</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Téléphone connecté · Appuyer pour ouvrir</string>
     <string name="aa_waiting">Branchez votre téléphone en USB</string>

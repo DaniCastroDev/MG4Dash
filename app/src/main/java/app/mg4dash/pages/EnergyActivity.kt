@@ -44,6 +44,7 @@ class EnergyActivity : PageActivity() {
     private lateinit var setLimit: (Int?) -> Unit
     private lateinit var setCurrent: (Int?) -> Unit
     private lateinit var enforce: TextView
+    private lateinit var heating: TextView
     // Programmation
     private lateinit var schedule: TextView
     private lateinit var finish: TextView
@@ -73,6 +74,13 @@ class EnergyActivity : PageActivity() {
             setBackgroundResource(R.drawable.bg_button)
             setOnClickListener { Apps.open(this@EnergyActivity, Apps.ENERGY, "SAIC") }
         })
+        // Réchauffage de la batterie en roulant (même réglage que l'appli Énergie SAIC)
+        heating = kit.toggleTile(getString(R.string.en_heating), heat = true) {
+            val on = heating.isSelected
+            CarProps.setInt(CarProps.DRVNG_PTC_HEAT, if (on) 2 else 1, "réchauffage batterie")
+            heating.postDelayed({ refreshProps() }, 1500)
+        }.apply { textSize = 18f; setPadding(kit.dp(20), 0, kit.dp(20), 0) }
+        header.addView(heating, header.childCount - 1, kit.lp(-2, kit.dp(52), r = 12))   // avant le lien SAIC
 
         // ── Colonne 1 : recharge ──
         val c1 = kit.panel(getString(R.string.en_charging))
@@ -187,7 +195,7 @@ class EnergyActivity : PageActivity() {
 
     private data class Props(
         val target: Int?, val current: Int?, val reser: Int?, val st: Pair<Int?, Int?>, val sp: Pair<Int?, Int?>,
-        val v2l: Int?, val volt: Float?, val amp: Float?, val cons: FloatArray,
+        val v2l: Int?, val volt: Float?, val amp: Float?, val cons: FloatArray, val heat: Int? = null,
     )
 
     private fun refreshProps() {
@@ -208,6 +216,7 @@ class EnergyActivity : PageActivity() {
                         f(if (chrg) CarProps.CONS_ACCRY_AFT_CHRG else CarProps.CONS_ACCRY_AFT_ST, if (chrg) CarProps.OLD_ACC_AFT_CHRG else CarProps.OLD_ACC_AFT_ST) ?: -1f,
                         f(if (chrg) CarProps.CONS_RGEN_AFT_CHRG else CarProps.CONS_RGEN_AFT_ST, if (chrg) CarProps.OLD_RGEN_AFT_CHRG else CarProps.OLD_RGEN_AFT_ST) ?: -1f,
                     ),
+                    CarProps.getInt(CarProps.DRVNG_PTC_HEAT),
                 )
             }
             renderProps(p)
@@ -216,6 +225,8 @@ class EnergyActivity : PageActivity() {
 
     private fun renderProps(p: Props) {
         reser = p.reser
+        heating.isSelected = p.heat == 1
+        heating.isEnabled = p.heat != null
         val carLimit = CarProps.targetSocPercent(p.target)
         renderLimit(carLimit)
         setCurrent(p.current?.minus(1))

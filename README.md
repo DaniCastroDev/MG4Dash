@@ -25,8 +25,8 @@ The button at the top right of the map swaps it for 2 pages of 4 × 2 shortcuts:
 Temperature in 1° steps (LO → HI), fan speed, combinable air direction, AUTO, A/C, ECO, recirculation and front / rear defrost.
 
 ### Energy
-![Energy](docs/screenshots/energy.png?v=2)
-Charging (start / stop, charge limit enforced by MG4Dash, AC current), scheduled charging, V2L (stop threshold, start / stop) and consumption (driving, climate, accessories, regeneration, curve of the last kilometres).
+![Energy](docs/screenshots/energy.png?v=3)
+Charging (start / stop, charge limit enforced by MG4Dash, AC current), scheduled charging, V2L (stop threshold, start / stop), battery heating while driving (same switch as the stock Energy app) and consumption (driving, climate, accessories, regeneration, curve of the last kilometres).
 
 ### Vehicle
 ![Vehicle](docs/screenshots/vehicle.png?v=2)
