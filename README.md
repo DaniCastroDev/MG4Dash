@@ -7,33 +7,33 @@ Languages: English (default), French, German, Spanish, Italian and Dutch, follow
 > Screenshots are rendered on a PC with simulated data (the OpenStreetMap map only shows on the car).
 
 ### Home
-![Home](docs/screenshots/home.png)
+![Home](docs/screenshots/home.png?v=2)
 Climate (temperature, fan, AUTO, A/C, recirculation, defrost), energy (battery, range, estimated consumption, drive mode, KERS, Charge / Start V2L button), vehicle position, Open-Meteo weather, a media card that follows the car's active audio source (DAB/FM radio, Bluetooth, USB, Android Auto) and a trip / status / weather widget.
 
 Long press the Android Auto button in the dock to replace it with the app of your choice.
 
 ### Shortcuts and Home Assistant
-![Shortcuts](docs/screenshots/home_shortcuts.png)
+![Shortcuts](docs/screenshots/home_shortcuts.png?v=2)
 The button at the top right of the map swaps it for 2 pages of 4 × 2 shortcuts: apps or Home Assistant actions (scripts, automations, scenes, buttons, gate, garage door…). Tap an empty slot, or long press any slot, to change it. The Home Assistant address and token are set in the launcher settings.
 
 ### Climate
-![Climate](docs/screenshots/climate.png)
+![Climate](docs/screenshots/climate.png?v=2)
 Temperature in 1° steps (LO → HI), fan speed, combinable air direction, AUTO, A/C, ECO, recirculation and front / rear defrost.
 
 ### Energy
-![Energy](docs/screenshots/energy.png)
+![Energy](docs/screenshots/energy.png?v=2)
 Charging (start / stop, charge limit enforced by MG4Dash, AC current), scheduled charging, V2L (stop threshold, start / stop) and consumption (driving, climate, accessories, regeneration, curve of the last kilometres).
 
 ### Vehicle
-![Vehicle](docs/screenshots/vehicle.png)
+![Vehicle](docs/screenshots/vehicle.png?v=2)
 Drive mode, KERS, driver assistance and vehicle status, read only, with a shortcut to MG4 Control.
 
 ### Phone
-![Phone](docs/screenshots/phone.png)
+![Phone](docs/screenshots/phone.png?v=2)
 Recent calls, contacts with a search field and a keypad, from the phone connected over Bluetooth. Calls go through the hands-free (HFP) account, like the stock phone app, whose in-call screen is kept.
 
 ### Launcher settings
-![Settings](docs/screenshots/settings.png)
+![Settings](docs/screenshots/settings.png?v=2)
 Home screen (replace the SAIC home / maintenance mode), battery capacity, weather city, startup, full screen, energy data recorder, Home Assistant and a built-in log.
 
 ## Project layout
