@@ -72,5 +72,10 @@ class Prefs(context: Context) {
         get() = sp.getString("ha_token", "") ?: ""
         set(v) = sp.edit().putString("ha_token", v.trim()).apply()
 
+    /** Enregistreur de données énergie (diagnostic, fichier CSV). */
+    var energyLog: Boolean
+        get() = sp.getBoolean("energy_log", true)
+        set(v) = sp.edit().putBoolean("energy_log", v).apply()
+
     val raw: SharedPreferences get() = sp
 }

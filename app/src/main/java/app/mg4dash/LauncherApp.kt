@@ -19,6 +19,7 @@ class LauncherApp : Application() {
         app.mg4dash.car.CarProps.start(this)
         app.mg4dash.energy.ChargeGuard.start(this)
         ConsumptionEstimator.start(this)
+        app.mg4dash.energy.EnergyLogger.start(this)
         MediaHub.start(this)
         app.mg4dash.map.LocationRepo.start(this)
         WeatherRepo.start(this)

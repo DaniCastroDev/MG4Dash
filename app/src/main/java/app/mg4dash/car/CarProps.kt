@@ -101,6 +101,30 @@ object CarProps {
         } catch (_: Throwable) { null }
     }
 
+    /**
+     * Lecture « quel que soit le type » pour l'enregistreur : essaie entier, réel puis booléen,
+     * sur la zone globale puis sur les zones habituelles (siège conducteur, rangée 1…).
+     */
+    private val areaCache = java.util.concurrent.ConcurrentHashMap<Int, Int>()
+
+    fun readAny(id: Int): String {
+        if (BuildConfig.MOCK) return mock[id]?.toString() ?: ""
+        val m = cpm ?: return ""
+        val type = id and 0x00FF0000
+        val areas = areaCache[id]?.let { intArrayOf(it) } ?: intArrayOf(0, 1, 4, 0x10, 0x40, 0x100)
+        for (area in areas) {
+            try {
+                val v = when (type) {
+                    0x00200000 -> m.javaClass.getMethod("getBooleanProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType).invoke(m, id, area)
+                    0x00600000 -> m.javaClass.getMethod("getFloatProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType).invoke(m, id, area)
+                    else -> m.javaClass.getMethod("getIntProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType).invoke(m, id, area)
+                }
+                if (v != null) { areaCache[id] = area; return v.toString() }
+            } catch (_: Throwable) { }
+        }
+        return ""
+    }
+
     /** Écriture entière ; relue ensuite par l'appelant pour confirmer. */
     fun setInt(id: Int, value: Int, label: String): Boolean {
         if (BuildConfig.MOCK) { mock[id] = value; return true }

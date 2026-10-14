@@ -203,8 +203,8 @@ class EnergyActivity : PageActivity() {
                     CarProps.getFloat(CarProps.BMS_PACK_VOL), CarProps.getFloat(CarProps.BMS_PACK_CRNT),
                     floatArrayOf(
                         f(if (chrg) CarProps.CONS_TOTAL_AFT_CHRG else CarProps.CONS_TOTAL_AFT_ST, if (chrg) CarProps.OLD_TOTAL_AFT_CHRG else CarProps.OLD_TOTAL_AFT_ST) ?: -1f,
-                        f(if (chrg) CarProps.CONS_ATC_AFT_CHRG else CarProps.CONS_ATC_AFT_ST, if (chrg) CarProps.OLD_ACC_AFT_CHRG else CarProps.OLD_ACC_AFT_ST) ?: -1f,
-                        f(if (chrg) CarProps.CONS_ACCRY_AFT_CHRG else CarProps.CONS_ACCRY_AFT_ST, null) ?: -1f,
+                        f(if (chrg) CarProps.CONS_ATC_AFT_CHRG else CarProps.CONS_ATC_AFT_ST, null) ?: -1f,
+                        f(if (chrg) CarProps.CONS_ACCRY_AFT_CHRG else CarProps.CONS_ACCRY_AFT_ST, if (chrg) CarProps.OLD_ACC_AFT_CHRG else CarProps.OLD_ACC_AFT_ST) ?: -1f,
                         f(if (chrg) CarProps.CONS_RGEN_AFT_CHRG else CarProps.CONS_RGEN_AFT_ST, if (chrg) CarProps.OLD_RGEN_AFT_CHRG else CarProps.OLD_RGEN_AFT_ST) ?: -1f,
                     ),
                 )

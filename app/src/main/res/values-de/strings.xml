@@ -246,6 +246,9 @@
     <string name="st_ha_set_token">Token</string>
     <string name="st_ha_test">Testen</string>
     <string name="st_ha_ok">Home Assistant verbunden</string>
+    <string name="st_diag">DIAGNOSE</string>
+    <string name="st_energy_log">Energiedaten-Rekorder: %1$s</string>
+    <string name="st_energy_log_desc">Schreibt alle 5 s Batterieleistung, Verbrauchszähler und Gerätezustände in Android/data/app.mg4dash/files/energy_log.csv (nur lesen, nichts wird an das Auto gesendet).</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefon verbunden · Zum Öffnen tippen</string>
     <string name="aa_waiting">Telefon per USB verbinden</string>

@@ -104,6 +104,14 @@ class SettingsActivity : AppCompatActivity() {
         text(display, getString(R.string.st_fullscreen_desc), 16f, R.color.text_title)
         row(display, button(getString(R.string.st_toggle)) { prefs.fullscreen = !prefs.fullscreen; showFs(); Fullscreen.apply(this) })
 
+        // ── Diagnostic énergie ──
+        val diag = panel(left, getString(R.string.st_diag))
+        val logState = text(diag, "", 18f, R.color.text_value)
+        fun showLog() { logState.text = getString(R.string.st_energy_log, getString(if (prefs.energyLog) R.string.yes else R.string.no)) }
+        showLog()
+        text(diag, getString(R.string.st_energy_log_desc), 16f, R.color.text_title)
+        row(diag, button(getString(R.string.st_toggle)) { prefs.energyLog = !prefs.energyLog; showLog() })
+
         // ── Home Assistant ──
         val ha = panel(left, "HOME ASSISTANT")
         val haState = text(ha, "", 18f, R.color.text_value)
