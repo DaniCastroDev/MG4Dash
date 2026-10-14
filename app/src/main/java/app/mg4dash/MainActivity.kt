@@ -98,7 +98,7 @@ class MainActivity : AppCompatActivity() {
     // ── Carte ────────────────────────────────────────────────────────────────
 
     private fun renderLocation(loc: Location?, s: VehicleState) {
-        b.mapEmpty.visibility = if (loc == null || !mapCard.available) View.VISIBLE else View.GONE
+        b.mapEmpty.visibility = if (prefs.homeWidget != 1 && (loc == null || !mapCard.available)) View.VISIBLE else View.GONE
         if (!mapCard.available) b.mapEmpty.text = getString(R.string.map_unavailable)
         val speed = s.speedKmh?.takeIf { it >= 0f } ?: loc?.takeIf { it.hasSpeed() }?.speed?.times(3.6f)
         b.mapSpeed.text = speed?.let { "${Math.round(it)} km/h" } ?: "— km/h"
@@ -330,7 +330,14 @@ class MainActivity : AppCompatActivity() {
 
     private fun applyHomeWidget() {
         val shortcuts = prefs.homeWidget == 1
-        b.shortcutsHolder.visibility = if (shortcuts) View.VISIBLE else View.GONE
+        // La carte et ses commandes disparaissent derrière les raccourcis (et inversement).
+        for (i in 0 until b.mapCard.childCount) {
+            val v = b.mapCard.getChildAt(i)
+            if (v === b.widgetToggle) continue
+            if (v === b.shortcutsHolder) v.visibility = if (shortcuts) View.VISIBLE else View.GONE
+            else v.visibility = if (shortcuts) View.INVISIBLE else View.VISIBLE
+        }
+        if (!shortcuts) renderLocation(LocationRepo.location.value, CarBridge.state.value)
         b.widgetToggle.setImageResource(if (shortcuts) R.drawable.ic_map else R.drawable.ic_apps)
         if (shortcuts) renderShortcuts()
     }

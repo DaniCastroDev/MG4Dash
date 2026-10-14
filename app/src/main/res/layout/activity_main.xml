@@ -455,6 +455,8 @@
                     style="@style/Panel"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
+                    android:background="@null"
+                    android:elevation="0dp"
                     android:orientation="vertical"
                     android:visibility="gone" />
 
