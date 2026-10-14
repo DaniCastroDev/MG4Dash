@@ -28,14 +28,14 @@ import java.net.URL
 import kotlin.concurrent.thread
 
 /**
- * Raccourcis de l'accueil : 2 pages de 4 × 2 cases, chacune vide, une appli ou une action
+ * Raccourcis de l'accueil : 4 × 2 cases, chacune vide, une appli ou une action
  * Home Assistant. Toucher = lancer ; appui long = modifier.
  * Stockage : "sc_<n>" = "app|<composant>" ou "ha|<entity_id>|<libellé>".
  */
 object Shortcuts {
     const val COLS = 4
     const val ROWS = 2
-    const val PAGES = 2
+    const val PAGES = 1
     private const val TAG = "Raccourcis"
     private val main = Handler(Looper.getMainLooper())
 
@@ -85,18 +85,6 @@ object Shortcuts {
             grid.addView(row, kit.lp(-1, 0, 1f, t = if (r > 0) 10 else 0))
         }
         holder.addView(grid, kit.lp(-1, 0, 1f, t = 4))
-        // Points de page : toucher pour changer
-        val dots = kit.row().apply { gravity = Gravity.CENTER }
-        for (p in 0 until PAGES) {
-            dots.addView(TextView(activity).apply {
-                text = if (p == page) "●" else "○"
-                setTextColor(kit.color(if (p == page) R.color.accent_action else R.color.text_sub))
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
-                setPadding(kit.dp(14), kit.dp(4), kit.dp(14), 0)
-                setOnClickListener { onPage(p) }
-            })
-        }
-        holder.addView(dots, kit.lp(-1, -2))
     }
 
     private fun cell(activity: Activity, kit: Kit, prefs: Prefs, i: Int, refresh: () -> Unit): View {

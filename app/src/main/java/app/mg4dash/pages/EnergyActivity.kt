@@ -9,6 +9,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import app.mg4dash.R
 import app.mg4dash.car.CarBridge
 import app.mg4dash.car.CarProps
+import app.mg4dash.energy.EnergyMonitor
 import app.mg4dash.car.VehicleState
 import app.mg4dash.energy.ChargeGuard
 import app.mg4dash.system.Apps
@@ -239,7 +240,9 @@ class EnergyActivity : PageActivity() {
             s.chargeRemainMin?.takeIf { VehicleState.isCharging(s.chargeStatus) && it in 1..2000 }
                 ?.let { getString(R.string.en_ends_in, it / 60, it % 60) },
         ).joinToString(" · ")
-        renderConsumption(p.cons)
+        // Compteurs SAIC à zéro sur la voiture : consommation mesurée par MG4Dash (EnergyMonitor)
+        val t = if (period == 0) EnergyMonitor.sinceCharge.value else EnergyMonitor.sinceStart.value
+        renderConsumption(if (t.outKwh > 0f) floatArrayOf(t.outKwh, t.climKwh, t.accKwh, t.regenKwh) else p.cons)
     }
 
     private fun renderLimit(carLimit: Int? = null) {

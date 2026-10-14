@@ -18,6 +18,7 @@ class LauncherApp : Application() {
         CarBridge.start(this)
         app.mg4dash.car.CarProps.start(this)
         app.mg4dash.energy.ChargeGuard.start(this)
+        app.mg4dash.energy.EnergyMonitor.start(this)
         ConsumptionEstimator.start(this)
         app.mg4dash.energy.EnergyLogger.start(this)
         MediaHub.start(this)

@@ -63,7 +63,8 @@ object ConsumptionEstimator {
                     sp.edit().putInt("ref_km", km).putInt("ref_soc", soc).apply()
                 }
                 if (soc != lastSoc) sp.edit().putInt("last_soc", soc).apply()
-                _average.value = estimate(km - refKm, refSoc - soc, capacity)
+                // Mesure par puissance batterie si disponible, sinon estimation par le % batterie
+                _average.value = EnergyMonitor.sinceCharge.value.per100 ?: estimate(km - refKm, refSoc - soc, capacity)
 
                 // Trajet en cours
                 if (tripStartKm == null) { tripStartKm = km; tripStartSoc = soc }
@@ -71,7 +72,7 @@ object ConsumptionEstimator {
                 val d = km - (tripStartKm ?: km)
                 _trip.value = _trip.value.copy(
                     distanceKm = d,
-                    kwhPer100 = estimate(d, (tripStartSoc ?: soc) - soc, capacity),
+                    kwhPer100 = EnergyMonitor.sinceStart.value.per100 ?: estimate(d, (tripStartSoc ?: soc) - soc, capacity),
                 )
             }
         }
