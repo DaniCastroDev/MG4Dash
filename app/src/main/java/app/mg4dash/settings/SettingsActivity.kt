@@ -104,6 +104,19 @@ class SettingsActivity : AppCompatActivity() {
         text(display, getString(R.string.st_fullscreen_desc), 16f, R.color.text_title)
         row(display, button(getString(R.string.st_toggle)) { prefs.fullscreen = !prefs.fullscreen; showFs(); Fullscreen.apply(this) })
 
+        // ── Style de l'accueil ──
+        val style = panel(left, getString(R.string.st_style))
+        val styleState = text(style, "", 18f, R.color.text_value)
+        fun showStyle() {
+            styleState.text = getString(R.string.st_style_now, getString(if (prefs.homeStyle == 1) R.string.st_style_simple else R.string.st_style_full))
+        }
+        showStyle()
+        text(style, getString(R.string.st_style_desc), 16f, R.color.text_title)
+        row(style,
+            button(getString(R.string.st_style_full), if (prefs.homeStyle == 0) R.color.accent_action else R.color.text_value) { prefs.homeStyle = 0; showStyle() },
+            button(getString(R.string.st_style_simple), if (prefs.homeStyle == 1) R.color.accent_action else R.color.text_value) { prefs.homeStyle = 1; showStyle() },
+        )
+
         // ── Diagnostic énergie ──
         val diag = panel(left, getString(R.string.st_diag))
         val logState = text(diag, "", 18f, R.color.text_value)

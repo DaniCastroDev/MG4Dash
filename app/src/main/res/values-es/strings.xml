@@ -262,6 +262,12 @@
     <string name="ph_no_calls">Sin llamadas recientes (permita el acceso al historial en el teléfono).</string>
     <string name="ph_no_contacts">Sin contactos (permita compartir contactos en el teléfono).</string>
     <string name="ph_call_failed">Error en la llamada</string>
+    <string name="title_battery">BATERÍA</string>
+    <string name="st_style">ESTILO DE INICIO</string>
+    <string name="st_style_now">Estilo actual: %1$s</string>
+    <string name="st_style_full">Completo</string>
+    <string name="st_style_simple">Sencillo</string>
+    <string name="st_style_desc">Sencillo: tres paneles grandes (clima, batería, multimedia), dos accesos y el tiempo de hoy. El cambio se aplica al volver al inicio.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Teléfono conectado · Pulse para abrir</string>
     <string name="aa_waiting">Conecte su teléfono por USB</string>

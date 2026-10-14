@@ -262,6 +262,12 @@
     <string name="ph_no_calls">Keine letzten Anrufe (Zugriff auf die Anrufliste am Telefon erlauben).</string>
     <string name="ph_no_contacts">Keine Kontakte (Kontaktfreigabe am Telefon erlauben).</string>
     <string name="ph_call_failed">Anruf fehlgeschlagen</string>
+    <string name="title_battery">BATTERIE</string>
+    <string name="st_style">STARTSEITENSTIL</string>
+    <string name="st_style_now">Aktueller Stil: %1$s</string>
+    <string name="st_style_full">Vollständig</string>
+    <string name="st_style_simple">Schlicht</string>
+    <string name="st_style_desc">Schlicht: drei große Felder (Klima, Batterie, Medien), zwei Verknüpfungen und das heutige Wetter. Die Änderung gilt beim Zurückkehren zur Startseite.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefon verbunden · Zum Öffnen tippen</string>
     <string name="aa_waiting">Telefon per USB verbinden</string>

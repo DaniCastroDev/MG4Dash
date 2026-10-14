@@ -77,5 +77,10 @@ class Prefs(context: Context) {
         get() = sp.getBoolean("energy_log", true)
         set(v) = sp.edit().putBoolean("energy_log", v).apply()
 
+    /** Style de l'accueil : 0 = complet (3 colonnes), 1 = épuré (3 volets + 2 raccourcis + météo). */
+    var homeStyle: Int
+        get() = sp.getInt("home_style", 0)
+        set(v) = sp.edit().putInt("home_style", v).apply()
+
     val raw: SharedPreferences get() = sp
 }

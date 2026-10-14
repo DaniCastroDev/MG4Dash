@@ -262,6 +262,12 @@
     <string name="ph_no_calls">No recent calls (allow call history access on the phone).</string>
     <string name="ph_no_contacts">No contacts (allow contact sharing on the phone).</string>
     <string name="ph_call_failed">Call failed</string>
+    <string name="title_battery">BATTERY</string>
+    <string name="st_style">HOME LAYOUT</string>
+    <string name="st_style_now">Current layout: %1$s</string>
+    <string name="st_style_full">Full</string>
+    <string name="st_style_simple">Simple</string>
+    <string name="st_style_desc">Simple: three large panels (climate, battery, media), two shortcuts and today\'s weather. The change applies when you go back to the home screen.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Phone connected · Tap to open</string>
     <string name="aa_waiting">Connect your phone via USB</string>

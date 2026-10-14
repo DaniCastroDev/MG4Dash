@@ -262,6 +262,12 @@
     <string name="ph_no_calls">Geen recente oproepen (sta toegang tot de oproepgeschiedenis toe op de telefoon).</string>
     <string name="ph_no_contacts">Geen contacten (sta het delen van contacten toe op de telefoon).</string>
     <string name="ph_call_failed">Oproep mislukt</string>
+    <string name="title_battery">ACCU</string>
+    <string name="st_style">STIJL STARTSCHERM</string>
+    <string name="st_style_now">Huidige stijl: %1$s</string>
+    <string name="st_style_full">Volledig</string>
+    <string name="st_style_simple">Eenvoudig</string>
+    <string name="st_style_desc">Eenvoudig: drie grote vlakken (klimaat, accu, media), twee snelkoppelingen en het weer van vandaag. De wijziging geldt zodra je terugkeert naar het startscherm.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefoon verbonden · Tik om te openen</string>
     <string name="aa_waiting">Sluit je telefoon aan via USB</string>

@@ -12,6 +12,7 @@ import app.mg4dash.pages.EnergyActivity
 import app.mg4dash.pages.VehicleActivity
 import app.mg4dash.ui.Fullscreen
 import app.mg4dash.ui.Dock
+import app.mg4dash.ui.SimpleHome
 import android.provider.Settings
 import android.util.TypedValue
 import android.view.Gravity
@@ -46,13 +47,25 @@ class MainActivity : AppCompatActivity() {
     private lateinit var b: ActivityMainBinding
     private lateinit var prefs: Prefs
     private lateinit var mapCard: MapCard
+    private var simpleMode = false
+    private var simple: SimpleHome? = null
     private val handler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        prefs = Prefs(this)
+        if (prefs.homeStyle == 1) {
+            // Accueil épuré : même activité HOME, autre contenu
+            simpleMode = true
+            val sh = SimpleHome(this)
+            simple = sh
+            setContentView(sh.root)
+            sh.start()
+            warmUpStockLauncherIfNeeded()
+            return
+        }
         b = ActivityMainBinding.inflate(layoutInflater)
         setContentView(b.root)
-        prefs = Prefs(this)
         b.fanGauge.segments = VehicleState.FAN_MAX
         b.batteryGauge.segments = 20
         b.kersGauge.segments = 4
@@ -69,6 +82,9 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         CarBridge.setForeground(true)
+        // Style d'accueil changé dans les paramètres : on reconstruit l'écran
+        if ((prefs.homeStyle == 1) != simpleMode) { recreate(); return }
+        if (simpleMode) { simple?.onResume(); Fullscreen.apply(this); return }
         mapCard.onResume()
         if (prefs.homeWidget == 1) renderShortcuts()
         Fullscreen.apply(this)
@@ -83,7 +99,7 @@ class MainActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         CarBridge.setForeground(false)
-        mapCard.onPause()
+        if (!simpleMode) mapCard.onPause()
         handler.removeCallbacksAndMessages(null)
     }
 

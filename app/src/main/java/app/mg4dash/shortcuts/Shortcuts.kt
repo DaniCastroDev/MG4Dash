@@ -124,7 +124,7 @@ object Shortcuts {
         return cell
     }
 
-    private fun haIcon(entity: String, label: String): Int {
+    fun haIcon(entity: String, label: String): Int {
         val s = (entity + " " + label).lowercase()
         return when {
             "garage" in s -> R.drawable.ic_garage
@@ -192,7 +192,7 @@ object Shortcuts {
 
     // ─── Modification d'une case ───
 
-    private fun edit(activity: Activity, i: Int, refresh: () -> Unit) {
+    fun edit(activity: Activity, i: Int, refresh: () -> Unit) {
         val prefs = Prefs(activity)
         val choices = arrayOf(
             activity.getString(R.string.sc_app),
@@ -294,7 +294,7 @@ object Shortcuts {
         else -> "homeassistant/toggle"
     }
 
-    private fun runHa(activity: Activity, slot: Slot.Ha) {
+    fun runHa(activity: Activity, slot: Slot.Ha) {
         val prefs = Prefs(activity)
         val app = activity.applicationContext
         thread {

@@ -262,6 +262,12 @@
     <string name="ph_no_calls">Aucun appel récent (autorisez l\'accès à l\'historique sur le téléphone).</string>
     <string name="ph_no_contacts">Aucun contact (autorisez le partage des contacts sur le téléphone).</string>
     <string name="ph_call_failed">Échec de l\'appel</string>
+    <string name="title_battery">BATTERIE</string>
+    <string name="st_style">STYLE D\'ACCUEIL</string>
+    <string name="st_style_now">Style actuel : %1$s</string>
+    <string name="st_style_full">Complet</string>
+    <string name="st_style_simple">Épuré</string>
+    <string name="st_style_desc">Épuré : trois grands volets (climatisation, batterie, multimédia), deux raccourcis et la météo du jour. Le changement s\'applique au retour sur l\'accueil.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Téléphone connecté · Appuyer pour ouvrir</string>
     <string name="aa_waiting">Branchez votre téléphone en USB</string>

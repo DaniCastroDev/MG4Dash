@@ -262,6 +262,12 @@
     <string name="ph_no_calls">Nessuna chiamata recente (consenti l\'accesso alla cronologia sul telefono).</string>
     <string name="ph_no_contacts">Nessun contatto (consenti la condivisione dei contatti sul telefono).</string>
     <string name="ph_call_failed">Chiamata non riuscita</string>
+    <string name="title_battery">BATTERIA</string>
+    <string name="st_style">STILE DELLA HOME</string>
+    <string name="st_style_now">Stile attuale: %1$s</string>
+    <string name="st_style_full">Completa</string>
+    <string name="st_style_simple">Semplice</string>
+    <string name="st_style_desc">Semplice: tre grandi riquadri (clima, batteria, multimedia), due scorciatoie e il meteo di oggi. La modifica vale al ritorno alla home.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefono connesso · Tocca per aprire</string>
     <string name="aa_waiting">Collega il telefono via USB</string>

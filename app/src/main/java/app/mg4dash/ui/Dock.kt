@@ -43,7 +43,7 @@ object Dock {
         Item(R.drawable.ic_settings, R.string.dock_settings, null),
     )
 
-    fun build(activity: Activity, dock: LinearLayout, current: Page) {
+    fun build(activity: Activity, dock: LinearLayout, current: Page, simple: Boolean = false) {
         val kit = Kit(activity)
         fun color(r: Int) = ContextCompat.getColor(activity, r)
         dock.removeAllViews()
@@ -71,7 +71,11 @@ object Dock {
         }
         tick.run()
 
-        ITEMS.forEachIndexed { index, item ->
+        // Accueil épuré : seulement Accueil, Téléphone, Android Auto et Paramètres, en plus grand.
+        val shown = if (simple) ITEMS.filter {
+            it.label == R.string.dock_home || it.label == R.string.dock_phone || it.label == R.string.dock_aa || it.label == R.string.dock_settings
+        } else ITEMS
+        shown.forEachIndexed { index, item ->
             val selected = item.page == current
             val cell = kit.row().apply {
                 gravity = Gravity.CENTER
@@ -88,10 +92,10 @@ object Dock {
                     setImageResource(item.icon)
                     setColorFilter(color(if (selected || item.accent) R.color.accent_action else R.color.text_sub))
                 }
-            }, LinearLayout.LayoutParams(kit.dp(30), kit.dp(30)))
+            }, LinearLayout.LayoutParams(kit.dp(if (simple) 40 else 30), kit.dp(if (simple) 40 else 30)))
             cell.addView(TextView(activity).apply {
                 if (custom != null) text = Shortcuts.appLabel(activity, custom) else setText(item.label)
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 19f); maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, if (simple) 26f else 19f); maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END
                 setTextColor(color(if (selected || item.accent) R.color.text_value else R.color.text_sub))
                 setPadding(kit.dp(12), 0, 0, 0)
             })
@@ -100,7 +104,7 @@ object Dock {
                 R.string.dock_aa -> cell.setOnLongClickListener {
                     Shortcuts.pickApp(activity, activity.getString(R.string.dock_aa_pick), activity.getString(R.string.dock_aa_stock)) { cn ->
                         Prefs(activity).dockAaTarget = cn?.flattenToString()
-                        build(activity, dock, current)
+                        build(activity, dock, current, simple)
                     }
                     true
                 }
