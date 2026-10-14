@@ -16,7 +16,9 @@ import app.mg4dash.pages.ClimateActivity
 import app.mg4dash.pages.EnergyActivity
 import app.mg4dash.pages.VehicleActivity
 import app.mg4dash.settings.SettingsActivity
+import app.mg4dash.shortcuts.Shortcuts
 import app.mg4dash.system.Apps
+import app.mg4dash.system.Prefs
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -77,26 +79,47 @@ object Dock {
                 isSelected = selected
                 setOnClickListener { open(activity, item, current) }
             }
+            // Bouton Android Auto : remplaçable par une autre appli (appui long)
+            val custom = if (item.label == R.string.dock_aa) customAa(activity) else null
             cell.addView(ImageView(activity).apply {
-                setImageResource(item.icon)
-                setColorFilter(color(if (selected || item.accent) R.color.accent_action else R.color.text_sub))
+                val appIcon = custom?.let { Shortcuts.appIcon(activity, it) }
+                if (appIcon != null) setImageDrawable(appIcon) else {
+                    setImageResource(item.icon)
+                    setColorFilter(color(if (selected || item.accent) R.color.accent_action else R.color.text_sub))
+                }
             }, LinearLayout.LayoutParams(kit.dp(30), kit.dp(30)))
             cell.addView(TextView(activity).apply {
-                setText(item.label); setTextSize(TypedValue.COMPLEX_UNIT_SP, 19f); maxLines = 1
+                if (custom != null) text = Shortcuts.appLabel(activity, custom) else setText(item.label)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 19f); maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END
                 setTextColor(color(if (selected || item.accent) R.color.text_value else R.color.text_sub))
                 setPadding(kit.dp(12), 0, 0, 0)
             })
             when (item.label) {
                 R.string.dock_home -> cell.setOnLongClickListener { activity.startActivity(Intent(activity, AppsActivity::class.java)); true }
+                R.string.dock_aa -> cell.setOnLongClickListener {
+                    Shortcuts.pickApp(activity, activity.getString(R.string.dock_aa_pick), activity.getString(R.string.dock_aa_stock)) { cn ->
+                        Prefs(activity).dockAaTarget = cn?.flattenToString()
+                        build(activity, dock, current)
+                    }
+                    true
+                }
                 R.string.dock_settings -> cell.setOnLongClickListener { activity.startActivity(Intent(activity, SettingsActivity::class.java)); true }
             }
             dock.addView(cell, LinearLayout.LayoutParams(0, -1, 1f).apply { if (index >= 0) leftMargin = kit.dp(6) })
         }
     }
 
+    private fun customAa(activity: Activity): android.content.ComponentName? =
+        Prefs(activity).dockAaTarget?.let { android.content.ComponentName.unflattenFromString(it) }
+
     private fun open(activity: Activity, item: Item, current: Page) {
         when (item.label) {
-            R.string.dock_aa -> { Apps.open(activity, Apps.ANDROID_AUTO, activity.getString(R.string.dock_aa)); return }
+            R.string.dock_aa -> {
+                val custom = customAa(activity)
+                if (custom != null) Shortcuts.launch(activity, custom)
+                else Apps.open(activity, Apps.ANDROID_AUTO, activity.getString(R.string.dock_aa))
+                return
+            }
             R.string.dock_settings -> { Apps.open(activity, Apps.SETTINGS, activity.getString(R.string.dock_settings)); return }
         }
         val page = item.page ?: return

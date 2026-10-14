@@ -54,5 +54,23 @@ class Prefs(context: Context) {
         get() = sp.getBoolean("fullscreen", true)
         set(v) = sp.edit().putBoolean("fullscreen", v).apply()
 
+    /** Widget central haut : 0 = carte OpenStreetMap, 1 = raccourcis. */
+    var homeWidget: Int
+        get() = sp.getInt("home_widget", 0)
+        set(v) = sp.edit().putInt("home_widget", v).apply()
+
+    /** Bouton Android Auto du dock : composant d'une autre appli, ou null = Android Auto d'origine. */
+    var dockAaTarget: String?
+        get() = sp.getString("dock_aa_target", null)
+        set(v) = sp.edit().putString("dock_aa_target", v).apply()
+
+    /** Home Assistant : adresse (ex. http://192.168.1.10:8123) et jeton d'accès longue durée. */
+    var haUrl: String
+        get() = sp.getString("ha_url", "") ?: ""
+        set(v) = sp.edit().putString("ha_url", v.trim()).apply()
+    var haToken: String
+        get() = sp.getString("ha_token", "") ?: ""
+        set(v) = sp.edit().putString("ha_token", v.trim()).apply()
+
     val raw: SharedPreferences get() = sp
 }

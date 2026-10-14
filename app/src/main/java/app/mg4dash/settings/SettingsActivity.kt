@@ -104,6 +104,29 @@ class SettingsActivity : AppCompatActivity() {
         text(display, getString(R.string.st_fullscreen_desc), 16f, R.color.text_title)
         row(display, button(getString(R.string.st_toggle)) { prefs.fullscreen = !prefs.fullscreen; showFs(); Fullscreen.apply(this) })
 
+        // ── Home Assistant ──
+        val ha = panel(left, "HOME ASSISTANT")
+        val haState = text(ha, "", 18f, R.color.text_value)
+        fun showHa() {
+            haState.text = getString(R.string.st_ha_url, prefs.haUrl.ifBlank { "—" }) + "\n" +
+                getString(if (prefs.haToken.isBlank()) R.string.st_ha_no_token else R.string.st_ha_token_set)
+        }
+        showHa()
+        text(ha, getString(R.string.st_ha_desc), 16f, R.color.text_title)
+        row(ha,
+            button(getString(R.string.st_ha_set_url)) {
+                ask(getString(R.string.st_ha_set_url), prefs.haUrl.ifBlank { "http://homeassistant.local:8123" }, secret = false) { prefs.haUrl = it; showHa() }
+            },
+            button(getString(R.string.st_ha_set_token)) {
+                ask(getString(R.string.st_ha_set_token), "", secret = true) { prefs.haToken = it; showHa() }
+            },
+            button(getString(R.string.st_ha_test), R.color.accent_action) {
+                app.mg4dash.shortcuts.Shortcuts.testHa(this) { ok ->
+                    android.widget.Toast.makeText(this, if (ok) R.string.st_ha_ok else R.string.ha_error, android.widget.Toast.LENGTH_LONG).show()
+                }
+            },
+        )
+
         // ── Journal ──
         val logs = panel(right, getString(R.string.st_log), fill = true)
         row(logs,
@@ -168,6 +191,22 @@ class SettingsActivity : AppCompatActivity() {
     private fun refreshLog() { logView.text = Log.snapshot().joinToString("\n") }
 
     // ── Petites briques d'UI ──
+
+    /** Saisie d'un texte (adresse, jeton masqué). */
+    private fun ask(title: String, initial: String, secret: Boolean, onOk: (String) -> Unit) {
+        val input = android.widget.EditText(this).apply {
+            setText(initial); setSingleLine()
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or
+                (if (secret) android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD else android.text.InputType.TYPE_TEXT_VARIATION_URI)
+            setSelection(text.length)
+        }
+        val box = android.widget.FrameLayout(this).apply { setPadding(dp(24), dp(8), dp(24), 0); addView(input) }
+        android.app.AlertDialog.Builder(this)
+            .setTitle(title).setView(box)
+            .setPositiveButton(android.R.string.ok) { _, _ -> onOk(input.text.toString()) }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
 
     private fun panel(parent: LinearLayout, title: String, fill: Boolean = false): LinearLayout {
         val p = LinearLayout(this).apply {

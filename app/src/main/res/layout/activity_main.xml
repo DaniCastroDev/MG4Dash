@@ -33,7 +33,7 @@
                 style="@style/Panel"
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
-                android:layout_weight="58"
+                android:layout_weight="60"
                 android:orientation="vertical">
 
                 <LinearLayout
@@ -178,7 +178,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_marginTop="@dimen/gap"
-                android:layout_weight="42"
+                android:layout_weight="40"
                 android:background="@drawable/bg_aa_tile_idle"
                 android:clickable="true"
                 android:focusable="true"
@@ -448,6 +448,24 @@
                     android:text="© OpenStreetMap"
                     android:textColor="@color/text_title"
                     android:textSize="13sp" />
+
+                <!-- Raccourcis (applis, Home Assistant), à la place de la carte au choix -->
+                <LinearLayout
+                    android:id="@+id/shortcutsHolder"
+                    style="@style/Panel"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:visibility="gone" />
+
+                <!-- Bascule carte ↔ raccourcis -->
+                <ImageButton
+                    android:id="@+id/widgetToggle"
+                    style="@style/RoundButton"
+                    android:layout_gravity="top|right"
+                    android:layout_margin="14dp"
+                    android:contentDescription="@string/cd_widget_toggle"
+                    android:src="@drawable/ic_apps" />
             </FrameLayout>
 
             <LinearLayout

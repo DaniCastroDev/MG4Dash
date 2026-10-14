@@ -224,3 +224,23 @@ cd_recenter|Recenter|Recentrer|Zentrieren|Recentrar|Ricentra|Centreren
 cd_zoom_in|Zoom in|Zoom avant|Vergrößern|Acercar|Ingrandisci|Inzoomen
 cd_zoom_out|Zoom out|Zoom arrière|Verkleinern|Alejar|Riduci|Uitzoomen
 cardinals|N,NE,E,SE,S,SW,W,NW|N,NE,E,SE,S,SO,O,NO|N,NO,O,SO,S,SW,W,NW|N,NE,E,SE,S,SO,O,NO|N,NE,E,SE,S,SO,O,NO|N,NO,O,ZO,Z,ZW,W,NW
+cd_widget_toggle|Map or shortcuts|Carte ou raccourcis|Karte oder Verknüpfungen|Mapa o accesos directos|Mappa o scorciatoie|Kaart of snelkoppelingen
+title_shortcuts|SHORTCUTS|RACCOURCIS|VERKNÜPFUNGEN|ACCESOS DIRECTOS|SCORCIATOIE|SNELKOPPELINGEN
+sc_edit|Shortcut|Raccourci|Verknüpfung|Acceso directo|Scorciatoia|Snelkoppeling
+sc_app|Application|Application|App|Aplicación|App|App
+sc_ha|Home Assistant action|Action Home Assistant|Home-Assistant-Aktion|Acción de Home Assistant|Azione Home Assistant|Home Assistant-actie
+sc_clear|Remove|Supprimer|Entfernen|Quitar|Rimuovi|Verwijderen
+ha_not_configured|Set up Home Assistant in MG4Dash settings first (long press on Settings).|Configurez d'abord Home Assistant dans les paramètres de MG4Dash (appui long sur Paramètres).|Richten Sie Home Assistant zuerst in den MG4Dash-Einstellungen ein (lange auf Einstellungen drücken).|Configure primero Home Assistant en los ajustes de MG4Dash (pulsación larga en Ajustes).|Configura prima Home Assistant nelle impostazioni di MG4Dash (pressione lunga su Impostazioni).|Stel eerst Home Assistant in bij de MG4Dash-instellingen (lang drukken op Instellingen).
+ha_error|Home Assistant unreachable: check the address, the token and the connection.|Home Assistant injoignable : vérifiez l'adresse, le jeton et la connexion.|Home Assistant nicht erreichbar: Adresse, Token und Verbindung prüfen.|Home Assistant no accesible: compruebe la dirección, el token y la conexión.|Home Assistant non raggiungibile: verifica indirizzo, token e connessione.|Home Assistant onbereikbaar: controleer adres, token en verbinding.
+ha_sent|%1$s: sent|%1$s : envoyé|%1$s: gesendet|%1$s: enviado|%1$s: inviato|%1$s: verzonden
+ha_error_action|%1$s: failed|%1$s : échec|%1$s: fehlgeschlagen|%1$s: error|%1$s: errore|%1$s: mislukt
+dock_aa_pick|Button shortcut|Raccourci du bouton|Tastenbelegung|Acceso del botón|Scorciatoia del pulsante|Snelkoppeling van de knop
+dock_aa_stock|Android Auto (original)|Android Auto (d'origine)|Android Auto (original)|Android Auto (original)|Android Auto (originale)|Android Auto (origineel)
+st_ha_url|Address: %1$s|Adresse : %1$s|Adresse: %1$s|Dirección: %1$s|Indirizzo: %1$s|Adres: %1$s
+st_ha_no_token|Token: not set|Jeton : non défini|Token: nicht festgelegt|Token: no definido|Token: non impostato|Token: niet ingesteld
+st_ha_token_set|Token: set|Jeton : défini|Token: festgelegt|Token: definido|Token: impostato|Token: ingesteld
+st_ha_desc|Create a long-lived access token in your Home Assistant profile. Shortcuts can then run scripts, automations, scenes, buttons and covers (gate, garage door). Use the button at the top right of the map to show the shortcuts.|Créez un jeton d'accès longue durée dans votre profil Home Assistant. Les raccourcis pourront alors lancer scripts, automatisations, scènes, boutons et ouvrants (portail, porte de garage). Le bouton en haut à droite de la carte affiche les raccourcis.|Erstellen Sie in Ihrem Home-Assistant-Profil ein langlebiges Zugriffstoken. Verknüpfungen können dann Skripte, Automationen, Szenen, Tasten und Abdeckungen (Tor, Garagentor) auslösen. Die Taste oben rechts auf der Karte zeigt die Verknüpfungen.|Cree un token de acceso de larga duración en su perfil de Home Assistant. Los accesos podrán ejecutar scripts, automatizaciones, escenas, botones y cubiertas (portón, puerta de garaje). El botón arriba a la derecha del mapa muestra los accesos.|Crea un token di accesso di lunga durata nel tuo profilo Home Assistant. Le scorciatoie potranno avviare script, automazioni, scene, pulsanti e coperture (cancello, porta del garage). Il pulsante in alto a destra della mappa mostra le scorciatoie.|Maak een langlevend toegangstoken aan in je Home Assistant-profiel. Snelkoppelingen kunnen dan scripts, automatiseringen, scènes, knoppen en afdekkingen (poort, garagedeur) starten. De knop rechtsboven op de kaart toont de snelkoppelingen.
+st_ha_set_url|Address|Adresse|Adresse|Dirección|Indirizzo|Adres
+st_ha_set_token|Token|Jeton|Token|Token|Token|Token
+st_ha_test|Test|Tester|Testen|Probar|Prova|Testen
+st_ha_ok|Home Assistant connected|Home Assistant connecté|Home Assistant verbunden|Home Assistant conectado|Home Assistant connesso|Home Assistant verbonden

@@ -70,6 +70,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         CarBridge.setForeground(true)
         mapCard.onResume()
+        if (prefs.homeWidget == 1) renderShortcuts()
         Fullscreen.apply(this)
     }
 
@@ -316,6 +317,28 @@ class MainActivity : AppCompatActivity() {
         b.mapZoomIn.setOnClickListener { mapCard.zoom(1) }
         b.mapZoomOut.setOnClickListener { mapCard.zoom(-1) }
         b.mapCenter.setOnClickListener { mapCard.recenter(LocationRepo.location.value) }
+        b.widgetToggle.setOnClickListener {
+            prefs.homeWidget = if (prefs.homeWidget == 1) 0 else 1
+            applyHomeWidget()
+        }
+        applyHomeWidget()
+    }
+
+    // ── Carte ou raccourcis ──────────────────────────────────────────────────
+
+    private var shortcutsPage = 0
+
+    private fun applyHomeWidget() {
+        val shortcuts = prefs.homeWidget == 1
+        b.shortcutsHolder.visibility = if (shortcuts) View.VISIBLE else View.GONE
+        b.widgetToggle.setImageResource(if (shortcuts) R.drawable.ic_map else R.drawable.ic_apps)
+        if (shortcuts) renderShortcuts()
+    }
+
+    private fun renderShortcuts() {
+        app.mg4dash.shortcuts.Shortcuts.render(this, b.shortcutsHolder, shortcutsPage) { p ->
+            shortcutsPage = p; renderShortcuts()
+        }
     }
 
     private fun renderSecondary() {
