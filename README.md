@@ -1,6 +1,6 @@
 # MG4Dash
 
-Full-screen launcher for the MG4 Standard (SWI69 firmware, A9 family) and its 1920 × 720 screen: a "dark glass" look, a three-column home screen, and Climate, Energy and Vehicle pages linked by a shared dock.
+Full-screen launcher for the MG4 Standard (SWI69 firmware, A9 family) and its 1920 × 720 screen: a "dark glass" look, a three-column home screen, and Climate, Energy, Vehicle and Phone pages linked by a shared dock.
 
 Languages: English (default), French, German, Spanish, Italian and Dutch, following the car's system language.
 
@@ -27,6 +27,10 @@ Charging (start / stop, charge limit enforced by MG4Dash, AC current), scheduled
 ### Vehicle
 ![Vehicle](docs/screenshots/vehicle.png)
 Drive mode, KERS, driver assistance and vehicle status, read only, with a shortcut to MG4 Control.
+
+### Phone
+![Phone](docs/screenshots/phone.png)
+Recent calls, contacts with a search field and a keypad, from the phone connected over Bluetooth. Calls go through the hands-free (HFP) account, like the stock phone app, whose in-call screen is kept.
 
 ### Launcher settings
 ![Settings](docs/screenshots/settings.png)
