@@ -72,13 +72,70 @@ object MediaHub {
         // même en lecture, donc absentes de getActiveSessions(). Comme le launcher d'origine,
         // on se connecte directement à leurs MediaBrowserService pour obtenir leur contrôleur.
         BROWSERS.forEach { connectBrowser(it) }
+        watchAudioSource(context)
         reevaluate()
+    }
+
+    /**
+     * Source audio active selon la voiture (API SAIC de AudioManager, comme le launcher d'origine) :
+     * c'est elle qui décide du lecteur affiché, la radio restant « en lecture » même muette.
+     */
+    @Volatile private var sourcePkg: String? = null
+    private const val AA_MBS = "com.allgo.remoteui.mediabrowserservice"
+
+    private fun sourceFromCarType(t: Int): String? = when (t) {
+        1, 2, 3 -> "com.saicmotor.radio"
+        5 -> "com.android.bluetooth"
+        6, 7, 14 -> "com.saicmotor.media"
+        70 -> AA_MBS
+        else -> null
+    }
+
+    private fun watchAudioSource(context: Context) {
+        val am = context.getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
+        try {
+            val last = am.javaClass.getMethod("getLastSource").invoke(am) as Int
+            sourcePkg = sourceFromCarType(last)
+            Log.i(TAG, "source audio au démarrage : $last → $sourcePkg")
+        } catch (e: Throwable) { Log.w(TAG, "getLastSource indisponible : ${e.message}") }
+        try {
+            val reg = am.javaClass.methods.first { it.name == "registerAudioSourceChange" }
+            val cbType = reg.parameterTypes[0]
+            val cb = java.lang.reflect.Proxy.newProxyInstance(cbType.classLoader, arrayOf(cbType)) { proxy, m, args ->
+                when (m.name) {
+                    "onSourceChanged" -> {
+                        val attrs = args?.getOrNull(0)
+                        val pkg = args?.getOrNull(1) as? String
+                        val type = try {
+                            (attrs?.javaClass?.getMethod("getBundle")?.invoke(attrs) as? android.os.Bundle)?.getInt("key_car_source_type", -1) ?: -1
+                        } catch (_: Throwable) { -1 }
+                        val src = when {
+                            pkg == "com.saicmotor.media" && type == 5 -> "com.android.bluetooth"
+                            pkg == "com.allgo.app.androidauto" -> AA_MBS
+                            pkg == "com.allgo.carplay.service" -> AA_MBS
+                            else -> pkg
+                        }
+                        Log.i(TAG, "source audio : $pkg ($type) → $src")
+                        main.post { sourcePkg = src; reevaluate() }
+                        null
+                    }
+                    "hashCode" -> System.identityHashCode(proxy)
+                    "equals" -> proxy === args?.getOrNull(0)
+                    "toString" -> "MG4DashSourceCallback"
+                    else -> null
+                }
+            }
+            val extra = reg.parameterTypes.drop(1).map { null }
+            reg.invoke(am, cb, *extra.toTypedArray())
+            Log.i(TAG, "suivi de la source audio actif")
+        } catch (e: Throwable) { Log.w(TAG, "registerAudioSourceChange indisponible : ${e.message}") }
     }
 
     private val BROWSERS = listOf(
         ComponentName("com.saicmotor.radio", "com.saicmotor.radio.service.RadioMBService"),
         ComponentName("com.android.bluetooth", "com.android.bluetooth.a2dpsink.mbs.A2dpMediaBrowserService"),
         ComponentName("com.saicmotor.media", "com.saicmotor.media.mbs.Usb1MediaBrowserService"),
+        ComponentName("com.allgo.remoteui.mediabrowserservice", "com.allgo.remoteui.mediabrowserservice.RemoteUIMediaBrowserService"),
     )
     private val browserControllers = mutableMapOf<String, MediaController>()
     private val watched = mutableSetOf<MediaSession.Token>()
@@ -107,7 +164,7 @@ object MediaHub {
 
     /**
      * Choix du lecteur à afficher, sans clignoter :
-     * 1) une session en lecture ; 2) la session déjà affichée tant qu'elle existe ;
+     * 0) celui de la source audio active de la voiture ; 1) une session en lecture ; 2) la session déjà affichée tant qu'elle existe ;
      * 3) la radio, puis le Bluetooth, puis l'USB (même s'ils sont en pause).
      */
     private fun reevaluate() {
@@ -117,7 +174,11 @@ object MediaHub {
             if (watched.add(c.sessionToken)) c.registerCallback(callback, main)
         }
         val playing = candidates.firstOrNull { it.playbackState?.state == PlaybackState.STATE_PLAYING }
-        val chosen = playing
+        val fromSource = sourcePkg?.let { src ->
+            browserControllers[src] ?: candidates.firstOrNull { it.packageName == src }
+        }
+        val chosen = fromSource
+            ?: playing
             ?: current?.takeIf { cur -> candidates.any { it.sessionToken == cur.sessionToken } }
             ?: active.firstOrNull()
             ?: BROWSERS.firstNotNullOfOrNull { browserControllers[it.packageName] }
@@ -193,7 +254,7 @@ object MediaHub {
         pkg == "com.android.bluetooth" -> "BLUETOOTH"
         pkg == "com.saicmotor.radio" -> "RADIO"
         pkg == "com.saicmotor.media" -> "USB"
-        pkg.startsWith("com.allgo.app.androidauto") -> "ANDROID AUTO"
+        pkg.startsWith("com.allgo.app.androidauto") || pkg == AA_MBS -> "ANDROID AUTO"
         pkg.startsWith("com.allgo.carplay") -> "CARPLAY"
         else -> appContext?.let { ctx ->
             try {
@@ -214,6 +275,7 @@ object MediaHub {
 
     /** Composant à ouvrir quand on touche la carte média. */
     fun ownerComponent(): ComponentName? = current?.packageName?.let { pkg ->
+        if (pkg == AA_MBS) return app.mg4dash.system.Apps.ANDROID_AUTO
         appContext?.packageManager?.getLaunchIntentForPackage(pkg)?.component
     }
 }
