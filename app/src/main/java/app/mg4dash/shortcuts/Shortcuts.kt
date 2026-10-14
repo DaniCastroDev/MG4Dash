@@ -247,14 +247,51 @@ object Shortcuts {
             main.post {
                 if (activity.isFinishing) return@post
                 if (result == null) { Toast.makeText(activity, R.string.ha_error, Toast.LENGTH_LONG).show(); return@post }
-                val labels = result.map { (id, name) -> if (name.isNotBlank()) "$name  ·  $id" else id }.toTypedArray()
-                AlertDialog.Builder(activity)
-                    .setTitle(R.string.sc_ha)
-                    .setItems(labels) { _, w -> result[w].let { (id, name) -> onPick(id, name.ifBlank { id.substringAfter('.') }) } }
-                    .setNegativeButton(R.string.cancel, null)
-                    .show()
+                val labels = result.map { (id, name) -> if (name.isNotBlank()) "$name  ·  $id" else id }
+                searchList(activity, activity.getString(R.string.sc_ha), labels) { w ->
+                    result[w].let { (id, name) -> onPick(id, name.ifBlank { id.substringAfter('.') }) }
+                }
             }
         }
+    }
+
+    /**
+     * Liste avec champ de recherche filtrant au fil de la frappe (sans tenir compte des accents
+     * ni de la casse ; plusieurs mots = tous doivent apparaître). Renvoie l'index d'origine.
+     */
+    private fun searchList(activity: Activity, title: String, labels: List<String>, onPick: (Int) -> Unit) {
+        val kit = Kit(activity)
+        fun norm(t: String) = java.text.Normalizer.normalize(t, java.text.Normalizer.Form.NFD)
+            .replace(Regex("\\p{M}+"), "").lowercase()
+        val keys = labels.map { norm(it) }
+        var shown = labels.indices.toList()
+        val adapter = android.widget.ArrayAdapter<String>(activity, android.R.layout.simple_list_item_1, labels.toMutableList())
+        val list = android.widget.ListView(activity).apply { this.adapter = adapter }
+        val search = android.widget.EditText(activity).apply {
+            hint = activity.getString(R.string.sc_search)
+            setSingleLine()
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
+        }
+        val box = kit.column().apply {
+            setPadding(kit.dp(20), kit.dp(8), kit.dp(20), 0)
+            addView(search, LinearLayout.LayoutParams(-1, -2))
+            addView(list, LinearLayout.LayoutParams(-1, kit.dp(420)))
+        }
+        val dialog = AlertDialog.Builder(activity)
+            .setTitle(title).setView(box)
+            .setNegativeButton(R.string.cancel, null)
+            .create()
+        search.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+            override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
+            override fun afterTextChanged(e: android.text.Editable?) {
+                val words = norm(e?.toString() ?: "").split(' ').filter { it.isNotBlank() }
+                shown = labels.indices.filter { i -> words.all { it in keys[i] } }
+                adapter.clear(); adapter.addAll(shown.map { labels[it] })
+            }
+        })
+        list.setOnItemClickListener { _, _, pos, _ -> dialog.dismiss(); onPick(shown[pos]) }
+        dialog.show()
     }
 
     /** Service appelé selon le domaine de l'entité. */

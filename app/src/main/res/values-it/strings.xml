@@ -249,6 +249,7 @@
     <string name="st_diag">DIAGNOSTICA</string>
     <string name="st_energy_log">Registratore dati energia: %1$s</string>
     <string name="st_energy_log_desc">Ogni 5 s registra potenza della batteria, contatori di consumo e stato degli equipaggiamenti in Android/data/app.mg4dash/files/energy_log.csv (sola lettura, nulla viene inviato all\'auto).</string>
+    <string name="sc_search">Cerca…</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefono connesso · Tocca per aprire</string>
     <string name="aa_waiting">Collega il telefono via USB</string>
