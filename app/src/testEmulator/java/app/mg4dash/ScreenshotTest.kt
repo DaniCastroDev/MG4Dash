@@ -31,6 +31,7 @@ class ScreenshotTest {
     @Test fun vehicle() = shoot(app.mg4dash.pages.VehicleActivity::class.java, "vehicle.png")
     @Test fun energy() = shoot(app.mg4dash.pages.EnergyActivity::class.java, "energy.png")
     @Test fun settings() = shoot(SettingsActivity::class.java, "settings.png")
+    @Test fun phone() = shoot(app.mg4dash.pages.PhoneActivity::class.java, "phone.png")
 
     @Test fun homeShortcuts() {
         val app = org.robolectric.RuntimeEnvironment.getApplication()

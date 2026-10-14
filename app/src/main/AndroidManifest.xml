@@ -12,6 +12,10 @@
     <!-- Accordées d'office au uid système (version voiture) -->
     <uses-permission android:name="android.permission.MEDIA_CONTENT_CONTROL" />
     <uses-permission android:name="android.permission.SET_PREFERRED_APPLICATIONS" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
 
     <application
         android:name=".LauncherApp"
@@ -54,6 +58,12 @@
 
         <activity
             android:name=".pages.VehicleActivity"
+            android:exported="false"
+            android:screenOrientation="landscape"
+            android:theme="@style/Theme.MG4Launcher" />
+
+        <activity
+            android:name=".pages.PhoneActivity"
             android:exported="false"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.MG4Launcher" />

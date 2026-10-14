@@ -29,7 +29,7 @@ import java.util.Locale
  * Appui long sur Accueil : liste des applis ; sur Paramètres : réglages du launcher.
  */
 object Dock {
-    enum class Page { HOME, VEHICLE, CLIMATE, ENERGY }
+    enum class Page { HOME, VEHICLE, CLIMATE, ENERGY, PHONE }
 
     private data class Item(val icon: Int, val label: Int, val page: Page?, val accent: Boolean = false)
 
@@ -38,6 +38,7 @@ object Dock {
         Item(R.drawable.ic_car, R.string.dock_vehicle, Page.VEHICLE),
         Item(R.drawable.ic_snow, R.string.dock_climate, Page.CLIMATE),
         Item(R.drawable.ic_bolt, R.string.dock_energy, Page.ENERGY),
+        Item(R.drawable.ic_phone, R.string.dock_phone, Page.PHONE),
         Item(R.drawable.ic_navigation, R.string.dock_aa, null, accent = true),
         Item(R.drawable.ic_settings, R.string.dock_settings, null),
     )
@@ -129,6 +130,7 @@ object Dock {
             Page.VEHICLE -> VehicleActivity::class.java
             Page.CLIMATE -> ClimateActivity::class.java
             Page.ENERGY -> EnergyActivity::class.java
+            Page.PHONE -> app.mg4dash.pages.PhoneActivity::class.java
         }
         // L'accueil (singleTask) referme les pages au-dessus de lui ; entre deux pages, on
         // remplace la page courante pour ne pas empiler l'historique.
