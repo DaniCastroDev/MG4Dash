@@ -37,6 +37,31 @@ class ScreenshotTest {
         shoot(MainActivity::class.java, "home_light.png")
     }
 
+    @Test fun climateLight() {
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit().putInt("theme_mode", 2).apply()
+        shoot(app.mg4dash.pages.ClimateActivity::class.java, "climate_light.png")
+    }
+
+    @Test fun vehicleLight() {
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit().putInt("theme_mode", 2).apply()
+        shoot(app.mg4dash.pages.VehicleActivity::class.java, "vehicle_light.png")
+    }
+
+    @Test fun phoneLight() {
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit().putInt("theme_mode", 2).apply()
+        shoot(app.mg4dash.pages.PhoneActivity::class.java, "phone_light.png")
+    }
+
+    @Test fun settingsLight() {
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit().putInt("theme_mode", 2).apply()
+        shoot(app.mg4dash.settings.SettingsActivity::class.java, "settings_light.png")
+    }
+
+    @Test fun homeSimpleLight() {
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit().putInt("theme_mode", 2).putInt("home_style", 1).apply()
+        shoot(MainActivity::class.java, "home_simple_light.png")
+    }
+
     @Test fun energyLight() {
         val ctx = org.robolectric.RuntimeEnvironment.getApplication()
         ctx.getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit().putInt("theme_mode", 2).apply()

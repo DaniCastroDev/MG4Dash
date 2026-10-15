@@ -21,6 +21,19 @@ abstract class PageActivity : AppCompatActivity() {
     protected lateinit var body: LinearLayout
     private var themeSig = 0
 
+    /** Mode auto : bascule jour / nuit (feux) pendant que la page est ouverte. */
+    private val themeWatch = object : Runnable {
+        override fun run() {
+            if (Themes.signature(this@PageActivity) != themeSig) { Themes.publish(this@PageActivity); recreate(); return }
+            body.postDelayed(this, 5000)
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        body.removeCallbacks(themeWatch)
+    }
+
     abstract val pageTitle: String
     abstract val page: Dock.Page
     abstract fun buildBody()
@@ -59,6 +72,7 @@ abstract class PageActivity : AppCompatActivity() {
         super.onResume()
         if (Themes.signature(this) != themeSig) { recreate(); return }
         CarBridge.setForeground(true)
+        body.postDelayed(themeWatch, 5000)
         Fullscreen.apply(this)
     }
 
