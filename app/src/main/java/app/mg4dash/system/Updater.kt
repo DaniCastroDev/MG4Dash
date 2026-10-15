@@ -100,6 +100,12 @@ object Updater {
         val pi = context.packageManager.packageInstaller
         val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
             setAppPackageName(context.packageName)
+            // Équivalent de « pm install -f » : la voiture refuse sinon les applis hors système sur la mémoire interne
+            setInstallLocation(android.content.pm.PackageInfo.INSTALL_LOCATION_INTERNAL_ONLY)
+            try {
+                val f = javaClass.getField("installFlags")
+                f.setInt(this, f.getInt(this) or 0x00000010)   // PackageManager.INSTALL_INTERNAL (caché)
+            } catch (e: Exception) { Log.w(TAG, "drapeau INSTALL_INTERNAL : ${e.message}") }
         }
         val id = pi.createSession(params)
         pi.openSession(id).use { s ->
