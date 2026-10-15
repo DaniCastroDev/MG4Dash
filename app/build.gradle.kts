@@ -13,8 +13,8 @@ android {
         // Cible Android 9 comme le reste du système : pas de restrictions d'arrière-plan
         // ni de permissions d'exécution à gérer pour une appli au uid système.
         targetSdk = 28
-        versionCode = 29
-        versionName = "0.8.7"
+        versionCode = 30
+        versionName = "0.8.8"
     }
 
     flavorDimensions += "target"
@@ -71,4 +71,11 @@ dependencies {
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.robolectric:robolectric:4.14.1")
     testImplementation("androidx.test:core:1.6.1")
+}
+
+// Pas de profil ART embarqué (assets/dexopt) : sur la voiture, la compilation « speed-profile »
+// faite à l'installation produisait parfois un code inutilisable (ClassNotFoundException au démarrage).
+configurations.all { exclude(group = "androidx.profileinstaller", module = "profileinstaller") }
+tasks.configureEach {
+    if (name.contains("ArtProfile", ignoreCase = true)) enabled = false
 }
