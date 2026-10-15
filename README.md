@@ -24,9 +24,14 @@ The button at the top right of the map swaps it for 2 pages of 4 × 2 shortcuts:
 ![Charcoal background, orange buttons](docs/screenshots/home_theme_charcoal_orange.png?v=8)
 Background (night blue, black, charcoal, dark green, dark burgundy) and button colour (blue, grey, red, green, orange) are chosen separately in the launcher settings and apply to every page. Battery green, heating orange, cooling cyan and alert red keep their meaning. Radio Dash 1.2 follows the same theme.
 
-Light mode: dark, light or auto (follows the car's day / night mode) in the same settings.
+Light mode: dark, light or auto in the same settings. In auto, every page (and Radio Dash) switches to dark when the car's lights come on, and back to light when they go off.
 
-![Light mode](docs/screenshots/home_light.png?v=8)
+![Light mode, home](docs/screenshots/home_light.png?v=9)
+
+| | |
+|---|---|
+| ![Climate, light](docs/screenshots/climate_light.png?v=9) | ![Energy, light](docs/screenshots/energy_light.png?v=9) |
+| ![Simple home, light](docs/screenshots/home_simple_light.png?v=9) | ![Settings, light](docs/screenshots/settings_light.png?v=9) |
 
 ### Climate
 ![Climate](docs/screenshots/climate.png?v=8)
