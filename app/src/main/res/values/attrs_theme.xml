@@ -19,4 +19,8 @@
     <attr name="mgActionTint" format="color" />
     <attr name="mgSelectTint" format="color" />
     <attr name="mgButtonDisabled" format="color" />
+    <attr name="mgTextValue" format="color" />
+    <attr name="mgTextTitle" format="color" />
+    <attr name="mgTextSub" format="color" />
+    <attr name="mgTextDisabled" format="color" />
 </resources>

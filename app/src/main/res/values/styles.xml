@@ -8,7 +8,7 @@
         <item name="android:windowAnimationStyle">@null</item>
         <item name="colorAccent">?attr/mgAction</item>
         <item name="android:fontFamily">sans-serif</item>
-        <item name="android:textColor">@color/text_value</item>
+        <item name="android:textColor">?attr/mgTextValue</item>
         <item name="mgBgTop">#FF0B0F17</item>
         <item name="mgBgBottom">#FF141B29</item>
         <item name="mgBgEnd">#FF0E1420</item>
@@ -19,6 +19,10 @@
         <item name="mgGaugeOff">#FF262D3D</item>
         <item name="mgPill">#CC12161F</item>
         <item name="mgButtonDisabled">#801C2231</item>
+        <item name="mgTextValue">#FFFFFFFF</item>
+        <item name="mgTextTitle">#FF8A94A6</item>
+        <item name="mgTextSub">#FFA0AEC0</item>
+        <item name="mgTextDisabled">#FF4A5366</item>
         <item name="mgAction">#FF2979FF</item>
         <item name="mgSelect">#FF00D2FF</item>
         <item name="mgActionPressed">#FF1C54B2</item>
@@ -30,7 +34,7 @@
     </style>
 
     <style name="CardTitle">
-        <item name="android:textColor">@color/text_title</item>
+        <item name="android:textColor">?attr/mgTextTitle</item>
         <item name="android:textSize">17sp</item>
         <item name="android:letterSpacing">0.12</item>
         <item name="android:fontFamily">sans-serif-medium</item>
@@ -39,14 +43,14 @@
     </style>
 
     <style name="ValueBig">
-        <item name="android:textColor">@color/text_value</item>
+        <item name="android:textColor">?attr/mgTextValue</item>
         <item name="android:fontFamily">sans-serif-light</item>
         <item name="android:includeFontPadding">false</item>
         <item name="android:maxLines">1</item>
     </style>
 
     <style name="Sub">
-        <item name="android:textColor">@color/text_sub</item>
+        <item name="android:textColor">?attr/mgTextSub</item>
         <item name="android:textSize">18sp</item>
         <item name="android:maxLines">1</item>
         <item name="android:ellipsize">end</item>
@@ -64,7 +68,7 @@
         <item name="android:background">@drawable/bg_button</item>
         <item name="android:padding">14dp</item>
         <item name="android:scaleType">fitCenter</item>
-        <item name="android:tint">@color/text_value</item>
+        <item name="android:tint">?attr/mgTextValue</item>
     </style>
 
     <style name="Chip">

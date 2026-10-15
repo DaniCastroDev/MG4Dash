@@ -21,6 +21,25 @@ import app.mg4dash.system.Prefs
 object Themes {
     val BACKGROUNDS = listOf(R.style.MgBg_Night, R.style.MgBg_Black, R.style.MgBg_Charcoal, R.style.MgBg_Forest, R.style.MgBg_Burgundy)
     val ACCENTS = listOf(R.style.MgAccent_Blue, R.style.MgAccent_Grey, R.style.MgAccent_Red, R.style.MgAccent_Green, R.style.MgAccent_Orange)
+    val BACKGROUNDS_LIGHT = listOf(R.style.MgBgLight_Night, R.style.MgBgLight_Black, R.style.MgBgLight_Charcoal, R.style.MgBgLight_Forest, R.style.MgBgLight_Burgundy)
+    val ACCENTS_LIGHT = listOf(R.style.MgAccentLight_Blue, R.style.MgAccentLight_Grey, R.style.MgAccentLight_Red, R.style.MgAccentLight_Green, R.style.MgAccentLight_Orange)
+
+    /**
+     * Mode clair ? Réglage : 0 = auto, 1 = sombre, 2 = clair. En auto, on suit le mode jour/nuit de
+     * la voiture : mode nuit d'Android (piloté par la voiture) ou PMS_SYSTEM_DAY_NIGHT_MODE (3 = nuit,
+     * relevé sur la voiture : passe à 3 quand les feux s'allument).
+     */
+    fun isLight(context: Context): Boolean = when (Prefs(context).themeMode) {
+        1 -> false
+        2 -> true
+        else -> !isNight(context)
+    }
+
+    fun isNight(context: Context): Boolean {
+        val ui = context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
+        if (ui == android.content.res.Configuration.UI_MODE_NIGHT_YES) return true
+        return try { app.mg4dash.car.CarProps.readAny(289442317) == "3" } catch (_: Exception) { false }
+    }
 
     /** Couleurs des pastilles du sélecteur (même ordre que les listes). */
     val BACKGROUND_SWATCHES = intArrayOf(0xFF141B29.toInt(), 0xFF0E0E10.toInt(), 0xFF2B2F35.toInt(), 0xFF16271F.toInt(), 0xFF29161C.toInt())
@@ -29,20 +48,23 @@ object Themes {
     private const val GLOBAL_KEY = "mg4dash_theme"
 
     /** Signature du thème courant : sert à savoir si un écran doit se redessiner. */
-    fun signature(context: Context): Int = Prefs(context).let { it.themeBackground * 10 + it.themeAccent }
+    fun signature(context: Context): Int = Prefs(context).let { it.themeBackground * 10 + it.themeAccent + (if (isLight(context)) 100 else 0) }
 
     /** À appeler dans onCreate, avant setContentView. */
     fun apply(activity: Activity) {
         val p = Prefs(activity)
-        activity.theme.applyStyle(BACKGROUNDS.getOrElse(p.themeBackground) { BACKGROUNDS[0] }, true)
-        activity.theme.applyStyle(ACCENTS.getOrElse(p.themeAccent) { ACCENTS[0] }, true)
+        val light = isLight(activity)
+        val bgs = if (light) BACKGROUNDS_LIGHT else BACKGROUNDS
+        val accs = if (light) ACCENTS_LIGHT else ACCENTS
+        activity.theme.applyStyle(bgs.getOrElse(p.themeBackground) { bgs[0] }, true)
+        activity.theme.applyStyle(accs.getOrElse(p.themeAccent) { accs[0] }, true)
     }
 
     /** Publie le thème pour Radio Dash (uid système requis ; sans effet sinon). */
     fun publish(context: Context) {
         val p = Prefs(context)
         try {
-            Settings.Global.putString(context.contentResolver, GLOBAL_KEY, "${p.themeBackground},${p.themeAccent}")
+            Settings.Global.putString(context.contentResolver, GLOBAL_KEY, "${p.themeBackground},${p.themeAccent},${if (isLight(context)) 1 else 0}")
         } catch (e: Exception) {
             Log.w("Thème", "publication pour Radio Dash impossible : ${e.message}")
         }
@@ -53,6 +75,8 @@ object Themes {
         R.color.panel to R.attr.mgPanel, R.color.panel_raised to R.attr.mgPanel, R.color.panel_border to R.attr.mgPanelBorder,
         R.color.button_idle to R.attr.mgButtonIdle, R.color.button_pressed to R.attr.mgButtonPressed,
         R.color.gauge_off to R.attr.mgGaugeOff, R.color.accent_action to R.attr.mgAction,
+        R.color.text_value to R.attr.mgTextValue, R.color.text_title to R.attr.mgTextTitle,
+        R.color.text_sub to R.attr.mgTextSub, R.color.text_disabled to R.attr.mgTextDisabled,
     )
 
     /** Couleur d'une ressource, en suivant le thème pour les teintes réglables. */

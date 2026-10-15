@@ -93,6 +93,12 @@ class MainActivity : AppCompatActivity() {
         Fullscreen.apply(this)
     }
 
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        // Passage jour / nuit de la voiture (mode auto) : on redessine avec l'autre thème
+        if (app.mg4dash.ui.Themes.signature(this) != themeSig) { app.mg4dash.ui.Themes.publish(this); recreate() }
+    }
+
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         if (hasFocus) Fullscreen.apply(this)
@@ -452,6 +458,7 @@ class MainActivity : AppCompatActivity() {
                 launch { LocationRepo.location.collect { renderLocation(it, CarBridge.state.value) } }
                 launch {
                     while (true) {
+                        if (app.mg4dash.ui.Themes.signature(this@MainActivity) != themeSig) { app.mg4dash.ui.Themes.publish(this@MainActivity); recreate(); return@launch }
                         renderSecondary()
                         renderWeatherFallbackOnly()
                         actualRecirc = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {

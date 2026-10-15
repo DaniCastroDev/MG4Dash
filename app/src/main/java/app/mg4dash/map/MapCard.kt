@@ -48,7 +48,8 @@ class MapCard(private val context: Context, holder: ViewGroup) {
                 minZoomLevel = 5.0
                 maxZoomLevel = 19.0
                 controller.setZoom(16.0)
-                overlayManager.tilesOverlay.setColorFilter(darkFilter())
+                // Carte sombre en thème sombre ; tuiles d'origine en thème clair
+                if (!app.mg4dash.ui.Themes.isLight(context)) overlayManager.tilesOverlay.setColorFilter(darkFilter())
                 overlayManager.tilesOverlay.loadingBackgroundColor = app.mg4dash.ui.Themes.color(context, R.color.bg_top)
                 overlayManager.tilesOverlay.loadingLineColor = app.mg4dash.ui.Themes.color(context, R.color.panel_border)
             }

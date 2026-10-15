@@ -286,3 +286,7 @@ st_update_installing|Installing… the screen will restart|Installation… l'éc
 ph_sync|Sync|Synchroniser|Synchronisieren|Sincronizar|Sincronizza|Synchroniseren
 ph_sync_started|Sync started: contacts and calls will appear in a few moments.|Synchronisation lancée : contacts et appels vont apparaître dans quelques instants.|Synchronisierung gestartet: Kontakte und Anrufe erscheinen gleich.|Sincronización iniciada: los contactos y las llamadas aparecerán en unos instantes.|Sincronizzazione avviata: contatti e chiamate appariranno tra poco.|Synchronisatie gestart: contacten en oproepen verschijnen zo.
 src_aa|AA|AA|AA|AA|AA|AA
+st_theme_mode|Light or dark|Clair ou sombre|Hell oder dunkel|Claro u oscuro|Chiaro o scuro|Licht of donker
+st_mode_auto|Auto (day / night)|Auto (jour / nuit)|Auto (Tag / Nacht)|Auto (día / noche)|Auto (giorno / notte)|Auto (dag / nacht)
+st_mode_dark|Dark|Sombre|Dunkel|Oscuro|Scuro|Donker
+st_mode_light|Light|Clair|Hell|Claro|Chiaro|Licht

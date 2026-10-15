@@ -86,6 +86,10 @@ class Prefs(context: Context) {
     var themeBackground: Int
         get() = sp.getInt("theme_bg", 0)
         set(v) = sp.edit().putInt("theme_bg", v).commit().let { }
+    /** Clair / sombre : 0 = auto (jour / nuit de la voiture), 1 = sombre, 2 = clair. */
+    var themeMode: Int
+        get() = sp.getInt("theme_mode", 0)
+        set(v) = sp.edit().putInt("theme_mode", v).commit().let { }
     var themeAccent: Int
         get() = sp.getInt("theme_accent", 0)
         set(v) = sp.edit().putInt("theme_accent", v).commit().let { }

@@ -29,7 +29,7 @@ class VehicleActivity : PageActivity() {
             setBackgroundResource(R.drawable.bg_button)
             setOnClickListener { Apps.open(this@VehicleActivity, Apps.VEHICLE, "SAIC") }
         }, kit.lp(-2, -2, r = 12))
-        header.addView(kit.text(getString(R.string.vh_mg4control), 18f, R.color.text_value).apply {
+        header.addView(kit.text(getString(R.string.vh_mg4control), 18f, R.color.on_action).apply {
             setPadding(kit.dp(20), kit.dp(12), kit.dp(20), kit.dp(12))
             setBackgroundResource(R.drawable.bg_aa_tile)
             setOnClickListener { Apps.open(this@VehicleActivity, Apps.MG4_CONTROL, "MG4 Control") }

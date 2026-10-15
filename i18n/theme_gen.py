@@ -20,6 +20,23 @@ accents = {
     'Green':  ('#FF00C853', '#FF69F0AE'),
     'Orange': ('#FFFF8F00', '#FFFFC46B'),
 }
+bgs_light = {
+    'Night':    ('#FFE9EEF6', '#FFF6F8FC', '#FFEDF1F8', '#E6FFFFFF', '#FFCBD3E1', '#FFE3E8F0', '#FFD3DAE6', '#FFD5DBE5'),
+    'Black':    ('#FFEDEDED', '#FFF8F8F8', '#FFF1F1F1', '#E6FFFFFF', '#FFCFCFD4', '#FFE6E6EA', '#FFD6D6DC', '#FFD9D9DE'),
+    'Charcoal': ('#FFE4E6E9', '#FFF2F3F5', '#FFE9EBEE', '#E6FCFCFD', '#FFC7CBD1', '#FFDDE0E4', '#FFCDD1D7', '#FFD2D6DB'),
+    'Forest':   ('#FFE6F0EB', '#FFF4F9F6', '#FFEAF3EE', '#E6FFFFFF', '#FFC4D6CC', '#FFDCE8E1', '#FFCCDDD3', '#FFD2E0D8'),
+    'Burgundy': ('#FFF2E8EA', '#FFFAF4F5', '#FFF5ECEE', '#E6FFFFFF', '#FFDCC7CC', '#FFEDE0E3', '#FFE2D0D4', '#FFE4D5D8'),
+}
+accents_light = {
+    # en mode clair, des teintes plus soutenues pour rester lisibles sur fond clair
+    'Blue':   ('#FF1E63D6', '#FF0088AD'),
+    'Grey':   ('#FF5E6878', '#FF46505E'),
+    'Red':    ('#FFD32F2F', '#FFB71C1C'),
+    'Green':  ('#FF00A142', '#FF007F35'),
+    'Orange': ('#FFE67E00', '#FFB86200'),
+}
+texts = {'dark': ('#FFFFFFFF', '#FF8A94A6', '#FFA0AEC0', '#FF4A5366'), 'light': ('#FF141922', '#FF5A6475', '#FF4A5466', '#FFA3ABB8')}
+text_keys = ['mgTextValue', 'mgTextTitle', 'mgTextSub', 'mgTextDisabled']
 keys = ['mgBgTop', 'mgBgBottom', 'mgBgEnd', 'mgPanel', 'mgPanelBorder', 'mgButtonIdle', 'mgButtonPressed', 'mgGaugeOff']
 
 
@@ -30,13 +47,14 @@ def light(h, f): r, g, b = _rgb(h); return _hex(r + (255 - r) * f, g + (255 - g)
 def alpha(h, a): r, g, b = _rgb(h); return _hex(r, g, b, a)
 
 
-def bg_items(n):
-    v = bgs[n]
-    return list(zip(keys, v)) + [('mgPill', alpha(v[3], 'CC')), ('mgButtonDisabled', alpha(v[5], '80'))]
+def bg_items(n, lightmode=False):
+    v = (bgs_light if lightmode else bgs)[n]
+    t = texts['light' if lightmode else 'dark']
+    return list(zip(keys, v)) + [('mgPill', alpha(v[3], 'CC')), ('mgButtonDisabled', alpha(v[5], '80'))] + list(zip(text_keys, t))
 
 
-def acc_items(n):
-    a, sel = accents[n]
+def acc_items(n, lightmode=False):
+    a, sel = (accents_light if lightmode else accents)[n]
     return [('mgAction', a), ('mgSelect', sel), ('mgActionPressed', shade(a, 0.70)), ('mgActionDeep', shade(a, 0.45)),
             ('mgActionDeeper', shade(a, 0.32)), ('mgActionBorder', light(a, 0.18)), ('mgActionTint', alpha(a, '26')),
             ('mgSelectTint', alpha(sel, '26'))]
@@ -45,15 +63,16 @@ def acc_items(n):
 out = ['<?xml version="1.0" encoding="utf-8"?>',
        '<!-- Généré par i18n/theme_gen.py : fonds et couleurs des boutons, appliqués par-dessus Theme.MG4Launcher (ui/Themes.kt). -->',
        '<resources>']
-for n in bgs:
-    out.append(f'    <style name="MgBg.{n}" parent="">')
-    out += [f'        <item name="{k}">{c}</item>' for k, c in bg_items(n)]
-    out.append('    </style>')
-for n in accents:
-    out.append(f'    <style name="MgAccent.{n}" parent="">')
-    out += [f'        <item name="{k}">{c}</item>' for k, c in acc_items(n)]
-    out.append(f'        <item name="colorAccent">{accents[n][0]}</item>')
-    out.append('    </style>')
+for lm, suffix in ((False, ''), (True, 'Light')):
+    for n in bgs:
+        out.append(f'    <style name="MgBg{suffix}.{n}" parent="">')
+        out += [f'        <item name="{k}">{c}</item>' for k, c in bg_items(n, lm)]
+        out.append('    </style>')
+    for n in accents:
+        out.append(f'    <style name="MgAccent{suffix}.{n}" parent="">')
+        out += [f'        <item name="{k}">{c}</item>' for k, c in acc_items(n, lm)]
+        out.append(f'        <item name="colorAccent">{(accents_light if lm else accents)[n][0]}</item>')
+        out.append('    </style>')
 out.append('</resources>' + NL)
 open('values/themes_colors.xml', 'w', encoding='utf-8', newline=NL).write(NL.join(out))
 
@@ -68,12 +87,16 @@ s = s.replace(a, '        <item name="android:textColor">@color/text_value</item
 s = s.replace('<item name="android:statusBarColor">@color/bg_top</item>', '<item name="android:statusBarColor">?attr/mgBgTop</item>')
 s = s.replace('<item name="android:navigationBarColor">@color/bg_top</item>', '<item name="android:navigationBarColor">?attr/mgBgTop</item>')
 s = s.replace('<item name="colorAccent">@color/accent_action</item>', '<item name="colorAccent">?attr/mgAction</item>')
+for a2, b2 in {'>@color/text_value<': '>?attr/mgTextValue<', '>@color/text_title<': '>?attr/mgTextTitle<', '>@color/text_sub<': '>?attr/mgTextSub<', '>@color/text_disabled<': '>?attr/mgTextDisabled<'}.items():
+    s = s.replace(a2, b2)
 open(p, 'w', encoding='utf-8', newline=NL).write(s)
 
 mp = {'"@color/bg_top"': '"?attr/mgBgTop"', '"@color/bg_bottom"': '"?attr/mgBgBottom"', '"@color/panel"': '"?attr/mgPanel"',
       '"@color/panel_raised"': '"?attr/mgPanel"', '"@color/panel_border"': '"?attr/mgPanelBorder"',
       '"@color/button_idle"': '"?attr/mgButtonIdle"', '"@color/button_pressed"': '"?attr/mgButtonPressed"',
-      '"@color/gauge_off"': '"?attr/mgGaugeOff"', '"@color/accent_action"': '"?attr/mgAction"'}
+      '"@color/gauge_off"': '"?attr/mgGaugeOff"', '"@color/accent_action"': '"?attr/mgAction"',
+      '"@color/text_value"': '"?attr/mgTextValue"', '"@color/text_title"': '"?attr/mgTextTitle"',
+      '"@color/text_sub"': '"?attr/mgTextSub"', '"@color/text_disabled"': '"?attr/mgTextDisabled"'}
 hexmap = {'"#FF1A4FB0"': '"?attr/mgActionPressed"', '"#FF0D2A66"': '"?attr/mgActionDeeper"', '"#FF2979FF"': '"?attr/mgAction"',
           '"#FF123A8C"': '"?attr/mgActionDeep"', '"#FF4A8CFF"': '"?attr/mgActionBorder"', '"#FF1A5CCC"': '"?attr/mgActionPressed"',
           '"#262979FF"': '"?attr/mgActionTint"', '"#2600D2FF"': '"?attr/mgSelectTint"', '"#CC12161F"': '"?attr/mgPill"', '"#801C2231"': '"?attr/mgButtonDisabled"'}

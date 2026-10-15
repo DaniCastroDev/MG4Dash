@@ -197,7 +197,7 @@ class SimpleHome(private val a: AppCompatActivity) {
         controls.addView(kit.roundButton(R.drawable.ic_prev, 76) { MediaHub.previous() })
         mediaPlay = ImageButton(a).apply {
             setBackgroundResource(R.drawable.bg_play); setImageResource(R.drawable.ic_play)
-            scaleType = ImageView.ScaleType.FIT_CENTER; setColorFilter(kit.color(R.color.text_value))
+            scaleType = ImageView.ScaleType.FIT_CENTER; setColorFilter(kit.color(R.color.on_action))
             val pad = kit.dp(22); setPadding(pad, pad, pad, pad)
             setOnClickListener { MediaHub.playPause() }
         }

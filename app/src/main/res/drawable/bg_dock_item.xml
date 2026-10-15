@@ -2,6 +2,6 @@
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_pressed="true"><shape android:shape="rectangle"><solid android:color="?attr/mgButtonPressed" /><corners android:radius="@dimen/radius_button" /></shape></item>
     <item android:state_selected="true"><shape android:shape="rectangle"><solid android:color="?attr/mgActionTint" /><corners android:radius="@dimen/radius_button" /></shape></item>
-    <item android:state_focused="true"><shape android:shape="rectangle"><stroke android:width="2dp" android:color="@color/text_value" /><corners android:radius="@dimen/radius_button" /></shape></item>
+    <item android:state_focused="true"><shape android:shape="rectangle"><stroke android:width="2dp" android:color="?attr/mgTextValue" /><corners android:radius="@dimen/radius_button" /></shape></item>
     <item><shape android:shape="rectangle"><solid android:color="#00000000" /><corners android:radius="@dimen/radius_button" /></shape></item>
 </selector>

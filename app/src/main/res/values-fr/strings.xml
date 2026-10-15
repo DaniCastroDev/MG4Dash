@@ -288,6 +288,10 @@
     <string name="ph_sync">Synchroniser</string>
     <string name="ph_sync_started">Synchronisation lancée : contacts et appels vont apparaître dans quelques instants.</string>
     <string name="src_aa">AA</string>
+    <string name="st_theme_mode">Clair ou sombre</string>
+    <string name="st_mode_auto">Auto (jour / nuit)</string>
+    <string name="st_mode_dark">Sombre</string>
+    <string name="st_mode_light">Clair</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Téléphone connecté · Appuyer pour ouvrir</string>
     <string name="aa_waiting">Branchez votre téléphone en USB</string>

@@ -31,6 +31,18 @@ class ScreenshotTest {
     @Test fun vehicle() = shoot(app.mg4dash.pages.VehicleActivity::class.java, "vehicle.png")
     @Test fun energy() = shoot(app.mg4dash.pages.EnergyActivity::class.java, "energy.png")
     @Test fun settings() = shoot(SettingsActivity::class.java, "settings.png")
+    @Test fun homeLight() {
+        val ctx = org.robolectric.RuntimeEnvironment.getApplication()
+        ctx.getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit().putInt("theme_mode", 2).apply()
+        shoot(MainActivity::class.java, "home_light.png")
+    }
+
+    @Test fun energyLight() {
+        val ctx = org.robolectric.RuntimeEnvironment.getApplication()
+        ctx.getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit().putInt("theme_mode", 2).apply()
+        shoot(app.mg4dash.pages.EnergyActivity::class.java, "energy_light.png")
+    }
+
     @Test fun homeThemed() {
         val ctx = org.robolectric.RuntimeEnvironment.getApplication()
         ctx.getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
@@ -136,6 +148,9 @@ class ScreenshotTest {
     }
 
     private fun <T : Activity> shoot(cls: Class<T>, name: String) {
+        // Captures en mode sombre, sauf si le test a choisi un autre mode
+        val sp = org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE)
+        if (!sp.contains("theme_mode")) sp.edit().putInt("theme_mode", 1).commit()
         val activity = Robolectric.buildActivity(cls).setup().get()
         repeat(5) { shadowOf(Looper.getMainLooper()).idleFor(200, TimeUnit.MILLISECONDS) }
         save(activity.window.decorView, name)

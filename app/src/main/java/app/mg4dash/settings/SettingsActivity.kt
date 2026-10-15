@@ -168,6 +168,12 @@ class SettingsActivity : AppCompatActivity() {
 
         // ── Thème : fond et couleur des boutons ──
         val theme = panel(right, getString(R.string.st_theme))
+        text(theme, getString(R.string.st_theme_mode), 18f, R.color.text_value)
+        row(theme,
+            button(getString(R.string.st_mode_auto), if (prefs.themeMode == 0) R.color.accent_action else R.color.text_value) { if (prefs.themeMode != 0) { prefs.themeMode = 0; onThemeChanged() } },
+            button(getString(R.string.st_mode_dark), if (prefs.themeMode == 1) R.color.accent_action else R.color.text_value) { if (prefs.themeMode != 1) { prefs.themeMode = 1; onThemeChanged() } },
+            button(getString(R.string.st_mode_light), if (prefs.themeMode == 2) R.color.accent_action else R.color.text_value) { if (prefs.themeMode != 2) { prefs.themeMode = 2; onThemeChanged() } },
+        )
         text(theme, getString(R.string.st_theme_bg), 18f, R.color.text_value)
         swatches(theme, app.mg4dash.ui.Themes.BACKGROUND_SWATCHES, prefs.themeBackground) { prefs.themeBackground = it; onThemeChanged() }
         text(theme, getString(R.string.st_theme_accent), 18f, R.color.text_value)

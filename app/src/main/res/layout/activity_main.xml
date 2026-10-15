@@ -145,7 +145,7 @@
                         android:layout_marginRight="10dp"
                         android:gravity="center"
                         android:maxLines="1"
-                        android:textColor="@color/text_value"
+                        android:textColor="?attr/mgTextValue"
                         android:textSize="20sp"
                         tools:text="4" />
 
@@ -252,7 +252,7 @@
                             android:id="@+id/range"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/text_value"
+                            android:textColor="?attr/mgTextValue"
                             android:textSize="24sp"
                             tools:text="284 km" />
 
@@ -274,7 +274,7 @@
                             android:id="@+id/consumption"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/text_value"
+                            android:textColor="?attr/mgTextValue"
                             android:textSize="24sp"
                             tools:text="15,8" />
 
@@ -311,7 +311,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="8dp"
-                        android:textColor="@color/text_value"
+                        android:textColor="?attr/mgTextValue"
                         android:textSize="18sp"
                         tools:text="Normal" />
 
@@ -403,7 +403,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:fontFamily="sans-serif-medium"
-                        android:textColor="@color/text_value"
+                        android:textColor="?attr/mgTextValue"
                         android:textSize="22sp"
                         tools:text="0 km/h" />
 
@@ -452,7 +452,7 @@
                     android:layout_gravity="bottom|right"
                     android:layout_margin="10dp"
                     android:text="© OpenStreetMap"
-                    android:textColor="@color/text_title"
+                    android:textColor="?attr/mgTextTitle"
                     android:textSize="13sp" />
 
                 <!-- Raccourcis (applis, Home Assistant), à la place de la carte au choix -->
@@ -521,7 +521,7 @@
                         android:layout_width="52dp"
                         android:layout_height="52dp"
                         android:src="@drawable/ic_cloud"
-                        android:tint="@color/text_value" />
+                        android:tint="?attr/mgTextValue" />
 
                     <TextView
                         android:id="@+id/weatherTemp"
@@ -544,7 +544,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:maxLines="1"
-                            android:textColor="@color/text_value"
+                            android:textColor="?attr/mgTextValue"
                             android:textSize="19sp"
                             tools:text="Partiellement nuageux" />
 
@@ -657,7 +657,7 @@
                             android:layout_height="112dp"
                             android:layout_gravity="center"
                             android:src="@drawable/ic_music"
-                            android:tint="@color/text_title" />
+                            android:tint="?attr/mgTextTitle" />
 
                         <app.mg4dash.ui.RoundedFrame
                             android:layout_width="match_parent"
@@ -684,7 +684,7 @@
                             android:layout_height="wrap_content"
                             android:ellipsize="end"
                             android:maxLines="2"
-                            android:textColor="@color/text_value"
+                            android:textColor="?attr/mgTextValue"
                             android:textSize="22sp"
                             tools:text="France Inter" />
 
@@ -703,7 +703,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:textColor="@color/text_title"
+                            android:textColor="?attr/mgTextTitle"
                             android:textSize="17sp"
                             tools:text="DAB+" />
 
@@ -747,7 +747,7 @@
                                 android:padding="18dp"
                                 android:scaleType="fitCenter"
                                 android:src="@drawable/ic_play"
-                                android:tint="@color/text_value" />
+                                android:tint="@color/on_action" />
 
                             <ImageButton
                                 android:id="@+id/mediaNext"

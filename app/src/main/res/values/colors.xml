@@ -11,6 +11,7 @@
 
     <!-- Texte -->
     <color name="text_value">#FFFFFFFF</color>
+    <color name="on_action">#FFFFFFFF</color>          <!-- texte / icône posés sur la couleur des boutons (fixe) -->
     <color name="text_title">#FF8A94A6</color>
     <color name="text_sub">#FFA0AEC0</color>
     <color name="text_disabled">#FF4A5366</color>
