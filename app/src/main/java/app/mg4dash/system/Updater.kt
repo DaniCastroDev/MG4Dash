@@ -104,7 +104,9 @@ object Updater {
             setInstallLocation(android.content.pm.PackageInfo.INSTALL_LOCATION_INTERNAL_ONLY)
             try {
                 val f = javaClass.getField("installFlags")
-                f.setInt(this, f.getInt(this) or 0x00000010)   // PackageManager.INSTALL_INTERNAL (caché)
+                // INSTALL_INTERNAL (0x10) ; INSTALL_DONT_KILL_APP (0x1000) : on garde la main pour recompiler
+                // proprement avant de redémarrer (voir Result)
+                f.setInt(this, f.getInt(this) or 0x00000010 or 0x00001000)
             } catch (e: Exception) { Log.w(TAG, "drapeau INSTALL_INTERNAL : ${e.message}") }
         }
         val id = pi.createSession(params)
@@ -125,7 +127,33 @@ object Updater {
             val status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, -999)
             val msg = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE)
             Log.i(TAG, "résultat de l'installation : $status $msg")
+            if (status != PackageInstaller.STATUS_SUCCESS) return
+            // Après une installation, la compilation faite par la voiture était parfois inutilisable
+            // (ClassNotFoundException au démarrage) ; une recompilation « speed » la remplace.
+            recompile(context)
+            restart(context)
         }
+    }
+
+    /** Recompile MG4Dash en mode « speed » (équivalent de adb shell cmd package compile -m speed -f). */
+    fun recompile(context: Context) {
+        try {
+            val pm = Class.forName("android.app.ActivityThread").getMethod("getPackageManager").invoke(null)
+            val m = pm.javaClass.methods.first { it.name == "performDexOptMode" && it.parameterTypes.size == 6 }
+            val ok = m.invoke(pm, context.packageName, false, "speed", true, true, null)
+            Log.i(TAG, "recompilation : $ok")
+        } catch (e: Throwable) {
+            Log.w(TAG, "recompilation impossible : ${(e.cause ?: e).message}")
+        }
+    }
+
+    /** Redémarre MG4Dash sur la nouvelle version. */
+    private fun restart(context: Context) {
+        val intent = Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+        val pi = PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_CANCEL_CURRENT)
+        (context.getSystemService(Context.ALARM_SERVICE) as android.app.AlarmManager)
+            .set(android.app.AlarmManager.RTC, System.currentTimeMillis() + 1500, pi)
+        android.os.Process.killProcess(android.os.Process.myPid())
     }
 
     /** Après une mise à jour, l'accueil MG4Dash est rouvert. */
