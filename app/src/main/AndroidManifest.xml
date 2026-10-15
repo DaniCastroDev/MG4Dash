@@ -13,6 +13,7 @@
     <uses-permission android:name="android.permission.MEDIA_CONTENT_CONTROL" />
     <uses-permission android:name="android.permission.SET_PREFERRED_APPLICATIONS" />
     <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
     <uses-permission android:name="android.permission.CALL_PHONE" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
@@ -91,6 +92,16 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+
+        <!-- Mise à jour depuis GitHub : résultat de l'installation et relance de l'accueil -->
+        <receiver android:name=".system.Updater$Result" android:exported="false" />
+        <receiver
+            android:name=".system.Updater$Relaunch"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
             </intent-filter>
         </receiver>
     </application>

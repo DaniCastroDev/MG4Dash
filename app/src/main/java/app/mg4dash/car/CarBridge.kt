@@ -264,8 +264,16 @@ object CarBridge {
         { it.ecoStatus.asInt() }, { it.switchEcoStatus() })
 
     /** Recyclage : air recyclé (0) ↔ air extérieur (1) ; cycle à 3 états, donc 3 crans au plus. */
-    fun toggleRecirc() = cycleTo("recirc", if (_state.value.recirc == 0) 1 else 0, 3,
-        { it.airCirculationStatus.takeIf { v -> v >= 0 } }, { it.switchAirCirculationStatus() })
+    /**
+     * Recyclage en 3 états : extérieur (1) → recyclé (0) → auto (2) → extérieur.
+     * La commande SAIC n'a pas d'argument et avance d'un cran ; si la voiture ne propose pas
+     * l'état auto par ce bouton, deux crans ramènent à l'état de départ (aucun changement).
+     */
+    fun toggleRecirc() {
+        val cur = _state.value.recirc
+        val (target, steps) = when (cur) { 1 -> 0 to 3; 0 -> 2 to 2; else -> 1 to 3 }
+        cycleTo("recirc", target, steps, { it.airCirculationStatus.takeIf { v -> v >= 0 } }, { it.switchAirCirculationStatus() })
+    }
 
     /**
      * Température au pas de 1° : LO, 18 à 32, HI (bornes mesurées par MG4Control sur A9).

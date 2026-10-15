@@ -3,6 +3,10 @@ package app.mg4dash.settings
 import android.app.AlertDialog
 import android.graphics.Typeface
 import android.os.Bundle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.launch
+import androidx.lifecycle.lifecycleScope
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -104,6 +108,53 @@ class SettingsActivity : AppCompatActivity() {
         showFs()
         text(display, getString(R.string.st_fullscreen_desc), 16f, R.color.text_title)
         row(display, button(getString(R.string.st_toggle)) { prefs.fullscreen = !prefs.fullscreen; showFs(); Fullscreen.apply(this) })
+
+        // ── Mise à jour depuis GitHub ──
+        val upd = panel(left, getString(R.string.st_update))
+        val updState = text(upd, getString(R.string.st_update_installed, BuildConfig.VERSION_NAME), 18f, R.color.text_value)
+        text(upd, getString(R.string.st_update_desc), 16f, R.color.text_title)
+        var found: app.mg4dash.system.Updater.Release? = null
+        lateinit var installBtn: Button
+        val checkBtn = button(getString(R.string.st_update_check)) {
+            updState.text = getString(R.string.st_update_checking)
+            lifecycleScope.launch {
+                val r = withContext(Dispatchers.IO) { try { app.mg4dash.system.Updater.latest() } catch (e: Exception) { Log.w("MàJ", "${e.message}"); null } }
+                found = r?.takeIf { app.mg4dash.system.Updater.isNewer(it.version) }
+                updState.text = when {
+                    r == null -> getString(R.string.st_update_error)
+                    found != null -> getString(R.string.st_update_available, BuildConfig.VERSION_NAME, r.version)
+                    else -> getString(R.string.st_update_uptodate, BuildConfig.VERSION_NAME)
+                }
+                installBtn.isEnabled = found != null
+            }
+        }
+        installBtn = button(getString(R.string.st_update_install), R.color.accent_action) {
+            val r = found ?: return@button
+            android.app.AlertDialog.Builder(this)
+                .setTitle(R.string.st_update)
+                .setMessage(getString(R.string.st_update_confirm, r.version))
+                .setPositiveButton(R.string.st_update_install) { _, _ ->
+                    installBtn.isEnabled = false
+                    lifecycleScope.launch {
+                        try {
+                            val apk = withContext(Dispatchers.IO) {
+                                app.mg4dash.system.Updater.download(this@SettingsActivity, r) { pct ->
+                                    runOnUiThread { updState.text = getString(R.string.st_update_downloading, pct) }
+                                }
+                            }
+                            updState.text = getString(R.string.st_update_installing)
+                            withContext(Dispatchers.IO) { app.mg4dash.system.Updater.install(this@SettingsActivity, apk) }
+                        } catch (e: Exception) {
+                            Log.w("MàJ", "échec : ${e.message}")
+                            updState.text = getString(R.string.st_update_error)
+                            installBtn.isEnabled = true
+                        }
+                    }
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
+        }.apply { isEnabled = false }
+        row(upd, checkBtn, installBtn)
 
         // ── Thème : fond et couleur des boutons ──
         val theme = panel(left, getString(R.string.st_theme))

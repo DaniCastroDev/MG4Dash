@@ -1,0 +1,133 @@
+package app.mg4dash.system
+
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageInstaller
+import app.mg4dash.BuildConfig
+import app.mg4dash.MainActivity
+import org.json.JSONArray
+import java.io.File
+import java.net.HttpURLConnection
+import java.net.URL
+
+/**
+ * Mise à jour de MG4Dash depuis les releases GitHub (pré-versions comprises).
+ * Téléchargement de l'APK, puis installation par PackageInstaller (uid système) : Android
+ * vérifie lui-même que l'APK est signé avec la même clé. Après l'installation, l'accueil
+ * est relancé ([Relaunch]).
+ */
+object Updater {
+    private const val TAG = "MàJ"
+    private const val API = "https://api.github.com/repos/Skittle6938/MG4Dash/releases?per_page=10"
+
+    data class Release(val version: String, val url: String, val size: Long, val notes: String)
+
+    /** Dernière release publiée (la plus récente, pré-version ou non), ou null. Réseau : à appeler hors du fil principal. */
+    fun latest(): Release? {
+        val c = URL(API).openConnection() as HttpURLConnection
+        try {
+            c.connectTimeout = 8000; c.readTimeout = 15000
+            c.setRequestProperty("Accept", "application/vnd.github+json")
+            c.setRequestProperty("User-Agent", "MG4Dash")
+            if (c.responseCode != 200) throw IllegalStateException("HTTP ${c.responseCode}")
+            val arr = JSONArray(c.inputStream.bufferedReader().use { it.readText() })
+            for (i in 0 until arr.length()) {
+                val r = arr.getJSONObject(i)
+                if (r.optBoolean("draft")) continue
+                val assets = r.optJSONArray("assets") ?: continue
+                for (j in 0 until assets.length()) {
+                    val a = assets.getJSONObject(j)
+                    if (a.getString("name").endsWith(".apk")) {
+                        return Release(r.getString("tag_name").trimStart('v'), a.getString("browser_download_url"),
+                            a.optLong("size"), r.optString("body"))
+                    }
+                }
+            }
+            return null
+        } finally { c.disconnect() }
+    }
+
+    /** true si [remote] est plus récente que la version installée (comparaison numérique 0.8.2 < 0.8.10). */
+    fun isNewer(remote: String, local: String = BuildConfig.VERSION_NAME): Boolean {
+        fun parts(v: String) = v.split('.', '-').map { it.toIntOrNull() ?: 0 }
+        val a = parts(remote); val b = parts(local)
+        for (i in 0 until maxOf(a.size, b.size)) {
+            val x = a.getOrElse(i) { 0 }; val y = b.getOrElse(i) { 0 }
+            if (x != y) return x > y
+        }
+        return false
+    }
+
+    /** Télécharge l'APK ; [progress] reçoit 0..100. Réseau : hors du fil principal. */
+    fun download(context: Context, r: Release, progress: (Int) -> Unit): File {
+        val dir = context.getExternalFilesDir(null) ?: context.filesDir
+        val out = File(dir, "update.apk")
+        var url = URL(r.url)
+        var c: HttpURLConnection
+        var hops = 0
+        while (true) {
+            c = url.openConnection() as HttpURLConnection
+            c.instanceFollowRedirects = false
+            c.connectTimeout = 8000; c.readTimeout = 30000
+            c.setRequestProperty("User-Agent", "MG4Dash")
+            val code = c.responseCode
+            if (code in 300..399 && hops < 5) { url = URL(url, c.getHeaderField("Location")); c.disconnect(); hops++; continue }
+            if (code != 200) throw IllegalStateException("HTTP $code")
+            break
+        }
+        try {
+            val total = c.contentLengthLong.takeIf { it > 0 } ?: r.size
+            var done = 0L
+            c.inputStream.use { input ->
+                out.outputStream().use { o ->
+                    val buf = ByteArray(64 * 1024)
+                    while (true) {
+                        val n = input.read(buf); if (n < 0) break
+                        o.write(buf, 0, n); done += n
+                        if (total > 0) progress((done * 100 / total).toInt())
+                    }
+                }
+            }
+        } finally { c.disconnect() }
+        Log.i(TAG, "téléchargé ${r.version} (${out.length()} octets)")
+        return out
+    }
+
+    /** Installe l'APK téléchargé ; MG4Dash est arrêté puis relancé par Android. */
+    fun install(context: Context, apk: File) {
+        val pi = context.packageManager.packageInstaller
+        val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
+            setAppPackageName(context.packageName)
+        }
+        val id = pi.createSession(params)
+        pi.openSession(id).use { s ->
+            apk.inputStream().use { input ->
+                s.openWrite("base.apk", 0, apk.length()).use { o -> input.copyTo(o); s.fsync(o) }
+            }
+            val intent = Intent(context, Result::class.java)
+            val sender = PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_UPDATE_CURRENT)
+            Log.i(TAG, "installation lancée (session $id)")
+            s.commit(sender.intentSender)
+        }
+    }
+
+    /** Résultat de l'installation (journal). */
+    class Result : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            val status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, -999)
+            val msg = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE)
+            Log.i(TAG, "résultat de l'installation : $status $msg")
+        }
+    }
+
+    /** Après une mise à jour, l'accueil MG4Dash est rouvert. */
+    class Relaunch : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.action != Intent.ACTION_MY_PACKAGE_REPLACED) return
+            Log.i(TAG, "mise à jour installée : ${BuildConfig.VERSION_NAME}")
+            context.startActivity(Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        }
+    }
+}
