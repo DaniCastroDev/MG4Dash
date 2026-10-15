@@ -7,21 +7,21 @@ Languages: English (default), French, German, Spanish, Italian and Dutch, follow
 > Screenshots are rendered on a PC with simulated data (the OpenStreetMap map only shows on the car).
 
 ### Home
-![Home](docs/screenshots/home.png?v=5)
+![Home](docs/screenshots/home.png?v=7)
 Climate (temperature, fan, AUTO, A/C, recirculation, defrost), energy (battery, range, estimated consumption, drive mode, KERS, Charge / Start V2L button), vehicle position, Open-Meteo weather, a media card that follows the car's active audio source (DAB/FM radio, Bluetooth, USB, Android Auto) and a trip / status / weather widget.
 
 Long press the Android Auto button in the dock to replace it with the app of your choice.
 
 ### Simple home layout
-![Simple home](docs/screenshots/home_simple.png?v=5)
+![Simple home](docs/screenshots/home_simple.png?v=7)
 An alternative, calmer home screen for those who want fewer buttons and bigger text: three large panels (climate, battery, media), two configurable shortcuts and today's weather, with a reduced dock (Home, Phone, Android Auto, Settings). Choose it in the launcher settings, under "Home layout"; tap a panel to open the matching page.
 
 ### Shortcuts and Home Assistant
-![Shortcuts](docs/screenshots/home_shortcuts.png?v=5)
+![Shortcuts](docs/screenshots/home_shortcuts.png?v=7)
 The button at the top right of the map swaps it for 2 pages of 4 × 2 shortcuts: apps or Home Assistant actions (scripts, automations, scenes, buttons, gate, garage door…). Tap an empty slot, or long press any slot, to change it. The Home Assistant address and token are set in the launcher settings.
 
 ### Themes
-![Charcoal background, orange buttons](docs/screenshots/home_theme_charcoal_orange.png?v=5)
+![Charcoal background, orange buttons](docs/screenshots/home_theme_charcoal_orange.png?v=7)
 Background (night blue, black, charcoal, dark green, dark burgundy) and button colour (blue, grey, red, green, orange) are chosen separately in the launcher settings and apply to every page. Battery green, heating orange, cooling cyan and alert red keep their meaning. Radio Dash 1.2 follows the same theme.
 
 ### Climate

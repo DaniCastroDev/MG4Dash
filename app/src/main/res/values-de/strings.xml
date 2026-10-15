@@ -287,6 +287,7 @@
     <string name="st_update_installing">Installation… der Bildschirm startet neu</string>
     <string name="ph_sync">Synchronisieren</string>
     <string name="ph_sync_started">Synchronisierung gestartet: Kontakte und Anrufe erscheinen gleich.</string>
+    <string name="src_aa">AA</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefon verbunden · Zum Öffnen tippen</string>
     <string name="aa_waiting">Telefon per USB verbinden</string>

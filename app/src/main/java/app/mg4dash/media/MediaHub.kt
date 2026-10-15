@@ -43,6 +43,8 @@ object MediaHub {
         val playing: Boolean = false,
         val durationMs: Long = 0,
         val positionMs: Long = 0,
+        /** Android Auto connecté (son lecteur a quelque chose à afficher) : la puce AA est proposée. */
+        val androidAuto: Boolean = false,
     )
 
     private val _now = MutableStateFlow(NowPlaying())
@@ -58,7 +60,7 @@ object MediaHub {
     fun start(context: Context) {
         appContext = context.applicationContext
         if (BuildConfig.MOCK) {
-            _now.value = NowPlaying(true, "com.saicmotor.radio", "RADIO DAB", "Radio Example", "Morning show", "DAB+ · 11B", mockLogo(), true)
+            _now.value = NowPlaying(true, "com.saicmotor.radio", "RADIO DAB", "Radio Example", "Morning show", "DAB+ · 11B", mockLogo(), true, androidAuto = true)
             return
         }
         val msm = context.getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager
@@ -91,6 +93,17 @@ object MediaHub {
         pinnedPkg = pkg
         main.post { reevaluate() }
     }
+
+    /** Android Auto connecté : son lecteur existe et a un état ou un titre. */
+    fun androidAutoAvailable(): Boolean {
+        val c = browserControllers[AA_MBS] ?: return false
+        val st = c.playbackState?.state ?: PlaybackState.STATE_NONE
+        return st != PlaybackState.STATE_NONE || c.metadata != null || sourcePkg == AA_MBS
+    }
+
+    fun selectAndroidAuto() = select(AA_MBS)
+
+    fun isAndroidAuto(pkg: String?) = pkg == AA_MBS || pkg?.startsWith("com.allgo.app.androidauto") == true
 
     /** Puce USB / BT : bascule entre le Bluetooth et l'USB, en partant de ce qui est affiché. */
     fun selectUsbBt() {
@@ -264,6 +277,7 @@ object MediaHub {
             playing = st?.state == PlaybackState.STATE_PLAYING,
             durationMs = md?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0,
             positionMs = st?.position ?: 0,
+            androidAuto = androidAutoAvailable(),
         )
         _now.value = np
         val artUri = md?.getString(MediaMetadata.METADATA_KEY_ALBUM_ART_URI)

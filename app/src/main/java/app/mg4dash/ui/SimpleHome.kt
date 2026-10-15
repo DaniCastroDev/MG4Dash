@@ -59,6 +59,7 @@ class SimpleHome(private val a: AppCompatActivity) {
     private lateinit var mediaPlay: ImageButton
     private lateinit var srcRadio: TextView
     private lateinit var srcMedia: TextView
+    private lateinit var srcAa: TextView
 
     private lateinit var weatherIcon: ImageView
     private lateinit var weatherTemp: TextView
@@ -170,6 +171,8 @@ class SimpleHome(private val a: AppCompatActivity) {
         srcMedia = kit.toggleTile(a.getString(R.string.src_media)) { MediaHub.selectUsbBt() }.apply { textSize = 18f }
         head.addView(srcRadio, kit.lp(kit.dp(110), kit.dp(48)))
         head.addView(srcMedia, kit.lp(kit.dp(130), kit.dp(48), l = 8))
+        srcAa = kit.toggleTile(a.getString(R.string.src_aa)) { MediaHub.selectAndroidAuto() }.apply { textSize = 18f; visibility = View.GONE }
+        head.addView(srcAa, kit.lp(kit.dp(80), kit.dp(48), l = 8))
         p.addView(head, kit.lp(-1, kit.dp(52)))
 
         val info = kit.row().apply { isClickable = true; isFocusable = true }
@@ -352,6 +355,8 @@ class SimpleHome(private val a: AppCompatActivity) {
         }
         srcRadio.isSelected = m.packageName == "com.saicmotor.radio"
         srcMedia.isSelected = m.packageName == "com.saicmotor.media" || m.packageName == "com.android.bluetooth"
+        srcAa.isSelected = MediaHub.isAndroidAuto(m.packageName)
+        srcAa.visibility = if (m.androidAuto || srcAa.isSelected) View.VISIBLE else View.GONE
         mediaArt.setImageBitmap(m.art)
         mediaPlay.setImageResource(if (m.playing) R.drawable.ic_pause else R.drawable.ic_play)
         mediaPlay.isEnabled = m.available

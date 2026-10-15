@@ -276,6 +276,7 @@ class MainActivity : AppCompatActivity() {
         // Les puces basculent la source affichée ; l'appli ne s'ouvre qu'en touchant la pochette / les infos.
         b.srcRadio.setOnClickListener { MediaHub.select("com.saicmotor.radio") }
         b.srcMedia.setOnClickListener { MediaHub.selectUsbBt() }
+        b.srcAa.setOnClickListener { MediaHub.selectAndroidAuto() }
         b.mediaInfo.setOnClickListener {
             val owner = MediaHub.ownerComponent()
             if (owner != null) Apps.open(this, owner, "Media") else Apps.open(this, Apps.RADIO, "Radio")
@@ -296,6 +297,8 @@ class MainActivity : AppCompatActivity() {
         }
         b.srcRadio.isSelected = m.packageName == "com.saicmotor.radio"
         b.srcMedia.isSelected = m.packageName == "com.saicmotor.media" || m.packageName == "com.android.bluetooth"
+        b.srcAa.isSelected = MediaHub.isAndroidAuto(m.packageName)
+        b.srcAa.visibility = if (m.androidAuto || b.srcAa.isSelected) View.VISIBLE else View.GONE
         b.mediaArt.setImageBitmap(m.art)
         b.mediaArtPlaceholder.visibility = if (m.art == null) View.VISIBLE else View.INVISIBLE
         b.mediaPlay.setImageResource(if (m.playing) R.drawable.ic_pause else R.drawable.ic_play)
