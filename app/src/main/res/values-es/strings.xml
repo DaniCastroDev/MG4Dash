@@ -187,7 +187,7 @@
     <string name="st_home_desc">«Sustituir inicio SAIC» desactiva solo la pantalla de inicio original (su servicio sigue activo). El modo mantenimiento la reactiva, por ejemplo antes de una revisión.</string>
     <string name="st_replace">Sustituir inicio SAIC</string>
     <string name="st_valet">Modo mantenimiento</string>
-    <string name="st_adb">Recuperación ADB: adb shell pm enable com.saicmotor.launcher/.view.MainActivity</string>
+    <string name="st_adb">Recuperación ADB si MG4Dash ya no arranca: adb shell cmd package compile -m speed -f app.mg4dash</string>
     <string name="st_capacity">Capacidad útil de la batería: %1$s kWh</string>
     <string name="st_capacity_desc">Para la estimación de kWh/100 (MG4 Standard 51 kWh: unos 49 kWh útiles).</string>
     <string name="st_city">Ciudad de respaldo: %1$s (si el coche no da la posición)</string>

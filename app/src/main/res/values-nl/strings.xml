@@ -187,7 +187,7 @@
     <string name="st_home_desc">\"SAIC-start vervangen\" schakelt alleen het originele startscherm uit (de dienst blijft actief). De onderhoudsmodus zet het weer aan, bijvoorbeeld voor een onderhoudsbeurt.</string>
     <string name="st_replace">SAIC-start vervangen</string>
     <string name="st_valet">Onderhoudsmodus</string>
-    <string name="st_adb">ADB-herstel: adb shell pm enable com.saicmotor.launcher/.view.MainActivity</string>
+    <string name="st_adb">ADB-herstel als MG4Dash niet meer start: adb shell cmd package compile -m speed -f app.mg4dash</string>
     <string name="st_capacity">Bruikbare batterijcapaciteit: %1$s kWh</string>
     <string name="st_capacity_desc">Voor de kWh/100-schatting (MG4 Standard 51 kWh: ongeveer 49 kWh bruikbaar).</string>
     <string name="st_city">Reservestad: %1$s (als de auto geen positie geeft)</string>

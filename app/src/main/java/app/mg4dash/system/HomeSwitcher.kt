@@ -15,8 +15,10 @@ import android.content.pm.PackageManager
  * audio, commandes SystemUI) reste actif. Le mode Entretien et le garde-fou anti-crash la
  * réactivent. Exige le uid système.
  *
- * Secours ADB, sans l'appli :
- *   adb shell pm enable com.saicmotor.launcher/.view.MainActivity
+ * Attention : « adb shell pm enable … » est refusé sur la voiture (le shell n'a pas le droit) ;
+ * seul MG4Dash (uid système) peut réactiver l'accueil SAIC. Si MG4Dash ne démarre plus :
+ *   adb shell cmd package compile -m speed -f app.mg4dash
+ *   adb shell cmd package set-home-activity --user 0 app.mg4dash/.MainActivity
  */
 object HomeSwitcher {
     private const val TAG = "Home"

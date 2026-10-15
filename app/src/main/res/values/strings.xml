@@ -187,7 +187,7 @@
     <string name="st_home_desc">\"Replace SAIC home\" disables only the original home screen (its service keeps running). Maintenance mode re-enables it, e.g. before a dealer service.</string>
     <string name="st_replace">Replace SAIC home</string>
     <string name="st_valet">Maintenance mode</string>
-    <string name="st_adb">ADB recovery: adb shell pm enable com.saicmotor.launcher/.view.MainActivity</string>
+    <string name="st_adb">ADB recovery if MG4Dash no longer starts: adb shell cmd package compile -m speed -f app.mg4dash</string>
     <string name="st_capacity">Usable battery capacity: %1$s kWh</string>
     <string name="st_capacity_desc">Used for the kWh/100 estimate (MG4 Standard 51 kWh: about 49 kWh usable).</string>
     <string name="st_city">Fallback city: %1$s (if the car provides no position)</string>
