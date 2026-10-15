@@ -2,6 +2,7 @@ package app.mg4dash.media
 
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.media.MediaMetadata
@@ -75,6 +76,7 @@ object MediaHub {
         // même en lecture, donc absentes de getActiveSessions(). Comme le launcher d'origine,
         // on se connecte directement à leurs MediaBrowserService pour obtenir leur contrôleur.
         BROWSERS.forEach { connectBrowser(it) }
+        bindAndroidAuto()
         watchAudioSource(context)
         reevaluate()
     }
@@ -325,18 +327,58 @@ object MediaHub {
         val c = current ?: return
         val playing = c.playbackState?.state == PlaybackState.STATE_PLAYING
         // Android Auto (RemoteUI) ne réagit qu'aux touches média, pas aux commandes play()/pause()
-        if (isAndroidAuto(c.packageName)) { mediaKey(c, if (playing) KeyEvent.KEYCODE_MEDIA_PAUSE else KeyEvent.KEYCODE_MEDIA_PLAY); return }
+        if (isAndroidAuto(c.packageName)) { aaControl(c, if (playing) AA_PAUSE else AA_PLAY, if (playing) KeyEvent.KEYCODE_MEDIA_PAUSE else KeyEvent.KEYCODE_MEDIA_PLAY); return }
         if (playing) c.transportControls.pause() else c.transportControls.play()
     }
 
     fun next() {
         val c = current ?: return
-        if (isAndroidAuto(c.packageName)) mediaKey(c, KeyEvent.KEYCODE_MEDIA_NEXT) else c.transportControls.skipToNext()
+        if (isAndroidAuto(c.packageName)) aaControl(c, AA_NEXT, KeyEvent.KEYCODE_MEDIA_NEXT) else c.transportControls.skipToNext()
     }
 
     fun previous() {
         val c = current ?: return
-        if (isAndroidAuto(c.packageName)) mediaKey(c, KeyEvent.KEYCODE_MEDIA_PREVIOUS) else c.transportControls.skipToPrevious()
+        if (isAndroidAuto(c.packageName)) aaControl(c, AA_PREVIOUS, KeyEvent.KEYCODE_MEDIA_PREVIOUS) else c.transportControls.skipToPrevious()
+    }
+
+    // ── Android Auto : commandes de lecture par le service allgo (comme le fait RemoteUI SAIC) ──
+    // IAndroidAutoMainService.sendMediaPlayControl(int) : 1 lecture, 2 pause, 3 suivant, 4 précédent
+    private const val AA_PLAY = 1
+    private const val AA_PAUSE = 2
+    private const val AA_NEXT = 3
+    private const val AA_PREVIOUS = 4
+    private const val AA_DESCRIPTOR = "com.allgo.app.androidauto.IAndroidAutoMainService"
+    private const val AA_TX_MEDIA_CONTROL = 25   // IBinder.FIRST_CALL_TRANSACTION + 24
+    @Volatile private var aaService: android.os.IBinder? = null
+    private val aaConnection = object : android.content.ServiceConnection {
+        override fun onServiceConnected(name: ComponentName?, service: android.os.IBinder?) { aaService = service; Log.i(TAG, "service Android Auto connecté") }
+        override fun onServiceDisconnected(name: ComponentName?) { aaService = null }
+    }
+
+    private fun bindAndroidAuto() {
+        val ctx = appContext ?: return
+        try {
+            val ok = ctx.bindService(Intent().setComponent(ComponentName("com.allgo.app.androidauto", "com.allgo.app.androidauto.AndroidAutoMainService")),
+                aaConnection, android.content.Context.BIND_AUTO_CREATE)
+            Log.i(TAG, "liaison au service Android Auto : $ok")
+        } catch (e: Exception) { Log.w(TAG, "service Android Auto : ${e.message}") }
+    }
+
+    /** Commande envoyée au service Android Auto ; à défaut, touche média vers sa session. */
+    private fun aaControl(c: MediaController, code: Int, fallbackKey: Int) {
+        val b = aaService
+        if (b == null) { bindAndroidAuto(); mediaKey(c, fallbackKey); return }
+        val data = android.os.Parcel.obtain(); val reply = android.os.Parcel.obtain()
+        try {
+            data.writeInterfaceToken(AA_DESCRIPTOR)
+            data.writeInt(code)
+            b.transact(AA_TX_MEDIA_CONTROL, data, reply, 0)
+            reply.readException()
+            Log.i(TAG, "commande Android Auto $code → ${reply.readInt()}")
+        } catch (e: Exception) {
+            Log.w(TAG, "commande Android Auto $code : ${e.message}")
+            mediaKey(c, fallbackKey)
+        } finally { data.recycle(); reply.recycle() }
     }
 
     /** Appui + relâchement d'une touche média, envoyés à la session du lecteur. */
