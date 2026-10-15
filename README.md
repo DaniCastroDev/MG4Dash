@@ -41,7 +41,7 @@ Drive mode, KERS, driver assistance and vehicle status, read only, with a shortc
 Recent calls, contacts with a search field and a keypad, from the phone connected over Bluetooth. Calls go through the hands-free (HFP) account, like the stock phone app, whose in-call screen is kept.
 
 ### Launcher settings
-![Settings](docs/screenshots/settings.png?v=5)
+![Settings](docs/screenshots/settings.png?v=6)
 Home screen (replace the SAIC home / maintenance mode), battery capacity, weather city, startup, full screen, energy data recorder, Home Assistant and a built-in log.
 
 ## Project layout

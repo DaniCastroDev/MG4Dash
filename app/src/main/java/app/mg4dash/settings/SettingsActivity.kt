@@ -33,7 +33,6 @@ class SettingsActivity : AppCompatActivity() {
 
     private lateinit var prefs: Prefs
     private lateinit var homeState: TextView
-    private lateinit var logView: TextView
 
     private val cities = listOf(
         Triple("Paris", 48.8566f, 2.3522f), Triple("Lyon", 45.764f, 4.8357f),
@@ -55,8 +54,17 @@ class SettingsActivity : AppCompatActivity() {
         val left = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         val right = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         root.addView(ScrollView(this).apply { addView(left) }, LinearLayout.LayoutParams(0, -1, 1f).apply { rightMargin = dp(12); topMargin = dp(60) /* zone antibrouillards */ })
-        root.addView(right, LinearLayout.LayoutParams(0, -1, 1f).apply { leftMargin = dp(12) })
+        val rightCol = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        rightCol.addView(right)
+        root.addView(ScrollView(this).apply { addView(rightCol) }, LinearLayout.LayoutParams(0, -1, 1f).apply { leftMargin = dp(12) })
         setContentView(root)
+
+        // ── En-tête de la colonne droite : version, journal, fermer ──
+        val head = panel(right, "MG4Dash ${BuildConfig.VERSION_NAME}")
+        row(head,
+            button(getString(R.string.st_log)) { showLogDialog() },
+            button(getString(R.string.st_close), R.color.accent_action) { finish() },
+        )
 
         // ── Mode Entretien ──
         val valet = panel(left, getString(R.string.st_home))
@@ -110,54 +118,56 @@ class SettingsActivity : AppCompatActivity() {
         row(display, button(getString(R.string.st_toggle)) { prefs.fullscreen = !prefs.fullscreen; showFs(); Fullscreen.apply(this) })
 
         // ── Mise à jour depuis GitHub ──
-        val upd = panel(left, getString(R.string.st_update))
+        val upd = panel(right, getString(R.string.st_update))
         val updState = text(upd, getString(R.string.st_update_installed, BuildConfig.VERSION_NAME), 18f, R.color.text_value)
         text(upd, getString(R.string.st_update_desc), 16f, R.color.text_title)
-        var found: app.mg4dash.system.Updater.Release? = null
-        lateinit var installBtn: Button
-        val checkBtn = button(getString(R.string.st_update_check)) {
+        fun install(r: app.mg4dash.system.Updater.Release) {
+            lifecycleScope.launch {
+                try {
+                    val apk = withContext(Dispatchers.IO) {
+                        app.mg4dash.system.Updater.download(this@SettingsActivity, r) { pct ->
+                            runOnUiThread { updState.text = getString(R.string.st_update_downloading, pct) }
+                        }
+                    }
+                    updState.text = getString(R.string.st_update_installing)
+                    withContext(Dispatchers.IO) { app.mg4dash.system.Updater.install(this@SettingsActivity, apk) }
+                } catch (e: Exception) {
+                    Log.w("MàJ", "échec : ${e.message}")
+                    updState.text = getString(R.string.st_update_error)
+                }
+            }
+        }
+        row(upd, button(getString(R.string.st_update_check), R.color.accent_action) {
             updState.text = getString(R.string.st_update_checking)
             lifecycleScope.launch {
                 val r = withContext(Dispatchers.IO) { try { app.mg4dash.system.Updater.latest() } catch (e: Exception) { Log.w("MàJ", "${e.message}"); null } }
-                found = r?.takeIf { app.mg4dash.system.Updater.isNewer(it.version) }
+                val newer = r?.takeIf { app.mg4dash.system.Updater.isNewer(it.version) }
                 updState.text = when {
                     r == null -> getString(R.string.st_update_error)
-                    found != null -> getString(R.string.st_update_available, BuildConfig.VERSION_NAME, r.version)
+                    newer != null -> getString(R.string.st_update_available, BuildConfig.VERSION_NAME, r.version)
                     else -> getString(R.string.st_update_uptodate, BuildConfig.VERSION_NAME)
                 }
-                installBtn.isEnabled = found != null
-            }
-        }
-        installBtn = button(getString(R.string.st_update_install), R.color.accent_action) {
-            val r = found ?: return@button
-            android.app.AlertDialog.Builder(this)
-                .setTitle(R.string.st_update)
-                .setMessage(getString(R.string.st_update_confirm, r.version))
-                .setPositiveButton(R.string.st_update_install) { _, _ ->
-                    installBtn.isEnabled = false
-                    lifecycleScope.launch {
-                        try {
-                            val apk = withContext(Dispatchers.IO) {
-                                app.mg4dash.system.Updater.download(this@SettingsActivity, r) { pct ->
-                                    runOnUiThread { updState.text = getString(R.string.st_update_downloading, pct) }
-                                }
-                            }
-                            updState.text = getString(R.string.st_update_installing)
-                            withContext(Dispatchers.IO) { app.mg4dash.system.Updater.install(this@SettingsActivity, apk) }
-                        } catch (e: Exception) {
-                            Log.w("MàJ", "échec : ${e.message}")
-                            updState.text = getString(R.string.st_update_error)
-                            installBtn.isEnabled = true
-                        }
+                // Nouvelle version : notes de la release et choix Installer / Annuler
+                if (newer != null && !isFinishing) {
+                    val notes = ScrollView(this@SettingsActivity).apply {
+                        setPadding(dp(24), dp(8), dp(24), 0)
+                        addView(TextView(this@SettingsActivity).apply {
+                            text = plainNotes(newer.notes); setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+                            setTextColor(color(R.color.text_value)); setLineSpacing(0f, 1.15f)
+                        })
                     }
+                    AlertDialog.Builder(this@SettingsActivity)
+                        .setTitle(getString(R.string.st_update_available, BuildConfig.VERSION_NAME, newer.version))
+                        .setView(notes)
+                        .setPositiveButton(R.string.st_update_install) { _, _ -> install(newer) }
+                        .setNegativeButton(R.string.cancel, null)
+                        .show()
                 }
-                .setNegativeButton(R.string.cancel, null)
-                .show()
-        }.apply { isEnabled = false }
-        row(upd, checkBtn, installBtn)
+            }
+        })
 
         // ── Thème : fond et couleur des boutons ──
-        val theme = panel(left, getString(R.string.st_theme))
+        val theme = panel(right, getString(R.string.st_theme))
         text(theme, getString(R.string.st_theme_bg), 18f, R.color.text_value)
         swatches(theme, app.mg4dash.ui.Themes.BACKGROUND_SWATCHES, prefs.themeBackground) { prefs.themeBackground = it; onThemeChanged() }
         text(theme, getString(R.string.st_theme_accent), 18f, R.color.text_value)
@@ -165,7 +175,7 @@ class SettingsActivity : AppCompatActivity() {
         text(theme, getString(R.string.st_theme_desc), 16f, R.color.text_title)
 
         // ── Style de l'accueil ──
-        val style = panel(left, getString(R.string.st_style))
+        val style = panel(right, getString(R.string.st_style))
         val styleState = text(style, "", 18f, R.color.text_value)
         fun showStyle() {
             styleState.text = getString(R.string.st_style_now, getString(if (prefs.homeStyle == 1) R.string.st_style_simple else R.string.st_style_full))
@@ -178,7 +188,7 @@ class SettingsActivity : AppCompatActivity() {
         )
 
         // ── Diagnostic énergie ──
-        val diag = panel(left, getString(R.string.st_diag))
+        val diag = panel(right, getString(R.string.st_diag))
         val logState = text(diag, "", 18f, R.color.text_value)
         fun showLog() { logState.text = getString(R.string.st_energy_log, getString(if (prefs.energyLog) R.string.yes else R.string.no)) }
         showLog()
@@ -186,7 +196,7 @@ class SettingsActivity : AppCompatActivity() {
         row(diag, button(getString(R.string.st_toggle)) { prefs.energyLog = !prefs.energyLog; showLog() })
 
         // ── Home Assistant ──
-        val ha = panel(left, "HOME ASSISTANT")
+        val ha = panel(right, "HOME ASSISTANT")
         val haState = text(ha, "", 18f, R.color.text_value)
         fun showHa() {
             haState.text = getString(R.string.st_ha_url, prefs.haUrl.ifBlank { "—" }) + "\n" +
@@ -208,20 +218,7 @@ class SettingsActivity : AppCompatActivity() {
             },
         )
 
-        // ── Journal ──
-        val logs = panel(right, getString(R.string.st_log), fill = true)
-        row(logs,
-            button(getString(R.string.st_refresh)) { refreshLog() },
-            button(getString(R.string.st_close), R.color.accent_action) { finish() },
-        )
-        logView = TextView(this).apply {
-            setTextColor(color(R.color.text_sub)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
-            typeface = Typeface.MONOSPACE; setTextIsSelectable(true)
-        }
-        logs.addView(ScrollView(this).apply { addView(logView) }, LinearLayout.LayoutParams(-1, 0, 1f).apply { topMargin = dp(10) })
-        text(logs, "MG4Dash ${BuildConfig.VERSION_NAME} · ${BuildConfig.FLAVOR}", 15f, R.color.text_title)
-
-        refreshHome(); refreshLog()
+        refreshHome()
     }
 
     override fun onResume() {
@@ -269,7 +266,28 @@ class SettingsActivity : AppCompatActivity() {
         })
     }
 
-    private fun refreshLog() { logView.text = Log.snapshot().joinToString("\n") }
+    /** Journal dans une fenêtre, à la demande. */
+    private fun showLogDialog() {
+        val view = TextView(this).apply {
+            setTextColor(color(R.color.text_sub)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+            typeface = Typeface.MONOSPACE; setTextIsSelectable(true)
+            text = Log.snapshot().joinToString("\n")
+            setPadding(dp(20), dp(8), dp(20), dp(8))
+        }
+        val d = AlertDialog.Builder(this)
+            .setTitle(getString(R.string.st_log) + " · MG4Dash ${BuildConfig.VERSION_NAME} · ${BuildConfig.FLAVOR}")
+            .setView(ScrollView(this).apply { addView(view) })
+            .setNeutralButton(R.string.st_refresh, null)
+            .setPositiveButton(R.string.st_close, null)
+            .show()
+        d.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener { view.text = Log.snapshot().joinToString("\n") }
+    }
+
+    /** Notes de release GitHub (Markdown) en texte lisible. */
+    private fun plainNotes(md: String): String = md
+        .replace("**", "").replace("`", "")
+        .lines().joinToString("\n") { l -> l.trim().let { if (it.startsWith("- ")) "•  " + it.drop(2) else it } }
+        .trim()
 
     private fun onThemeChanged() {
         app.mg4dash.ui.Themes.publish(this)
