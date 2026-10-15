@@ -76,6 +76,7 @@ class EnergyActivity : PageActivity() {
         })
         // Réchauffage de la batterie en roulant (même réglage que l'appli Énergie SAIC)
         heating = kit.toggleTile(getString(R.string.en_heating), heat = true) {
+            // Écriture 1 = activer, 2 = désactiver (comme l'appli SAIC) ; la lecture rend 0 quand c'est activé
             val on = heating.isSelected
             CarProps.setInt(CarProps.DRVNG_PTC_HEAT, if (on) 2 else 1, "réchauffage batterie")
             heating.postDelayed({ refreshProps() }, 1500)
@@ -225,7 +226,7 @@ class EnergyActivity : PageActivity() {
 
     private fun renderProps(p: Props) {
         reser = p.reser
-        heating.isSelected = p.heat == 1
+        heating.isSelected = p.heat == 0
         heating.isEnabled = p.heat != null
         val carLimit = CarProps.targetSocPercent(p.target)
         renderLimit(carLimit)

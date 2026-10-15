@@ -25,7 +25,7 @@ object CarProps {
     const val ALTNG_CHRG_CRNT = 557904907        // courant AC : 1 = 6 A, 2 = 8 A, 3 = 16 A, 4 = max
     const val V2X_SP_SOC = 557904943             // seuil d'arrêt V2L : code 1..7 = 20..80 %
     const val V2X = 557904944                    // décharge V2L en cours : 1
-    const val DRVNG_PTC_HEAT = 557904937         // réchauffage batterie en roulant : 1 = activé, 2 = désactivé (appli Énergie SAIC)
+    const val DRVNG_PTC_HEAT = 557904937         // réchauffage batterie : écriture 1 = activer, 2 = désactiver ; lecture 0 = activé, 1 = désactivé (relevé sur la voiture le 2026-10-15)
     const val BMS_PACK_VOL = 560002054           // tension batterie (V, float)
     const val BMS_PACK_CRNT = 560002055          // courant batterie (A, float)
     const val ELEC_CSUMP_PERKM = 560002077       // conso récente (kWh/100 km, float)
@@ -143,7 +143,7 @@ object CarProps {
 
     private fun seedMock() {
         mock[CHRG_TRGT_SOC] = 7; mock[RESER_CTRL] = 2; mock[RESER_ST_HOUR] = 22; mock[RESER_ST_MIN] = 30
-        mock[RESER_SP_HOUR] = 6; mock[RESER_SP_MIN] = 0; mock[ALTNG_CHRG_CRNT] = 4; mock[V2X_SP_SOC] = 3; mock[V2X] = 0; mock[DRVNG_PTC_HEAT] = 1
+        mock[RESER_SP_HOUR] = 6; mock[RESER_SP_MIN] = 0; mock[ALTNG_CHRG_CRNT] = 4; mock[V2X_SP_SOC] = 3; mock[V2X] = 0; mock[DRVNG_PTC_HEAT] = 0
         mock[BMS_PACK_VOL] = 352.4f; mock[BMS_PACK_CRNT] = -0.8f; mock[ELEC_CSUMP_PERKM] = 15.6f
         mock[CONS_TOTAL_AFT_CHRG] = 18.4f; mock[CONS_ATC_AFT_CHRG] = 2.1f; mock[CONS_ACCRY_AFT_CHRG] = 0.9f; mock[CONS_RGEN_AFT_CHRG] = 3.2f
         mock[CONS_TOTAL_AFT_ST] = 3.6f; mock[CONS_ATC_AFT_ST] = 0.5f; mock[CONS_ACCRY_AFT_ST] = 0.2f; mock[CONS_RGEN_AFT_ST] = 0.7f
