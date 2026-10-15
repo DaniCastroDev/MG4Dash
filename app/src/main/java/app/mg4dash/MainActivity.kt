@@ -48,12 +48,15 @@ class MainActivity : AppCompatActivity() {
     private lateinit var prefs: Prefs
     private lateinit var mapCard: MapCard
     private var simpleMode = false
+    private var themeSig = 0
     private var simple: SimpleHome? = null
     private val handler = Handler(Looper.getMainLooper())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         prefs = Prefs(this)
+        app.mg4dash.ui.Themes.apply(this)
+        themeSig = app.mg4dash.ui.Themes.signature(this)
         if (prefs.homeStyle == 1) {
             // Accueil épuré : même activité HOME, autre contenu
             simpleMode = true
@@ -83,7 +86,7 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         CarBridge.setForeground(true)
         // Style d'accueil changé dans les paramètres : on reconstruit l'écran
-        if ((prefs.homeStyle == 1) != simpleMode) { recreate(); return }
+        if ((prefs.homeStyle == 1) != simpleMode || app.mg4dash.ui.Themes.signature(this) != themeSig) { recreate(); return }
         if (simpleMode) { simple?.onResume(); Fullscreen.apply(this); return }
         mapCard.onResume()
         if (prefs.homeWidget == 1) renderShortcuts()
@@ -464,6 +467,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun color(res: Int) = ContextCompat.getColor(this, res)
+    private fun color(res: Int) = app.mg4dash.ui.Themes.color(this, res)
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 }

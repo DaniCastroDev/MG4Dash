@@ -269,6 +269,10 @@
     <string name="st_style_simple">Eenvoudig</string>
     <string name="st_style_desc">Eenvoudig: drie grote vlakken (klimaat, accu, media), twee snelkoppelingen en het weer van vandaag. De wijziging geldt zodra je terugkeert naar het startscherm.</string>
     <string name="en_heating">ACCUVERWARMING</string>
+    <string name="st_theme">THEMA</string>
+    <string name="st_theme_bg">Achtergrond</string>
+    <string name="st_theme_accent">Knopkleur</string>
+    <string name="st_theme_desc">Accugroen, verwarmingsoranje, koelingscyaan en waarschuwingsrood behouden hun betekenis bij elk thema. Radio Dash volgt het thema bij de volgende keer dat de radio opent.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefoon verbonden · Tik om te openen</string>
     <string name="aa_waiting">Sluit je telefoon aan via USB</string>

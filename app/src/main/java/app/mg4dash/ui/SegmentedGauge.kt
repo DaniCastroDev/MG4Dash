@@ -21,10 +21,10 @@ class SegmentedGauge @JvmOverloads constructor(
     var value: Int = 0
         set(v) { field = v; invalidate() }
 
-    var onColor: Int = ContextCompat.getColor(context, R.color.accent_cold)
+    var onColor: Int = app.mg4dash.ui.Themes.color(context, R.color.accent_cold)
         set(v) { field = v; invalidate() }
 
-    private val offColor = ContextCompat.getColor(context, R.color.gauge_off)
+    private val offColor = app.mg4dash.ui.Themes.color(context, R.color.gauge_off)
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val rect = RectF()
     private val gap = resources.displayMetrics.density * 4f

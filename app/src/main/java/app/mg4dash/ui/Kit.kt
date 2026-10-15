@@ -44,7 +44,7 @@ class Kit(private val c: Context) {
         return r to v
     }
     fun dp(v: Int) = (v * c.resources.displayMetrics.density).toInt()
-    fun color(res: Int) = ContextCompat.getColor(c, res)
+    fun color(res: Int) = app.mg4dash.ui.Themes.color(c, res)
 
     fun column(): LinearLayout = LinearLayout(c).apply { orientation = LinearLayout.VERTICAL }
     fun row(): LinearLayout = LinearLayout(c).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }

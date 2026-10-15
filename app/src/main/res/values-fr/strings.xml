@@ -269,6 +269,10 @@
     <string name="st_style_simple">Épuré</string>
     <string name="st_style_desc">Épuré : trois grands volets (climatisation, batterie, multimédia), deux raccourcis et la météo du jour. Le changement s\'applique au retour sur l\'accueil.</string>
     <string name="en_heating">RÉCHAUFFAGE BATTERIE</string>
+    <string name="st_theme">THÈME</string>
+    <string name="st_theme_bg">Fond</string>
+    <string name="st_theme_accent">Couleur des boutons</string>
+    <string name="st_theme_desc">Le vert de la batterie, l\'orange du chauffage, le cyan du froid et le rouge des alertes gardent leur sens quel que soit le thème. Radio Dash suit le thème à la prochaine ouverture de la radio.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Téléphone connecté · Appuyer pour ouvrir</string>
     <string name="aa_waiting">Branchez votre téléphone en USB</string>

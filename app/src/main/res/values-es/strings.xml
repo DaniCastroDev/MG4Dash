@@ -269,6 +269,10 @@
     <string name="st_style_simple">Sencillo</string>
     <string name="st_style_desc">Sencillo: tres paneles grandes (clima, batería, multimedia), dos accesos y el tiempo de hoy. El cambio se aplica al volver al inicio.</string>
     <string name="en_heating">CALEFACCIÓN BATERÍA</string>
+    <string name="st_theme">TEMA</string>
+    <string name="st_theme_bg">Fondo</string>
+    <string name="st_theme_accent">Color de los botones</string>
+    <string name="st_theme_desc">El verde de la batería, el naranja de la calefacción, el cian del frío y el rojo de las alertas mantienen su significado con cualquier tema. Radio Dash sigue el tema la próxima vez que se abra la radio.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Teléfono conectado · Pulse para abrir</string>
     <string name="aa_waiting">Conecte su teléfono por USB</string>

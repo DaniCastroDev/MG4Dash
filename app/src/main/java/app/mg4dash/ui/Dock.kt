@@ -45,7 +45,7 @@ object Dock {
 
     fun build(activity: Activity, dock: LinearLayout, current: Page, simple: Boolean = false) {
         val kit = Kit(activity)
-        fun color(r: Int) = ContextCompat.getColor(activity, r)
+        fun color(r: Int) = app.mg4dash.ui.Themes.color(activity, r)
         dock.removeAllViews()
         // Le dock fixe lui-même son apparence : identique sur l'accueil et sur toutes les pages.
         dock.orientation = LinearLayout.HORIZONTAL

@@ -19,6 +19,7 @@ abstract class PageActivity : AppCompatActivity() {
     protected lateinit var kit: Kit
     protected lateinit var header: LinearLayout
     protected lateinit var body: LinearLayout
+    private var themeSig = 0
 
     abstract val pageTitle: String
     abstract val page: Dock.Page
@@ -27,6 +28,8 @@ abstract class PageActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Themes.apply(this)
+        themeSig = Themes.signature(this)
         kit = Kit(this)
         val root = kit.column().apply {
             setBackgroundResource(R.drawable.bg_root)
@@ -54,6 +57,7 @@ abstract class PageActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
+        if (Themes.signature(this) != themeSig) { recreate(); return }
         CarBridge.setForeground(true)
         Fullscreen.apply(this)
     }

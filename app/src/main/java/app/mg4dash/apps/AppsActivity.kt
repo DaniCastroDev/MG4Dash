@@ -19,6 +19,7 @@ class AppsActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        app.mg4dash.ui.Themes.apply(this)
         val pm = packageManager
         val apps: List<ResolveInfo> = pm.queryIntentActivities(
             Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER), 0,
@@ -47,7 +48,7 @@ class AppsActivity : AppCompatActivity() {
             cell.addView(ImageView(this).apply { setImageDrawable(ri.loadIcon(pm)) }, LinearLayout.LayoutParams(dp(72), dp(72)))
             cell.addView(TextView(this).apply {
                 text = ri.loadLabel(pm); maxLines = 2; gravity = Gravity.CENTER
-                setTextColor(ContextCompat.getColor(this@AppsActivity, R.color.text_sub))
+                setTextColor(app.mg4dash.ui.Themes.color(this@AppsActivity, R.color.text_sub))
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f)
             }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
             grid.addView(cell, GridLayout.LayoutParams().apply {

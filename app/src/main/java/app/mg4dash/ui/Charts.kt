@@ -24,7 +24,7 @@ class StackedBar @JvmOverloads constructor(context: Context, attrs: AttributeSet
     private val rect = RectF()
     private val r = resources.displayMetrics.density * 6f
     private val gap = resources.displayMetrics.density * 3f
-    private val off = ContextCompat.getColor(context, R.color.gauge_off)
+    private val off = app.mg4dash.ui.Themes.color(context, R.color.gauge_off)
 
     override fun onDraw(canvas: Canvas) {
         val total = parts.sumOf { it.value.toDouble() }.toFloat()
@@ -50,20 +50,20 @@ class LineChart @JvmOverloads constructor(context: Context, attrs: AttributeSet?
     private val d = resources.displayMetrics.density
     private val line = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE; strokeWidth = 2.5f * d; strokeJoin = Paint.Join.ROUND
-        color = ContextCompat.getColor(context, R.color.accent_energy)
+        color = app.mg4dash.ui.Themes.color(context, R.color.accent_energy)
     }
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val grid = Paint().apply { color = ContextCompat.getColor(context, R.color.panel_border); strokeWidth = 1f }
+    private val grid = Paint().apply { color = app.mg4dash.ui.Themes.color(context, R.color.panel_border); strokeWidth = 1f }
     private val avgPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         style = Paint.Style.STROKE; strokeWidth = 1.5f * d
-        color = ContextCompat.getColor(context, R.color.accent_heat)
+        color = app.mg4dash.ui.Themes.color(context, R.color.accent_heat)
         pathEffect = android.graphics.DashPathEffect(floatArrayOf(6 * d, 6 * d), 0f)
     }
     private val label = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = ContextCompat.getColor(context, R.color.text_title); textSize = 14f * d
+        color = app.mg4dash.ui.Themes.color(context, R.color.text_title); textSize = 14f * d
     }
     private val empty = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = ContextCompat.getColor(context, R.color.text_sub); textSize = 17f * d; textAlign = Paint.Align.CENTER
+        color = app.mg4dash.ui.Themes.color(context, R.color.text_sub); textSize = 17f * d; textAlign = Paint.Align.CENTER
     }
 
     override fun onDraw(canvas: Canvas) {

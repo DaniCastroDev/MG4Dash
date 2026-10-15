@@ -49,8 +49,8 @@ class MapCard(private val context: Context, holder: ViewGroup) {
                 maxZoomLevel = 19.0
                 controller.setZoom(16.0)
                 overlayManager.tilesOverlay.setColorFilter(darkFilter())
-                overlayManager.tilesOverlay.loadingBackgroundColor = ContextCompat.getColor(context, R.color.bg_top)
-                overlayManager.tilesOverlay.loadingLineColor = ContextCompat.getColor(context, R.color.panel_border)
+                overlayManager.tilesOverlay.loadingBackgroundColor = app.mg4dash.ui.Themes.color(context, R.color.bg_top)
+                overlayManager.tilesOverlay.loadingLineColor = app.mg4dash.ui.Themes.color(context, R.color.panel_border)
             }
             val mk = Marker(m).apply {
                 icon = ContextCompat.getDrawable(context, R.drawable.ic_car_marker)

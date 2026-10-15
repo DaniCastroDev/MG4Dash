@@ -24,6 +24,7 @@ class LauncherApp : Application() {
         MediaHub.start(this)
         app.mg4dash.map.LocationRepo.start(this)
         WeatherRepo.start(this)
+        app.mg4dash.ui.Themes.publish(this)
     }
 
     /** Langue de la voiture changée : la météo (libellés, lieu, heures) est recalculée dans la nouvelle langue. */

@@ -43,6 +43,7 @@ class SettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         prefs = Prefs(this)
+        app.mg4dash.ui.Themes.apply(this)
         val root = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             setPadding(dp(24), dp(20), dp(24), dp(20))
@@ -103,6 +104,14 @@ class SettingsActivity : AppCompatActivity() {
         showFs()
         text(display, getString(R.string.st_fullscreen_desc), 16f, R.color.text_title)
         row(display, button(getString(R.string.st_toggle)) { prefs.fullscreen = !prefs.fullscreen; showFs(); Fullscreen.apply(this) })
+
+        // ── Thème : fond et couleur des boutons ──
+        val theme = panel(left, getString(R.string.st_theme))
+        text(theme, getString(R.string.st_theme_bg), 18f, R.color.text_value)
+        swatches(theme, app.mg4dash.ui.Themes.BACKGROUND_SWATCHES, prefs.themeBackground) { prefs.themeBackground = it; onThemeChanged() }
+        text(theme, getString(R.string.st_theme_accent), 18f, R.color.text_value)
+        swatches(theme, app.mg4dash.ui.Themes.ACCENT_SWATCHES, prefs.themeAccent) { prefs.themeAccent = it; onThemeChanged() }
+        text(theme, getString(R.string.st_theme_desc), 16f, R.color.text_title)
 
         // ── Style de l'accueil ──
         val style = panel(left, getString(R.string.st_style))
@@ -211,6 +220,29 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun refreshLog() { logView.text = Log.snapshot().joinToString("\n") }
 
+    private fun onThemeChanged() {
+        app.mg4dash.ui.Themes.publish(this)
+        recreate()
+    }
+
+    /** Rangée de pastilles de couleur ; la pastille choisie est entourée de blanc. */
+    private fun swatches(parent: LinearLayout, colors: IntArray, selected: Int, onPick: (Int) -> Unit) {
+        val r = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        colors.forEachIndexed { i, c ->
+            val v = View(this).apply {
+                background = android.graphics.drawable.GradientDrawable().apply {
+                    shape = android.graphics.drawable.GradientDrawable.OVAL
+                    setColor(c)
+                    setStroke(dp(if (i == selected) 4 else 1), if (i == selected) 0xFFFFFFFF.toInt() else 0xFF4A5366.toInt())
+                }
+                isClickable = true
+                setOnClickListener { if (i != selected) onPick(i) }
+            }
+            r.addView(v, LinearLayout.LayoutParams(dp(56), dp(56)).apply { if (i > 0) leftMargin = dp(18) })
+        }
+        parent.addView(r, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8); bottomMargin = dp(6) })
+    }
+
     // ── Petites briques d'UI ──
 
     /** Saisie d'un texte (adresse, jeton masqué). */
@@ -264,6 +296,6 @@ class SettingsActivity : AppCompatActivity() {
         parent.addView(r, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
     }
 
-    private fun color(res: Int) = ContextCompat.getColor(this, res)
+    private fun color(res: Int) = app.mg4dash.ui.Themes.color(this, res)
     private fun dp(v: Int) = (v * resources.displayMetrics.density).toInt()
 }

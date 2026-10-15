@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_pressed="true">
-        <shape android:shape="rectangle"><gradient android:angle="315" android:startColor="#FF1A4FB0" android:endColor="#FF0D2A66" /><corners android:radius="@dimen/radius_panel" /><stroke android:width="2dp" android:color="@color/text_value" /></shape>
+        <shape android:shape="rectangle"><gradient android:angle="315" android:startColor="?attr/mgActionPressed" android:endColor="?attr/mgActionDeeper" /><corners android:radius="@dimen/radius_panel" /><stroke android:width="2dp" android:color="@color/text_value" /></shape>
     </item>
     <item android:state_focused="true">
-        <shape android:shape="rectangle"><gradient android:angle="315" android:startColor="#FF2979FF" android:endColor="#FF123A8C" /><corners android:radius="@dimen/radius_panel" /><stroke android:width="2dp" android:color="@color/text_value" /></shape>
+        <shape android:shape="rectangle"><gradient android:angle="315" android:startColor="?attr/mgAction" android:endColor="?attr/mgActionDeep" /><corners android:radius="@dimen/radius_panel" /><stroke android:width="2dp" android:color="@color/text_value" /></shape>
     </item>
     <item>
-        <shape android:shape="rectangle"><gradient android:angle="315" android:startColor="#FF2979FF" android:endColor="#FF123A8C" /><corners android:radius="@dimen/radius_panel" /><stroke android:width="1px" android:color="#FF4A8CFF" /></shape>
+        <shape android:shape="rectangle"><gradient android:angle="315" android:startColor="?attr/mgAction" android:endColor="?attr/mgActionDeep" /><corners android:radius="@dimen/radius_panel" /><stroke android:width="1px" android:color="?attr/mgActionBorder" /></shape>
     </item>
 </selector>

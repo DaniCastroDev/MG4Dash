@@ -3,12 +3,30 @@
     <style name="Theme.MG4Launcher" parent="Theme.AppCompat.NoActionBar">
         <item name="android:windowBackground">@drawable/bg_root</item>
         <item name="android:windowShowWallpaper">false</item>
-        <item name="android:statusBarColor">@color/bg_top</item>
-        <item name="android:navigationBarColor">@color/bg_top</item>
+        <item name="android:statusBarColor">?attr/mgBgTop</item>
+        <item name="android:navigationBarColor">?attr/mgBgTop</item>
         <item name="android:windowAnimationStyle">@null</item>
-        <item name="colorAccent">@color/accent_action</item>
+        <item name="colorAccent">?attr/mgAction</item>
         <item name="android:fontFamily">sans-serif</item>
         <item name="android:textColor">@color/text_value</item>
+        <item name="mgBgTop">#FF0B0F17</item>
+        <item name="mgBgBottom">#FF141B29</item>
+        <item name="mgBgEnd">#FF0E1420</item>
+        <item name="mgPanel">#D912161F</item>
+        <item name="mgPanelBorder">#FF2A3142</item>
+        <item name="mgButtonIdle">#FF1C2231</item>
+        <item name="mgButtonPressed">#FF283048</item>
+        <item name="mgGaugeOff">#FF262D3D</item>
+        <item name="mgPill">#CC12161F</item>
+        <item name="mgButtonDisabled">#801C2231</item>
+        <item name="mgAction">#FF2979FF</item>
+        <item name="mgSelect">#FF00D2FF</item>
+        <item name="mgActionPressed">#FF1C54B2</item>
+        <item name="mgActionDeep">#FF123672</item>
+        <item name="mgActionDeeper">#FF0D2651</item>
+        <item name="mgActionBorder">#FF4F91FF</item>
+        <item name="mgActionTint">#262979FF</item>
+        <item name="mgSelectTint">#2600D2FF</item>
     </style>
 
     <style name="CardTitle">

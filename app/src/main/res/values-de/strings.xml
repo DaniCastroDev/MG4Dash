@@ -269,6 +269,10 @@
     <string name="st_style_simple">Schlicht</string>
     <string name="st_style_desc">Schlicht: drei große Felder (Klima, Batterie, Medien), zwei Verknüpfungen und das heutige Wetter. Die Änderung gilt beim Zurückkehren zur Startseite.</string>
     <string name="en_heating">BATTERIEHEIZUNG</string>
+    <string name="st_theme">DESIGN</string>
+    <string name="st_theme_bg">Hintergrund</string>
+    <string name="st_theme_accent">Tastenfarbe</string>
+    <string name="st_theme_desc">Batteriegrün, Heizungsorange, Kühlungscyan und Warnrot behalten ihre Bedeutung unabhängig vom Design. Radio Dash übernimmt das Design beim nächsten Öffnen des Radios.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefon verbunden · Zum Öffnen tippen</string>
     <string name="aa_waiting">Telefon per USB verbinden</string>

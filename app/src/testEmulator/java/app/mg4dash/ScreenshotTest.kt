@@ -31,9 +31,30 @@ class ScreenshotTest {
     @Test fun vehicle() = shoot(app.mg4dash.pages.VehicleActivity::class.java, "vehicle.png")
     @Test fun energy() = shoot(app.mg4dash.pages.EnergyActivity::class.java, "energy.png")
     @Test fun settings() = shoot(SettingsActivity::class.java, "settings.png")
+    @Test fun homeThemed() {
+        val ctx = org.robolectric.RuntimeEnvironment.getApplication()
+        ctx.getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
+            .putInt("theme_bg", 2).putInt("theme_accent", 4).apply()
+        shoot(MainActivity::class.java, "home_theme_charcoal_orange.png")
+    }
+
+    @Test fun energyThemed() {
+        val ctx = org.robolectric.RuntimeEnvironment.getApplication()
+        ctx.getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
+            .putInt("theme_bg", 4).putInt("theme_accent", 2).apply()
+        shoot(app.mg4dash.pages.EnergyActivity::class.java, "energy_theme_burgundy_red.png")
+    }
+
+    @Test fun settingsThemed() {
+        val ctx = org.robolectric.RuntimeEnvironment.getApplication()
+        ctx.getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
+            .putInt("theme_bg", 3).putInt("theme_accent", 3).apply()
+        shoot(app.mg4dash.settings.SettingsActivity::class.java, "settings_theme_forest_green.png")
+    }
+
     @Test fun homeSimple() {
-        val app = org.robolectric.RuntimeEnvironment.getApplication()
-        app.getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
+        val ctx = org.robolectric.RuntimeEnvironment.getApplication()
+        ctx.getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
             .putInt("home_style", 1)
             .putString("sc_100", "ha|cover.gate|Gate")
             .putString("sc_101", "ha|cover.garage_door|Garage")
@@ -44,8 +65,8 @@ class ScreenshotTest {
     @Test fun phone() = shoot(app.mg4dash.pages.PhoneActivity::class.java, "phone.png")
 
     @Test fun homeShortcuts() {
-        val app = org.robolectric.RuntimeEnvironment.getApplication()
-        app.getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
+        val ctx = org.robolectric.RuntimeEnvironment.getApplication()
+        ctx.getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
             .putInt("home_widget", 1)
             .putString("sc_0", "ha|cover.gate|Gate")
             .putString("sc_1", "ha|cover.garage_door|Garage")
@@ -59,8 +80,8 @@ class ScreenshotTest {
 
     @Test @Config(qualifiers = "fr-w1920dp-h720dp-land-mdpi")
     fun homeShortcutsFr() {
-        val app = org.robolectric.RuntimeEnvironment.getApplication()
-        app.getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
+        val ctx = org.robolectric.RuntimeEnvironment.getApplication()
+        ctx.getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
             .putInt("home_widget", 1)
             .putString("sc_0", "ha|cover.portail|Portail")
             .putString("sc_1", "ha|cover.porte_garage|Garage")

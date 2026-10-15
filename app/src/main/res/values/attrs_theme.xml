@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Couleurs réglables (thèmes) : fond et couleur des boutons, choisis séparément dans les paramètres. -->
+<resources>
+    <attr name="mgBgTop" format="color" />
+    <attr name="mgBgBottom" format="color" />
+    <attr name="mgBgEnd" format="color" />
+    <attr name="mgPanel" format="color" />
+    <attr name="mgPanelBorder" format="color" />
+    <attr name="mgButtonIdle" format="color" />
+    <attr name="mgButtonPressed" format="color" />
+    <attr name="mgGaugeOff" format="color" />
+    <attr name="mgAction" format="color" />
+    <attr name="mgSelect" format="color" />
+    <attr name="mgPill" format="color" />
+    <attr name="mgActionPressed" format="color" />
+    <attr name="mgActionDeep" format="color" />
+    <attr name="mgActionDeeper" format="color" />
+    <attr name="mgActionBorder" format="color" />
+    <attr name="mgActionTint" format="color" />
+    <attr name="mgSelectTint" format="color" />
+    <attr name="mgButtonDisabled" format="color" />
+</resources>

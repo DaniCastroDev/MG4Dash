@@ -269,6 +269,10 @@
     <string name="st_style_simple">Semplice</string>
     <string name="st_style_desc">Semplice: tre grandi riquadri (clima, batteria, multimedia), due scorciatoie e il meteo di oggi. La modifica vale al ritorno alla home.</string>
     <string name="en_heating">RISCALDAMENTO BATTERIA</string>
+    <string name="st_theme">TEMA</string>
+    <string name="st_theme_bg">Sfondo</string>
+    <string name="st_theme_accent">Colore dei pulsanti</string>
+    <string name="st_theme_desc">Il verde della batteria, l\'arancione del riscaldamento, il ciano del freddo e il rosso degli avvisi mantengono il loro significato con qualsiasi tema. Radio Dash segue il tema alla prossima apertura della radio.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefono connesso · Tocca per aprire</string>
     <string name="aa_waiting">Collega il telefono via USB</string>

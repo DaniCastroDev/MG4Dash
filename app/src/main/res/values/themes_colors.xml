@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Généré par i18n/theme_gen.py : fonds et couleurs des boutons, appliqués par-dessus Theme.MG4Launcher (ui/Themes.kt). -->
+<resources>
+    <style name="MgBg.Night" parent="">
+        <item name="mgBgTop">#FF0B0F17</item>
+        <item name="mgBgBottom">#FF141B29</item>
+        <item name="mgBgEnd">#FF0E1420</item>
+        <item name="mgPanel">#D912161F</item>
+        <item name="mgPanelBorder">#FF2A3142</item>
+        <item name="mgButtonIdle">#FF1C2231</item>
+        <item name="mgButtonPressed">#FF283048</item>
+        <item name="mgGaugeOff">#FF262D3D</item>
+        <item name="mgPill">#CC12161F</item>
+        <item name="mgButtonDisabled">#801C2231</item>
+    </style>
+    <style name="MgBg.Black" parent="">
+        <item name="mgBgTop">#FF050506</item>
+        <item name="mgBgBottom">#FF0E0E10</item>
+        <item name="mgBgEnd">#FF08080A</item>
+        <item name="mgPanel">#D9121214</item>
+        <item name="mgPanelBorder">#FF2A2A2F</item>
+        <item name="mgButtonIdle">#FF1B1B1F</item>
+        <item name="mgButtonPressed">#FF2A2A31</item>
+        <item name="mgGaugeOff">#FF26262B</item>
+        <item name="mgPill">#CC121214</item>
+        <item name="mgButtonDisabled">#801B1B1F</item>
+    </style>
+    <style name="MgBg.Charcoal" parent="">
+        <item name="mgBgTop">#FF15171A</item>
+        <item name="mgBgBottom">#FF22252A</item>
+        <item name="mgBgEnd">#FF191B1E</item>
+        <item name="mgPanel">#D921242A</item>
+        <item name="mgPanelBorder">#FF3A3F46</item>
+        <item name="mgButtonIdle">#FF2B2F35</item>
+        <item name="mgButtonPressed">#FF3A3F47</item>
+        <item name="mgGaugeOff">#FF33383F</item>
+        <item name="mgPill">#CC21242A</item>
+        <item name="mgButtonDisabled">#802B2F35</item>
+    </style>
+    <style name="MgBg.Forest" parent="">
+        <item name="mgBgTop">#FF07110E</item>
+        <item name="mgBgBottom">#FF0F2019</item>
+        <item name="mgBgEnd">#FF0A1712</item>
+        <item name="mgPanel">#D90F1B16</item>
+        <item name="mgPanelBorder">#FF243A30</item>
+        <item name="mgButtonIdle">#FF16271F</item>
+        <item name="mgButtonPressed">#FF22392D</item>
+        <item name="mgGaugeOff">#FF1F2E27</item>
+        <item name="mgPill">#CC0F1B16</item>
+        <item name="mgButtonDisabled">#8016271F</item>
+    </style>
+    <style name="MgBg.Burgundy" parent="">
+        <item name="mgBgTop">#FF13090C</item>
+        <item name="mgBgBottom">#FF231117</item>
+        <item name="mgBgEnd">#FF190C10</item>
+        <item name="mgPanel">#D91C1015</item>
+        <item name="mgPanelBorder">#FF3B2229</item>
+        <item name="mgButtonIdle">#FF29161C</item>
+        <item name="mgButtonPressed">#FF3B2129</item>
+        <item name="mgGaugeOff">#FF2E1C22</item>
+        <item name="mgPill">#CC1C1015</item>
+        <item name="mgButtonDisabled">#8029161C</item>
+    </style>
+    <style name="MgAccent.Blue" parent="">
+        <item name="mgAction">#FF2979FF</item>
+        <item name="mgSelect">#FF00D2FF</item>
+        <item name="mgActionPressed">#FF1C54B2</item>
+        <item name="mgActionDeep">#FF123672</item>
+        <item name="mgActionDeeper">#FF0D2651</item>
+        <item name="mgActionBorder">#FF4F91FF</item>
+        <item name="mgActionTint">#262979FF</item>
+        <item name="mgSelectTint">#2600D2FF</item>
+        <item name="colorAccent">#FF2979FF</item>
+    </style>
+    <style name="MgAccent.Grey" parent="">
+        <item name="mgAction">#FF8E99A8</item>
+        <item name="mgSelect">#FFCFD6DF</item>
+        <item name="mgActionPressed">#FF636B75</item>
+        <item name="mgActionDeep">#FF3F444B</item>
+        <item name="mgActionDeeper">#FF2D3035</item>
+        <item name="mgActionBorder">#FFA2ABB7</item>
+        <item name="mgActionTint">#268E99A8</item>
+        <item name="mgSelectTint">#26CFD6DF</item>
+        <item name="colorAccent">#FF8E99A8</item>
+    </style>
+    <style name="MgAccent.Red" parent="">
+        <item name="mgAction">#FFE53935</item>
+        <item name="mgSelect">#FFFF8A80</item>
+        <item name="mgActionPressed">#FFA02725</item>
+        <item name="mgActionDeep">#FF671917</item>
+        <item name="mgActionDeeper">#FF491210</item>
+        <item name="mgActionBorder">#FFE95C59</item>
+        <item name="mgActionTint">#26E53935</item>
+        <item name="mgSelectTint">#26FF8A80</item>
+        <item name="colorAccent">#FFE53935</item>
+    </style>
+    <style name="MgAccent.Green" parent="">
+        <item name="mgAction">#FF00C853</item>
+        <item name="mgSelect">#FF69F0AE</item>
+        <item name="mgActionPressed">#FF008C3A</item>
+        <item name="mgActionDeep">#FF005A25</item>
+        <item name="mgActionDeeper">#FF00401A</item>
+        <item name="mgActionBorder">#FF2DD171</item>
+        <item name="mgActionTint">#2600C853</item>
+        <item name="mgSelectTint">#2669F0AE</item>
+        <item name="colorAccent">#FF00C853</item>
+    </style>
+    <style name="MgAccent.Orange" parent="">
+        <item name="mgAction">#FFFF8F00</item>
+        <item name="mgSelect">#FFFFC46B</item>
+        <item name="mgActionPressed">#FFB26400</item>
+        <item name="mgActionDeep">#FF724000</item>
+        <item name="mgActionDeeper">#FF512D00</item>
+        <item name="mgActionBorder">#FFFFA32D</item>
+        <item name="mgActionTint">#26FF8F00</item>
+        <item name="mgSelectTint">#26FFC46B</item>
+        <item name="colorAccent">#FFFF8F00</item>
+    </style>
+</resources>
