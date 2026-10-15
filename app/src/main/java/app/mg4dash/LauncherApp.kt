@@ -26,6 +26,12 @@ class LauncherApp : Application() {
         WeatherRepo.start(this)
     }
 
+    /** Langue de la voiture changée : la météo (libellés, lieu, heures) est recalculée dans la nouvelle langue. */
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        WeatherRepo.refreshNow(this)
+    }
+
     /**
      * Garde-fou : 3 plantages en moins de 3 minutes → le launcher SAIC redevient l'accueil,
      * pour que l'écran de la voiture ne reste jamais inutilisable.
