@@ -284,13 +284,13 @@
     <string name="sw_drive">FAHREN</string>
     <string name="sw_clim">KLIMA</string>
     <string name="sw_acc">ZUBEHÖR</string>
-    <string name="sw_energy_note">Gesamt %1$s kWh · %2$s kWh zurückgewonnen</string>
     <string name="sw_power">LEISTUNG LIVE</string>
     <string name="sw_drawn">VERBRAUCH</string>
     <string name="sw_recovering">ZURÜCKGEWONNEN</string>
     <string name="sw_charging">LADEN</string>
     <string name="sw_trip_avg">FAHRT-SCHNITT</string>
     <string name="sw_phone">TELEFON</string>
+    <string name="sw_fav_pick">Kontakt auswählen</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefon verbunden · Zum Öffnen tippen</string>
     <string name="aa_waiting">Telefon per USB verbinden</string>

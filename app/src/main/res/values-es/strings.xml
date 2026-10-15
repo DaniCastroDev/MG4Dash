@@ -284,13 +284,13 @@
     <string name="sw_drive">CONDUCCIÓN</string>
     <string name="sw_clim">CLIMA</string>
     <string name="sw_acc">ACCESORIOS</string>
-    <string name="sw_energy_note">Total %1$s kWh · %2$s kWh recuperados</string>
     <string name="sw_power">POTENCIA EN DIRECTO</string>
     <string name="sw_drawn">CONSUMIDA</string>
     <string name="sw_recovering">RECUPERADA</string>
     <string name="sw_charging">CARGANDO</string>
     <string name="sw_trip_avg">MEDIA TRAYECTO</string>
     <string name="sw_phone">TELÉFONO</string>
+    <string name="sw_fav_pick">Elegir un contacto</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Teléfono conectado · Pulse para abrir</string>
     <string name="aa_waiting">Conecte su teléfono por USB</string>

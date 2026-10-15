@@ -247,7 +247,7 @@ object Shortcuts {
      * Liste avec champ de recherche filtrant au fil de la frappe (sans tenir compte des accents
      * ni de la casse ; plusieurs mots = tous doivent apparaître). Renvoie l'index d'origine.
      */
-    private fun searchList(activity: Activity, title: String, labels: List<String>, onPick: (Int) -> Unit) {
+    fun searchList(activity: Activity, title: String, labels: List<String>, onPick: (Int) -> Unit) {
         val kit = Kit(activity)
         fun norm(t: String) = java.text.Normalizer.normalize(t, java.text.Normalizer.Form.NFD)
             .replace(Regex("\\p{M}+"), "").lowercase()

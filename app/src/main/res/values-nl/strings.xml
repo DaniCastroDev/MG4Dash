@@ -284,13 +284,13 @@
     <string name="sw_drive">RIJDEN</string>
     <string name="sw_clim">KLIMAAT</string>
     <string name="sw_acc">ACCESSOIRES</string>
-    <string name="sw_energy_note">Totaal %1$s kWh · %2$s kWh teruggewonnen</string>
     <string name="sw_power">LIVE VERMOGEN</string>
     <string name="sw_drawn">VERBRUIKT</string>
     <string name="sw_recovering">TERUGGEWONNEN</string>
     <string name="sw_charging">LADEN</string>
     <string name="sw_trip_avg">RITGEMIDDELDE</string>
     <string name="sw_phone">TELEFOON</string>
+    <string name="sw_fav_pick">Contact kiezen</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefoon verbonden · Tik om te openen</string>
     <string name="aa_waiting">Sluit je telefoon aan via USB</string>

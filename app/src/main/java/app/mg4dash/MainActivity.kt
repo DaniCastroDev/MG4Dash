@@ -413,7 +413,7 @@ class MainActivity : AppCompatActivity() {
         when (mode) {
             0 -> renderTripEnergy()
             1 -> if (builtMode != 1) { buildPower(); builtMode = 1; lifecycleScope.launch { updatePower() } }
-            else -> renderPhoneCalls()
+            else -> if (builtMode != 2) renderPhoneFavs()
         }
         builtMode = mode
     }
@@ -463,17 +463,19 @@ class MainActivity : AppCompatActivity() {
         b.secondaryTitle.text = getString(R.string.sw_power)
         val g = b.secondaryGrid
         g.removeAllViews()
-        g.orientation = LinearLayout.HORIZONTAL
+        g.orientation = LinearLayout.VERTICAL
         val d = resources.displayMetrics.density
-        val left = statColumn(getString(R.string.sw_drawn), "—", 34f)
-        powerValue = left.getChildAt(0) as TextView; powerLabel = left.getChildAt(1) as TextView
-        g.addView(left, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
-        val right = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_VERTICAL }
+        // Même présentation que l'énergie du trajet : grosse barre, puis les chiffres en grand
         powerBar = app.mg4dash.ui.PowerBar(this)
-        right.addView(powerBar, LinearLayout.LayoutParams(-1, (16 * d).toInt()))
-        powerAvg = TextView(this).apply { setTextColor(color(R.color.text_sub)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f) }
-        right.addView(powerAvg, LinearLayout.LayoutParams(-2, -2).apply { topMargin = (10 * d).toInt() })
-        g.addView(right, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.4f).apply { marginEnd = (8 * d).toInt() })
+        g.addView(powerBar, LinearLayout.LayoutParams(-1, (34 * d).toInt()).apply { marginStart = (8 * d).toInt(); marginEnd = (8 * d).toInt() })
+        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        val left = statColumn(getString(R.string.sw_drawn), "—", 30f)
+        powerValue = left.getChildAt(0) as TextView; powerLabel = left.getChildAt(1) as TextView
+        val right = statColumn(getString(R.string.sw_trip_avg), "—", 30f)
+        powerAvg = right.getChildAt(0) as TextView
+        row.addView(left, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        row.addView(right, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        g.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = (12 * d).toInt() })
     }
 
     /** Puissance batterie (tension × courant) : positive = tirée, négative = récupérée. */
@@ -491,50 +493,41 @@ class MainActivity : AppCompatActivity() {
         powerLabel?.text = getString(when { plugged -> R.string.sw_charging; regen -> R.string.sw_recovering; else -> R.string.sw_drawn })
         powerBar?.kw = if (plugged) 0f else kw ?: 0f
         val avg = app.mg4dash.energy.EnergyMonitor.sinceStart.value.per100
-        powerAvg?.text = getString(R.string.sw_trip_avg) + "  " + (avg?.let { "${kwh(it)} kWh/100" } ?: "—")
+        powerAvg?.text = avg?.let { "${kwh(it)} kWh/100" } ?: "—"
     }
 
-    /** Derniers appels du téléphone connecté ; un toucher rappelle. */
-    private fun renderPhoneCalls() {
+    /** Trois contacts favoris, choisis dans le répertoire ; toucher = appeler, appui long = changer. */
+    private fun renderPhoneFavs() {
         b.secondaryTitle.text = getString(R.string.sw_phone)
-        lifecycleScope.launch {
-            val (device, calls) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                PhoneActivity.connectedPhone() to PhoneActivity.recentCalls(this@MainActivity, 30)
-                    .distinctBy { it.number.filter { c -> c.isDigit() } }.take(3)
-            }
-            if (prefs.secondaryWidget.coerceIn(0, 2) != 2) return@launch
-            val g = b.secondaryGrid
-            g.removeAllViews()
-            g.orientation = LinearLayout.VERTICAL
-            val d = resources.displayMetrics.density
-            if (calls.isEmpty()) {
-                g.addView(TextView(this@MainActivity).apply {
-                    text = getString(if (device == null) R.string.ph_no_phone else R.string.ph_no_calls)
-                    setTextColor(color(R.color.text_sub)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f); gravity = Gravity.CENTER
-                }, LinearLayout.LayoutParams(-1, -2))
-                return@launch
-            }
-            calls.forEach { e ->
-                val row = LinearLayout(this@MainActivity).apply {
-                    orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
-                    setPadding((14 * d).toInt(), 0, (14 * d).toInt(), 0)
-                    background = androidx.core.content.ContextCompat.getDrawable(this@MainActivity, R.drawable.bg_aa_tile_idle)
-                    isClickable = true
-                    setOnClickListener { PhoneActivity.placeCall(this@MainActivity, e.number) }
+        val g = b.secondaryGrid
+        g.removeAllViews()
+        g.orientation = LinearLayout.HORIZONTAL
+        val d = resources.displayMetrics.density
+        val refresh = { builtMode = -1; renderSecondary() }
+        for (i in 0 until app.mg4dash.shortcuts.PhoneFavorites.COUNT) {
+            val fav = app.mg4dash.shortcuts.PhoneFavorites.get(prefs, i)
+            val cell = LinearLayout(this).apply {
+                orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER
+                setPadding((8 * d).toInt(), (8 * d).toInt(), (8 * d).toInt(), (8 * d).toInt())
+                setBackgroundResource(R.drawable.bg_dock_item)
+                isClickable = true; isFocusable = true
+                setOnClickListener {
+                    if (fav == null) app.mg4dash.shortcuts.PhoneFavorites.edit(this@MainActivity, i, refresh)
+                    else PhoneActivity.placeCall(this@MainActivity, fav.number)
                 }
-                val missed = e.type == android.provider.CallLog.Calls.MISSED_TYPE
-                row.addView(TextView(this@MainActivity).apply {
-                    text = e.name; maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END
-                    setTextColor(color(if (missed) R.color.accent_danger else R.color.text_value)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 19f)
-                }, LinearLayout.LayoutParams(0, -2, 1f))
-                row.addView(TextView(this@MainActivity).apply {
-                    text = e.detail; setTextColor(color(R.color.text_sub)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
-                }, LinearLayout.LayoutParams(-2, -2).apply { marginEnd = (14 * d).toInt() })
-                row.addView(ImageView(this@MainActivity).apply {
-                    setImageResource(R.drawable.ic_phone); setColorFilter(color(R.color.accent_energy))
-                }, LinearLayout.LayoutParams((22 * d).toInt(), (22 * d).toInt()))
-                g.addView(row, LinearLayout.LayoutParams(-1, 0, 1f).apply { topMargin = (4 * d).toInt() })
+                setOnLongClickListener { app.mg4dash.shortcuts.PhoneFavorites.edit(this@MainActivity, i, refresh); true }
             }
+            cell.addView(ImageView(this).apply {
+                setImageResource(if (fav == null) R.drawable.ic_plus else R.drawable.ic_phone)
+                setColorFilter(color(if (fav == null) R.color.text_title else R.color.accent_energy))
+            }, LinearLayout.LayoutParams((40 * d).toInt(), (40 * d).toInt()))
+            if (fav != null) cell.addView(TextView(this).apply {
+                text = fav.name; maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END; gravity = Gravity.CENTER
+                setTextColor(color(R.color.text_value)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 19f)
+            }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = (8 * d).toInt() })
+            g.addView(cell, LinearLayout.LayoutParams(0, -1, 1f).apply {
+                marginStart = (4 * d).toInt(); marginEnd = (4 * d).toInt(); topMargin = (6 * d).toInt()
+            })
         }
     }
 

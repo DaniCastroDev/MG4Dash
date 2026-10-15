@@ -107,7 +107,8 @@ class ScreenshotTest {
     }
 
     @Test fun homeWidgetPhone() {
-        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit().putInt("secondary_widget", 2).apply()
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit().putInt("secondary_widget", 2)
+            .putString("fav_phone_0", "Claire Martin\u001F+33612345678").putString("fav_phone_1", "Garage MG\u001F+33123456789").apply()
         shoot(MainActivity::class.java, "home_widget_phone.png")
     }
 

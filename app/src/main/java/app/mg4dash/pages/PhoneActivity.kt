@@ -103,6 +103,66 @@ class PhoneActivity : PageActivity() {
             Entry("Claire Martin", "+33 6 12 34 56 78", "Yesterday", CallLog.Calls.INCOMING_TYPE),
             Entry("Sophie Leroy", "+33 6 11 22 33 44", "2 days", CallLog.Calls.MISSED_TYPE),
         )
+
+        /** Répertoire du téléphone connecté (ContactsProvider, rempli par PBAP), trié par nom. */
+        fun contacts(ctx: Context): List<Entry> {
+            if (BuildConfig.MOCK) return mockContacts()
+            return try {
+                ctx.contentResolver.query(
+                    ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
+                    arrayOf(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, ContactsContract.CommonDataKinds.Phone.NUMBER,
+                        ContactsContract.CommonDataKinds.Phone.TYPE, ContactsContract.CommonDataKinds.Phone.LABEL),
+                    null, null, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " COLLATE LOCALIZED ASC",
+                )?.use { c ->
+                    val out = ArrayList<Entry>()
+                    val seen = HashSet<String>()
+                    while (c.moveToNext()) {
+                        val name = c.getString(0) ?: continue
+                        val number = c.getString(1) ?: continue
+                        if (!seen.add(name + "|" + number.filter { it.isDigit() })) continue
+                        val label = ContactsContract.CommonDataKinds.Phone.getTypeLabel(ctx.resources, c.getInt(2), c.getString(3)).toString()
+                        out.add(Entry(name, number, "$label · $number"))
+                    }
+                    out
+                } ?: emptyList()
+            } catch (e: Exception) {
+                Log.w("Téléphone", "contacts : ${e.message}"); emptyList()
+            }
+        }
+
+        /** Demande au téléphone connecté (PBAP) de renvoyer répertoire et journal d'appels. */
+        fun sync(ctx: Context, manual: Boolean) {
+            if (BuildConfig.MOCK) return
+            val adapter = BluetoothAdapter.getDefaultAdapter() ?: return
+            val ok = adapter.getProfileProxy(ctx, object : android.bluetooth.BluetoothProfile.ServiceListener {
+                override fun onServiceConnected(profile: Int, proxy: android.bluetooth.BluetoothProfile) {
+                    var started = 0
+                    for (d in proxy.connectedDevices) {
+                        for (m in listOf("downloadPhoneBook", "downloadCallLog")) {
+                            try {
+                                val res = proxy.javaClass.getMethod(m, android.bluetooth.BluetoothDevice::class.java).invoke(proxy, d)
+                                Log.i("Téléphone", "$m → $res"); started++
+                            } catch (e: Throwable) {
+                                Log.w("Téléphone", "$m indisponible : ${(e.cause ?: e).message}")
+                            }
+                        }
+                    }
+                    if (manual) Toast.makeText(ctx, if (started > 0) R.string.ph_sync_started else R.string.ph_no_phone, Toast.LENGTH_SHORT).show()
+                    adapter.closeProfileProxy(profile, proxy)
+                }
+                override fun onServiceDisconnected(profile: Int) {}
+            }, 17 /* BluetoothProfile.PBAP_CLIENT */)
+            if (!ok) Log.w("Téléphone", "profil PBAP indisponible")
+        }
+
+        private fun mockContacts() = listOf(
+            Entry("Alice Bernard", "+33 6 01 02 03 04", "Mobile · +33 6 01 02 03 04"),
+            Entry("Claire Martin", "+33 6 12 34 56 78", "Mobile · +33 6 12 34 56 78"),
+            Entry("Garage MG", "+33 1 23 45 67 89", "Work · +33 1 23 45 67 89"),
+            Entry("Paul Durand", "+33 6 55 44 33 22", "Mobile · +33 6 55 44 33 22"),
+            Entry("Sophie Leroy", "+33 6 11 22 33 44", "Mobile · +33 6 11 22 33 44"),
+            Entry("Thomas Petit", "+33 6 99 88 77 66", "Home · +33 6 99 88 77 66"),
+        )
     }
 
     private lateinit var deviceLabel: TextView
@@ -119,7 +179,7 @@ class PhoneActivity : PageActivity() {
         header.addView(kit.text(getString(R.string.ph_sync), 19f, R.color.text_value).apply {
             setPadding(kit.dp(16), kit.dp(12), kit.dp(16), kit.dp(12))
             setBackgroundResource(R.drawable.bg_button)
-            setOnClickListener { sync(manual = true) }
+            setOnClickListener { sync(this@PhoneActivity, manual = true) }
         }, kit.lp(-2, -2, r = 12))
         header.addView(kit.text(getString(R.string.ph_stock), 19f, R.color.text_sub).apply {
             setPadding(kit.dp(16), kit.dp(12), kit.dp(16), kit.dp(12))
@@ -214,30 +274,6 @@ class PhoneActivity : PageActivity() {
      * Demande au téléphone son répertoire et son journal d'appels (PBAP), comme le fait l'appli
      * téléphone SAIC (BluetoothPbapClient.downloadPhoneBook / downloadCallLog, méthodes SAIC).
      */
-    private fun sync(manual: Boolean) {
-        if (BuildConfig.MOCK) return
-        val adapter = BluetoothAdapter.getDefaultAdapter() ?: return
-        val ok = adapter.getProfileProxy(this, object : android.bluetooth.BluetoothProfile.ServiceListener {
-            override fun onServiceConnected(profile: Int, proxy: android.bluetooth.BluetoothProfile) {
-                var started = 0
-                for (d in proxy.connectedDevices) {
-                    for (m in listOf("downloadPhoneBook", "downloadCallLog")) {
-                        try {
-                            val res = proxy.javaClass.getMethod(m, android.bluetooth.BluetoothDevice::class.java).invoke(proxy, d)
-                            Log.i("Téléphone", "$m → $res"); started++
-                        } catch (e: Throwable) {
-                            Log.w("Téléphone", "$m indisponible : ${(e.cause ?: e).message}")
-                        }
-                    }
-                }
-                if (manual) Toast.makeText(this@PhoneActivity, if (started > 0) R.string.ph_sync_started else R.string.ph_no_phone, Toast.LENGTH_SHORT).show()
-                adapter.closeProfileProxy(profile, proxy)
-            }
-            override fun onServiceDisconnected(profile: Int) {}
-        }, 17 /* BluetoothProfile.PBAP_CLIENT */)
-        if (!ok) Log.w("Téléphone", "profil PBAP indisponible")
-    }
-
     override fun render(s: VehicleState) {}
 
     private fun list(adapter: EntryAdapter) = ListView(this).apply {
@@ -252,16 +288,17 @@ class PhoneActivity : PageActivity() {
     private fun load() {
         lifecycleScope.launch {
             val device = connectedPhone()
-            val (calls, book) = withContext(Dispatchers.IO) { readCalls() to readContacts() }
+            val (calls, book) = withContext(Dispatchers.IO) { readCalls() to contacts(this@PhoneActivity) }
             deviceLabel.text = device ?: getString(R.string.ph_not_connected)
             contacts = book
+            app.mg4dash.shortcuts.PhoneFavorites.remember(app.mg4dash.system.Prefs(this@PhoneActivity), book)
             recentAdapter.items = calls
             recentEmpty.visibility = if (calls.isEmpty()) View.VISIBLE else View.GONE
             recentEmpty.text = getString(if (device == null) R.string.ph_no_phone else R.string.ph_no_calls)
             contactEmpty.text = getString(if (device == null) R.string.ph_no_phone else R.string.ph_no_contacts)
             filterContacts("")
             // Téléphone connecté mais rien de reçu : on lance la synchronisation une fois
-            if (device != null && book.isEmpty() && calls.isEmpty() && !autoSyncDone) { autoSyncDone = true; sync(manual = false) }
+            if (device != null && book.isEmpty() && calls.isEmpty() && !autoSyncDone) { autoSyncDone = true; sync(this@PhoneActivity, manual = false) }
         }
     }
 
@@ -277,31 +314,6 @@ class PhoneActivity : PageActivity() {
     }
 
     private fun readCalls(): List<Entry> = recentCalls(this)
-
-    private fun readContacts(): List<Entry> {
-        if (BuildConfig.MOCK) return mockContacts()
-        return try {
-            contentResolver.query(
-                ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
-                arrayOf(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME, ContactsContract.CommonDataKinds.Phone.NUMBER,
-                    ContactsContract.CommonDataKinds.Phone.TYPE, ContactsContract.CommonDataKinds.Phone.LABEL),
-                null, null, ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " COLLATE LOCALIZED ASC",
-            )?.use { c ->
-                val out = ArrayList<Entry>()
-                val seen = HashSet<String>()
-                while (c.moveToNext()) {
-                    val name = c.getString(0) ?: continue
-                    val number = c.getString(1) ?: continue
-                    if (!seen.add(name + "|" + number.filter { it.isDigit() })) continue
-                    val label = ContactsContract.CommonDataKinds.Phone.getTypeLabel(resources, c.getInt(2), c.getString(3)).toString()
-                    out.add(Entry(name, number, "$label · $number"))
-                }
-                out
-            } ?: emptyList()
-        } catch (e: Exception) {
-            Log.w("Téléphone", "contacts : ${e.message}"); emptyList()
-        }
-    }
 
     // ── Appel ──
 
@@ -343,15 +355,4 @@ class PhoneActivity : PageActivity() {
             return row
         }
     }
-
-    // ── Données de démonstration (version émulateur) ──
-
-    private fun mockContacts() = listOf(
-        Entry("Alice Bernard", "+33 6 01 02 03 04", "Mobile · +33 6 01 02 03 04"),
-        Entry("Claire Martin", "+33 6 12 34 56 78", "Mobile · +33 6 12 34 56 78"),
-        Entry("Garage MG", "+33 1 23 45 67 89", "Work · +33 1 23 45 67 89"),
-        Entry("Paul Durand", "+33 6 55 44 33 22", "Mobile · +33 6 55 44 33 22"),
-        Entry("Sophie Leroy", "+33 6 11 22 33 44", "Mobile · +33 6 11 22 33 44"),
-        Entry("Thomas Petit", "+33 6 99 88 77 66", "Home · +33 6 99 88 77 66"),
-    )
 }
