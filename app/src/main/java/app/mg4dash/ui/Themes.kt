@@ -38,7 +38,12 @@ object Themes {
     fun isNight(context: Context): Boolean {
         val ui = context.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_NIGHT_MASK
         if (ui == android.content.res.Configuration.UI_MODE_NIGHT_YES) return true
-        return try { app.mg4dash.car.CarProps.readAny(289442317) == "3" } catch (_: Exception) { false }
+        // Relevé sur la voiture : feux allumés → VEH_SIDE_LGHT = 3 et PMS_SYSTEM_DAY_NIGHT_MODE = 3 (zone 0x1000000)
+        return try {
+            val side = app.mg4dash.car.CarProps.readAny(557880099)
+            (side.isNotEmpty() && side != "0" && side != "false") ||
+                app.mg4dash.car.CarProps.readIntArea(289442317, 0x1000000) == 3
+        } catch (_: Exception) { false }
     }
 
     /** Couleurs des pastilles du sélecteur (même ordre que les listes). */

@@ -106,6 +106,15 @@ object CarProps {
      * Lecture « quel que soit le type » pour l'enregistreur : essaie entier, réel puis booléen,
      * sur la zone globale puis sur les zones habituelles (siège conducteur, rangée 1…).
      */
+    /** Lecture entière sur une zone précise (ex. 0x1000000 pour le mode jour / nuit). */
+    fun readIntArea(id: Int, area: Int): Int? {
+        if (BuildConfig.MOCK) return null
+        val m = cpm ?: return null
+        return try {
+            m.javaClass.getMethod("getIntProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType).invoke(m, id, area) as? Int
+        } catch (_: Throwable) { null }
+    }
+
     private val areaCache = java.util.concurrent.ConcurrentHashMap<Int, Int>()
 
     fun readAny(id: Int): String {
