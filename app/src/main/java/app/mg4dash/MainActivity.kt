@@ -441,22 +441,22 @@ class MainActivity : AppCompatActivity() {
         val g = b.secondaryGrid
         g.removeAllViews()
         g.orientation = LinearLayout.VERTICAL
+        // Lisible d'un coup d'œil : une grosse barre colorée et les pourcentages ; le détail est sur la page Énergie.
+        val d = resources.displayMetrics.density
+        val parts = listOf(
+            Triple(R.string.sw_drive, t.driveKwh, color(R.color.accent_energy)),
+            Triple(R.string.sw_clim, t.climKwh, color(R.color.accent_cold)),
+            Triple(R.string.sw_acc, t.accKwh, color(R.color.accent_heat)),
+        )
+        g.addView(app.mg4dash.ui.StackedBar(this).apply {
+            this.parts = if (ok) parts.map { app.mg4dash.ui.StackedBar.Part(it.second, it.third) } else emptyList()
+        }, LinearLayout.LayoutParams(-1, (34 * d).toInt()).apply { marginStart = (8 * d).toInt(); marginEnd = (8 * d).toInt() })
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        listOf(
-            Triple(R.string.sw_drive, t.driveKwh, R.color.accent_energy),
-            Triple(R.string.sw_clim, t.climKwh, R.color.accent_cold),
-            Triple(R.string.sw_acc, t.accKwh, R.color.accent_heat),
-        ).forEach { (label, v, c) ->
-            val pct = if (ok) " · ${Math.round(v / t.outKwh * 100)}%" else ""
-            row.addView(statColumn(getString(label), if (ok) kwh(v) + pct else "—", 26f, color(c)),
+        parts.forEach { (label, v, c) ->
+            row.addView(statColumn(getString(label), if (ok) "${Math.round(v / t.outKwh * 100)} %" else "—", 30f, c),
                 LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
         }
-        g.addView(row, LinearLayout.LayoutParams(-1, -2))
-        g.addView(TextView(this).apply {
-            text = if (ok) getString(R.string.sw_energy_note, kwh(t.outKwh), kwh(t.regenKwh)) +
-                (t.per100?.let { " · ${kwh(it)} kWh/100" } ?: "") else ""
-            setTextColor(color(R.color.text_sub)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f); gravity = Gravity.CENTER
-        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = (8 * resources.displayMetrics.density).toInt() })
+        g.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = (12 * d).toInt() })
     }
 
     private fun buildPower() {
