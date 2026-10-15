@@ -54,6 +54,11 @@ class PhoneActivity : PageActivity() {
     override fun buildBody() {
         deviceLabel = kit.text("", 18f, R.color.text_sub)
         header.addView(deviceLabel, kit.lp(-2, -2, r = 16))
+        header.addView(kit.text(getString(R.string.ph_sync), 19f, R.color.text_value).apply {
+            setPadding(kit.dp(16), kit.dp(12), kit.dp(16), kit.dp(12))
+            setBackgroundResource(R.drawable.bg_button)
+            setOnClickListener { sync(manual = true) }
+        }, kit.lp(-2, -2, r = 12))
         header.addView(kit.text(getString(R.string.ph_stock), 19f, R.color.text_sub).apply {
             setPadding(kit.dp(16), kit.dp(12), kit.dp(16), kit.dp(12))
             setBackgroundResource(R.drawable.bg_button)
@@ -124,6 +129,51 @@ class PhoneActivity : PageActivity() {
     override fun onResume() {
         super.onResume()
         load()
+        contentResolver.registerContentObserver(ContactsContract.AUTHORITY_URI, true, observer)
+        contentResolver.registerContentObserver(CallLog.Calls.CONTENT_URI, true, observer)
+    }
+
+    override fun onPause() {
+        super.onPause()
+        contentResolver.unregisterContentObserver(observer)
+    }
+
+    /** Le répertoire ou le journal changent (synchronisation en cours) : rechargement groupé. */
+    private val reload = Runnable { load() }
+    private val observer = object : android.database.ContentObserver(android.os.Handler(android.os.Looper.getMainLooper())) {
+        override fun onChange(selfChange: Boolean) {
+            body.removeCallbacks(reload); body.postDelayed(reload, 1500)
+        }
+    }
+
+    private var autoSyncDone = false
+
+    /**
+     * Demande au téléphone son répertoire et son journal d'appels (PBAP), comme le fait l'appli
+     * téléphone SAIC (BluetoothPbapClient.downloadPhoneBook / downloadCallLog, méthodes SAIC).
+     */
+    private fun sync(manual: Boolean) {
+        if (BuildConfig.MOCK) return
+        val adapter = BluetoothAdapter.getDefaultAdapter() ?: return
+        val ok = adapter.getProfileProxy(this, object : android.bluetooth.BluetoothProfile.ServiceListener {
+            override fun onServiceConnected(profile: Int, proxy: android.bluetooth.BluetoothProfile) {
+                var started = 0
+                for (d in proxy.connectedDevices) {
+                    for (m in listOf("downloadPhoneBook", "downloadCallLog")) {
+                        try {
+                            val res = proxy.javaClass.getMethod(m, android.bluetooth.BluetoothDevice::class.java).invoke(proxy, d)
+                            Log.i("Téléphone", "$m → $res"); started++
+                        } catch (e: Throwable) {
+                            Log.w("Téléphone", "$m indisponible : ${(e.cause ?: e).message}")
+                        }
+                    }
+                }
+                if (manual) Toast.makeText(this@PhoneActivity, if (started > 0) R.string.ph_sync_started else R.string.ph_no_phone, Toast.LENGTH_SHORT).show()
+                adapter.closeProfileProxy(profile, proxy)
+            }
+            override fun onServiceDisconnected(profile: Int) {}
+        }, 17 /* BluetoothProfile.PBAP_CLIENT */)
+        if (!ok) Log.w("Téléphone", "profil PBAP indisponible")
     }
 
     override fun render(s: VehicleState) {}
@@ -148,6 +198,8 @@ class PhoneActivity : PageActivity() {
             recentEmpty.text = getString(if (device == null) R.string.ph_no_phone else R.string.ph_no_calls)
             contactEmpty.text = getString(if (device == null) R.string.ph_no_phone else R.string.ph_no_contacts)
             filterContacts("")
+            // Téléphone connecté mais rien de reçu : on lance la synchronisation une fois
+            if (device != null && book.isEmpty() && calls.isEmpty() && !autoSyncDone) { autoSyncDone = true; sync(manual = false) }
         }
     }
 

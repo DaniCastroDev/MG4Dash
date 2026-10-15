@@ -285,6 +285,8 @@
     <string name="st_update_confirm">¿Descargar e instalar MG4Dash %1$s? La pantalla se reiniciará.</string>
     <string name="st_update_downloading">Descargando… %1$d %%</string>
     <string name="st_update_installing">Instalando… la pantalla se reiniciará</string>
+    <string name="ph_sync">Sincronizar</string>
+    <string name="ph_sync_started">Sincronización iniciada: los contactos y las llamadas aparecerán en unos instantes.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Teléfono conectado · Pulse para abrir</string>
     <string name="aa_waiting">Conecte su teléfono por USB</string>
