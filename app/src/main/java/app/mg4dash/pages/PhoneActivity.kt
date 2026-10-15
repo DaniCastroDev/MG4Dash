@@ -43,6 +43,68 @@ class PhoneActivity : PageActivity() {
 
     data class Entry(val name: String, val number: String, val detail: String, val type: Int = 0)
 
+    companion object {
+        /** Appels récents du téléphone connecté (journal synchronisé par PBAP), du plus récent au plus ancien. */
+        fun recentCalls(ctx: Context, max: Int = 100): List<Entry> {
+            if (BuildConfig.MOCK) return mockCalls()
+            return try {
+                ctx.contentResolver.query(
+                    CallLog.Calls.CONTENT_URI,
+                    arrayOf(CallLog.Calls.CACHED_NAME, CallLog.Calls.NUMBER, CallLog.Calls.TYPE, CallLog.Calls.DATE),
+                    null, null, CallLog.Calls.DATE + " DESC",
+                )?.use { c ->
+                    val out = ArrayList<Entry>()
+                    while (c.moveToNext() && out.size < max) {
+                        val number = c.getString(1) ?: continue
+                        val name = c.getString(0)?.takeIf { it.isNotBlank() } ?: number
+                        val ago = DateUtils.getRelativeTimeSpanString(c.getLong(3), System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS, DateUtils.FORMAT_ABBREV_RELATIVE).toString()
+                        out.add(Entry(name, number, ago, c.getInt(2)))
+                    }
+                    out
+                } ?: emptyList()
+            } catch (e: Exception) {
+                Log.w("Téléphone", "journal d'appels : ${e.message}"); emptyList()
+            }
+        }
+
+        /** Nom du téléphone connecté en mains libres (HFP), ou null. */
+        fun connectedPhone(): String? {
+            if (BuildConfig.MOCK) return "Pixel 8"
+            return try {
+                BluetoothAdapter.getDefaultAdapter()?.bondedDevices?.firstOrNull { d ->
+                    try { d.javaClass.getMethod("isConnected").invoke(d) as Boolean } catch (_: Throwable) { false }
+                }?.name
+            } catch (e: Exception) { null }
+        }
+
+        /** Appel par le compte Bluetooth mains libres (HFP), comme l'appli SAIC. */
+        fun placeCall(ctx: Context, number: String) {
+            val n = number.trim()
+            if (n.isEmpty()) return
+            if (BuildConfig.MOCK) { Toast.makeText(ctx, "☎ $n", Toast.LENGTH_SHORT).show(); return }
+            try {
+                val tm = ctx.getSystemService(Context.TELECOM_SERVICE) as TelecomManager
+                val hfp = tm.callCapablePhoneAccounts.firstOrNull { it.componentName.flattenToShortString().contains("HfpClientConnectionService") }
+                if (hfp == null) { Toast.makeText(ctx, R.string.ph_no_phone, Toast.LENGTH_LONG).show(); return }
+                val extras = Bundle().apply { putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, hfp) }
+                tm.placeCall(Uri.fromParts("tel", n, null), extras)
+                Log.i("Téléphone", "appel lancé")
+            } catch (e: Exception) {
+                Log.w("Téléphone", "appel : ${e.message}")
+                Toast.makeText(ctx, R.string.ph_call_failed, Toast.LENGTH_LONG).show()
+            }
+        }
+
+        private fun mockCalls() = listOf(
+            Entry("Claire Martin", "+33 6 12 34 56 78", "12 min", CallLog.Calls.INCOMING_TYPE),
+            Entry("Garage MG", "+33 1 23 45 67 89", "1 h", CallLog.Calls.OUTGOING_TYPE),
+            Entry("+33 7 98 76 54 32", "+33 7 98 76 54 32", "3 h", CallLog.Calls.MISSED_TYPE),
+            Entry("Paul Durand", "+33 6 55 44 33 22", "Yesterday", CallLog.Calls.OUTGOING_TYPE),
+            Entry("Claire Martin", "+33 6 12 34 56 78", "Yesterday", CallLog.Calls.INCOMING_TYPE),
+            Entry("Sophie Leroy", "+33 6 11 22 33 44", "2 days", CallLog.Calls.MISSED_TYPE),
+        )
+    }
+
     private lateinit var deviceLabel: TextView
     private lateinit var recentAdapter: EntryAdapter
     private lateinit var contactAdapter: EntryAdapter
@@ -214,27 +276,7 @@ class PhoneActivity : PageActivity() {
         contactEmpty.visibility = if (contactAdapter.items.isEmpty()) View.VISIBLE else View.GONE
     }
 
-    private fun readCalls(): List<Entry> {
-        if (BuildConfig.MOCK) return mockCalls()
-        return try {
-            contentResolver.query(
-                CallLog.Calls.CONTENT_URI,
-                arrayOf(CallLog.Calls.CACHED_NAME, CallLog.Calls.NUMBER, CallLog.Calls.TYPE, CallLog.Calls.DATE),
-                null, null, CallLog.Calls.DATE + " DESC",
-            )?.use { c ->
-                val out = ArrayList<Entry>()
-                while (c.moveToNext() && out.size < 100) {
-                    val number = c.getString(1) ?: continue
-                    val name = c.getString(0)?.takeIf { it.isNotBlank() } ?: number
-                    val ago = DateUtils.getRelativeTimeSpanString(c.getLong(3), System.currentTimeMillis(), DateUtils.MINUTE_IN_MILLIS, DateUtils.FORMAT_ABBREV_RELATIVE).toString()
-                    out.add(Entry(name, number, ago, c.getInt(2)))
-                }
-                out
-            } ?: emptyList()
-        } catch (e: Exception) {
-            Log.w("Téléphone", "journal d'appels : ${e.message}"); emptyList()
-        }
-    }
+    private fun readCalls(): List<Entry> = recentCalls(this)
 
     private fun readContacts(): List<Entry> {
         if (BuildConfig.MOCK) return mockContacts()
@@ -261,35 +303,9 @@ class PhoneActivity : PageActivity() {
         }
     }
 
-    /** Nom du téléphone connecté en mains libres (HFP), ou null. */
-    private fun connectedPhone(): String? {
-        if (BuildConfig.MOCK) return "Pixel 8"
-        return try {
-            BluetoothAdapter.getDefaultAdapter()?.bondedDevices?.firstOrNull { d ->
-                try { d.javaClass.getMethod("isConnected").invoke(d) as Boolean } catch (_: Throwable) { false }
-            }?.name
-        } catch (e: Exception) { null }
-    }
-
     // ── Appel ──
 
-    /** Appel par le compte Bluetooth mains libres (HFP), comme l'appli SAIC. */
-    private fun call(number: String) {
-        val n = number.trim()
-        if (n.isEmpty()) return
-        if (BuildConfig.MOCK) { Toast.makeText(this, "☎ $n", Toast.LENGTH_SHORT).show(); return }
-        try {
-            val tm = getSystemService(Context.TELECOM_SERVICE) as TelecomManager
-            val hfp = tm.callCapablePhoneAccounts.firstOrNull { it.componentName.flattenToShortString().contains("HfpClientConnectionService") }
-            if (hfp == null) { Toast.makeText(this, R.string.ph_no_phone, Toast.LENGTH_LONG).show(); return }
-            val extras = Bundle().apply { putParcelable(TelecomManager.EXTRA_PHONE_ACCOUNT_HANDLE, hfp) }
-            tm.placeCall(Uri.fromParts("tel", n, null), extras)
-            Log.i("Téléphone", "appel lancé")
-        } catch (e: Exception) {
-            Log.w("Téléphone", "appel : ${e.message}")
-            Toast.makeText(this, R.string.ph_call_failed, Toast.LENGTH_LONG).show()
-        }
-    }
+    private fun call(number: String) = placeCall(this, number)
 
     // ── Liste ──
 
@@ -329,15 +345,6 @@ class PhoneActivity : PageActivity() {
     }
 
     // ── Données de démonstration (version émulateur) ──
-
-    private fun mockCalls() = listOf(
-        Entry("Claire Martin", "+33 6 12 34 56 78", "12 min", CallLog.Calls.INCOMING_TYPE),
-        Entry("Garage MG", "+33 1 23 45 67 89", "1 h", CallLog.Calls.OUTGOING_TYPE),
-        Entry("+33 7 98 76 54 32", "+33 7 98 76 54 32", "3 h", CallLog.Calls.MISSED_TYPE),
-        Entry("Paul Durand", "+33 6 55 44 33 22", "Yesterday", CallLog.Calls.OUTGOING_TYPE),
-        Entry("Claire Martin", "+33 6 12 34 56 78", "Yesterday", CallLog.Calls.INCOMING_TYPE),
-        Entry("Sophie Leroy", "+33 6 11 22 33 44", "2 days", CallLog.Calls.MISSED_TYPE),
-    )
 
     private fun mockContacts() = listOf(
         Entry("Alice Bernard", "+33 6 01 02 03 04", "Mobile · +33 6 01 02 03 04"),

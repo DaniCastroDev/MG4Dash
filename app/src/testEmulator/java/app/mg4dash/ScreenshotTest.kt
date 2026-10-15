@@ -101,6 +101,16 @@ class ScreenshotTest {
 
     @Test fun phone() = shoot(app.mg4dash.pages.PhoneActivity::class.java, "phone.png")
 
+    @Test fun homeWidgetPower() {
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit().putInt("secondary_widget", 1).apply()
+        shoot(MainActivity::class.java, "home_widget_power.png")
+    }
+
+    @Test fun homeWidgetPhone() {
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit().putInt("secondary_widget", 2).apply()
+        shoot(MainActivity::class.java, "home_widget_phone.png")
+    }
+
     @Test fun homeShortcuts() {
         val ctx = org.robolectric.RuntimeEnvironment.getApplication()
         ctx.getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()

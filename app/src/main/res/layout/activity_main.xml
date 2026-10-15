@@ -761,7 +761,7 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <!-- Widget secondaire paramétrable : toucher pour changer (trajet / statut / météo) -->
+            <!-- Widget secondaire paramétrable : toucher pour changer (énergie du trajet / puissance / téléphone) -->
             <LinearLayout
                 android:id="@+id/secondaryCard"
                 style="@style/Panel"
@@ -785,7 +785,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/title_trip" />
+                        android:text="@string/sw_energy" />
 
                     <TextView
                         android:id="@+id/secondaryDots"

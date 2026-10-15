@@ -153,7 +153,7 @@ object CarProps {
     private fun seedMock() {
         mock[CHRG_TRGT_SOC] = 7; mock[RESER_CTRL] = 2; mock[RESER_ST_HOUR] = 22; mock[RESER_ST_MIN] = 30
         mock[RESER_SP_HOUR] = 6; mock[RESER_SP_MIN] = 0; mock[ALTNG_CHRG_CRNT] = 4; mock[V2X_SP_SOC] = 3; mock[V2X] = 0; mock[DRVNG_PTC_HEAT] = 0
-        mock[BMS_PACK_VOL] = 352.4f; mock[BMS_PACK_CRNT] = -0.8f; mock[ELEC_CSUMP_PERKM] = 15.6f
+        mock[BMS_PACK_VOL] = 352.4f; mock[BMS_PACK_CRNT] = 35.2f; mock[ELEC_CSUMP_PERKM] = 15.6f
         mock[CONS_TOTAL_AFT_CHRG] = 18.4f; mock[CONS_ATC_AFT_CHRG] = 2.1f; mock[CONS_ACCRY_AFT_CHRG] = 0.9f; mock[CONS_RGEN_AFT_CHRG] = 3.2f
         mock[CONS_TOTAL_AFT_ST] = 3.6f; mock[CONS_ATC_AFT_ST] = 0.5f; mock[CONS_ACCRY_AFT_ST] = 0.2f; mock[CONS_RGEN_AFT_ST] = 0.7f
     }

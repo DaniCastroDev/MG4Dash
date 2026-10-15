@@ -4,8 +4,6 @@ title_climate|CLIMATE|CLIMATISATION|KLIMA|CLIMATIZACIÓN|CLIMATIZZAZIONE|KLIMAAT
 title_energy|ENERGY|ÉNERGIE|ENERGIE|ENERGÍA|ENERGIA|ENERGIE
 title_weather|WEATHER|MÉTÉO|WETTER|TIEMPO|METEO|WEER
 title_media|MEDIA|MÉDIA|MEDIEN|MULTIMEDIA|MULTIMEDIA|MEDIA
-title_trip|TRIP|TRAJET|FAHRT|TRAYECTO|VIAGGIO|RIT
-title_status|STATUS|STATUT|STATUS|ESTADO|STATO|STATUS
 title_vehicle|VEHICLE|VÉHICULE|FAHRZEUG|VEHÍCULO|VEICOLO|VOERTUIG
 title_position|POSITION|POSITION|POSITION|POSICIÓN|POSIZIONE|POSITIE
 dock_home|Home|Accueil|Start|Inicio|Home|Start
@@ -44,16 +42,6 @@ weather_pending|Forecast pending|Prévisions en attente|Vorhersage folgt|Previsi
 weather_outside_vehicle|Vehicle outside temperature|Température extérieure du véhicule|Außentemperatur des Fahrzeugs|Temperatura exterior del vehículo|Temperatura esterna del veicolo|Buitentemperatuur van het voertuig
 weather_details|Feels like %1$d° · Wind %2$d km/h · %3$d %%|Ressenti %1$d° · Vent %2$d km/h · %3$d %%|Gefühlt %1$d° · Wind %2$d km/h · %3$d %%|Sensación %1$d° · Viento %2$d km/h · %3$d %%|Percepita %1$d° · Vento %2$d km/h · %3$d %%|Gevoel %1$d° · Wind %2$d km/h · %3$d %%
 weather_here|Current position|Position actuelle|Aktuelle Position|Posición actual|Posizione attuale|Huidige positie
-trip_distance|DISTANCE|DISTANCE|STRECKE|DISTANCIA|DISTANZA|AFSTAND
-trip_duration|DURATION|DURÉE|DAUER|DURACIÓN|DURATA|DUUR
-trip_cons|CONS.|CONSO|VERBR.|CONSUMO|CONSUMO|VERBR.
-status_odometer|ODOMETER|ODOMÈTRE|KILOMETERSTAND|ODÓMETRO|CONTACHILOMETRI|KILOMETERSTAND
-status_outside|OUTSIDE|EXTÉRIEUR|AUSSEN|EXTERIOR|ESTERNO|BUITEN
-status_connected|Connected|Connecté|Verbunden|Conectado|Connesso|Verbonden
-status_offline|Offline|Hors ligne|Offline|Sin conexión|Offline|Offline
-w_now|NOW|MAINTENANT|JETZT|AHORA|ORA|NU
-w_tomorrow|TOMORROW|DEMAIN|MORGEN|MAÑANA|DOMANI|MORGEN
-w_wind|WIND|VENT|WIND|VIENTO|VENTO|WIND
 wx_sunny|Sunny|Ensoleillé|Sonnig|Soleado|Soleggiato|Zonnig
 wx_mostly_clear|Mostly clear|Plutôt dégagé|Überwiegend klar|Mayormente despejado|Prevalentemente sereno|Overwegend helder
 wx_partly|Partly cloudy|Partiellement nuageux|Teilweise bewölkt|Parcialmente nublado|Parzialmente nuvoloso|Gedeeltelijk bewolkt
@@ -290,3 +278,14 @@ st_theme_mode|Light or dark|Clair ou sombre|Hell oder dunkel|Claro u oscuro|Chia
 st_mode_auto|Auto (day / night)|Auto (jour / nuit)|Auto (Tag / Nacht)|Auto (día / noche)|Auto (giorno / notte)|Auto (dag / nacht)
 st_mode_dark|Dark|Sombre|Dunkel|Oscuro|Scuro|Donker
 st_mode_light|Light|Clair|Hell|Claro|Chiaro|Licht
+sw_energy|TRIP ENERGY|ÉNERGIE DU TRAJET|FAHRTENERGIE|ENERGÍA DEL TRAYECTO|ENERGIA DEL VIAGGIO|RITENERGIE
+sw_drive|DRIVING|CONDUITE|FAHREN|CONDUCCIÓN|GUIDA|RIJDEN
+sw_clim|CLIMATE|CLIM|KLIMA|CLIMA|CLIMA|KLIMAAT
+sw_acc|ACCESSORIES|ACCESSOIRES|ZUBEHÖR|ACCESORIOS|ACCESSORI|ACCESSOIRES
+sw_energy_note|Total %1$s kWh · %2$s kWh recovered|Total %1$s kWh · %2$s kWh récupérés|Gesamt %1$s kWh · %2$s kWh zurückgewonnen|Total %1$s kWh · %2$s kWh recuperados|Totale %1$s kWh · %2$s kWh recuperati|Totaal %1$s kWh · %2$s kWh teruggewonnen
+sw_power|LIVE POWER|PUISSANCE EN DIRECT|LEISTUNG LIVE|POTENCIA EN DIRECTO|POTENZA IN TEMPO REALE|LIVE VERMOGEN
+sw_drawn|DRAWN|CONSOMMÉE|VERBRAUCH|CONSUMIDA|CONSUMATA|VERBRUIKT
+sw_recovering|RECOVERED|RÉCUPÉRÉE|ZURÜCKGEWONNEN|RECUPERADA|RECUPERATA|TERUGGEWONNEN
+sw_charging|CHARGING|EN CHARGE|LADEN|CARGANDO|IN RICARICA|LADEN
+sw_trip_avg|TRIP AVERAGE|MOYENNE TRAJET|FAHRT-SCHNITT|MEDIA TRAYECTO|MEDIA VIAGGIO|RITGEMIDDELDE
+sw_phone|PHONE|TÉLÉPHONE|TELEFON|TELÉFONO|TELEFONO|TELEFOON

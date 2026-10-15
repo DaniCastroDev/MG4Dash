@@ -9,6 +9,7 @@ import app.mg4dash.map.LocationRepo
 import app.mg4dash.map.MapCard
 import app.mg4dash.pages.ClimateActivity
 import app.mg4dash.pages.EnergyActivity
+import app.mg4dash.pages.PhoneActivity
 import app.mg4dash.pages.VehicleActivity
 import app.mg4dash.ui.Fullscreen
 import app.mg4dash.ui.Dock
@@ -361,8 +362,9 @@ class MainActivity : AppCompatActivity() {
         b.chargeAction.setOnClickListener { onChargeAction() }
         b.weatherCard.setOnClickListener { WeatherRepo.refreshNow(this) }
         b.secondaryCard.setOnClickListener {
-            prefs.secondaryWidget = (prefs.secondaryWidget + 1) % 3
+            prefs.secondaryWidget = (prefs.secondaryWidget.coerceIn(0, 2) + 1) % 3
             renderSecondary()
+            lifecycleScope.launch { updatePower() }
         }
         b.mapZoomIn.setOnClickListener { mapCard.zoom(1) }
         b.mapZoomOut.setOnClickListener { mapCard.zoom(-1) }
@@ -398,51 +400,141 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    // Widget du bas : énergie du trajet, puissance en direct, téléphone (toucher le widget pour changer)
+    private var builtMode = -1
+    private var powerValue: TextView? = null
+    private var powerLabel: TextView? = null
+    private var powerAvg: TextView? = null
+    private var powerBar: app.mg4dash.ui.PowerBar? = null
+
     private fun renderSecondary() {
-        val mode = prefs.secondaryWidget
+        val mode = prefs.secondaryWidget.coerceIn(0, 2)
         b.secondaryDots.text = (0..2).joinToString(" ") { if (it == mode) "●" else "○" }
-        val s = CarBridge.state.value
-        val stats: List<Pair<String, String>> = when (mode) {
-            0 -> {
-                b.secondaryTitle.text = getString(R.string.title_trip)
-                val t = ConsumptionEstimator.trip.value
-                val minutes = ((System.currentTimeMillis() - t.startedAt) / 60_000).toInt()
-                listOf(
-                    getString(R.string.trip_distance) to "${t.distanceKm} km",
-                    getString(R.string.trip_duration) to (if (minutes >= 60) "${minutes / 60} h ${minutes % 60}" else "$minutes min"),
-                    getString(R.string.trip_cons) to (t.kwhPer100?.let { String.format(Locale.getDefault(), "%.1f", it) } ?: "—"),
-                )
-            }
-            1 -> {
-                b.secondaryTitle.text = getString(R.string.title_status)
-                listOf(
-                    getString(R.string.status_odometer) to (s.odometerKm?.let { String.format(Locale.getDefault(), "%,d km", it) } ?: "—"),
-                    getString(R.string.status_outside) to (s.outsideTemp?.let { "${Math.round(it)}°" } ?: "—"),
-                    getString(R.string.title_vehicle) to getString(if (s.connected) R.string.status_connected else R.string.status_offline),
-                )
-            }
-            else -> {
-                b.secondaryTitle.text = getString(R.string.title_weather)
-                val w = WeatherRepo.weather.value
-                listOf(
-                    getString(R.string.w_now) to (w?.let { "${it.tempC}°" } ?: "—"),
-                    getString(R.string.w_tomorrow) to (w?.days?.firstOrNull()?.let { "${it.minC}°/${it.maxC}°" } ?: "—"),
-                    getString(R.string.w_wind) to (w?.let { "${it.windKmh} km/h" } ?: "—"),
-                )
-            }
+        when (mode) {
+            0 -> renderTripEnergy()
+            1 -> if (builtMode != 1) { buildPower(); builtMode = 1; lifecycleScope.launch { updatePower() } }
+            else -> renderPhoneCalls()
         }
-        b.secondaryGrid.removeAllViews()
-        stats.forEach { (title, value) ->
-            val col = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER }
-            col.addView(TextView(this).apply {
-                text = value; setTextColor(color(R.color.text_value)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 28f)
-                fontFeatureSettings = "tnum"; maxLines = 1
+        builtMode = mode
+    }
+
+    private fun statColumn(title: String, value: String, valueSp: Float = 28f, valueColor: Int = color(R.color.text_value)) =
+        LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER
+            addView(TextView(this@MainActivity).apply {
+                text = value; setTextColor(valueColor); setTextSize(TypedValue.COMPLEX_UNIT_SP, valueSp)
+                fontFeatureSettings = "tnum"; maxLines = 1; gravity = Gravity.CENTER
             })
-            col.addView(TextView(this).apply {
+            addView(TextView(this@MainActivity).apply {
                 text = title; setTextColor(color(R.color.text_title)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
-                letterSpacing = 0.12f
+                letterSpacing = 0.12f; maxLines = 1; gravity = Gravity.CENTER
             })
-            b.secondaryGrid.addView(col, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        }
+
+    private fun kwh(v: Float) = String.format(Locale.getDefault(), "%.1f", v)
+
+    /** Énergie depuis le démarrage, répartie comme sur la page Énergie (mesures de MG4Dash). */
+    private fun renderTripEnergy() {
+        b.secondaryTitle.text = getString(R.string.sw_energy)
+        val t = app.mg4dash.energy.EnergyMonitor.sinceStart.value
+        val ok = t.outKwh > 0f
+        val g = b.secondaryGrid
+        g.removeAllViews()
+        g.orientation = LinearLayout.VERTICAL
+        val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        listOf(
+            Triple(R.string.sw_drive, t.driveKwh, R.color.accent_energy),
+            Triple(R.string.sw_clim, t.climKwh, R.color.accent_cold),
+            Triple(R.string.sw_acc, t.accKwh, R.color.accent_heat),
+        ).forEach { (label, v, c) ->
+            val pct = if (ok) " · ${Math.round(v / t.outKwh * 100)}%" else ""
+            row.addView(statColumn(getString(label), if (ok) kwh(v) + pct else "—", 26f, color(c)),
+                LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        }
+        g.addView(row, LinearLayout.LayoutParams(-1, -2))
+        g.addView(TextView(this).apply {
+            text = if (ok) getString(R.string.sw_energy_note, kwh(t.outKwh), kwh(t.regenKwh)) +
+                (t.per100?.let { " · ${kwh(it)} kWh/100" } ?: "") else ""
+            setTextColor(color(R.color.text_sub)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f); gravity = Gravity.CENTER
+        }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = (8 * resources.displayMetrics.density).toInt() })
+    }
+
+    private fun buildPower() {
+        b.secondaryTitle.text = getString(R.string.sw_power)
+        val g = b.secondaryGrid
+        g.removeAllViews()
+        g.orientation = LinearLayout.HORIZONTAL
+        val d = resources.displayMetrics.density
+        val left = statColumn(getString(R.string.sw_drawn), "—", 34f)
+        powerValue = left.getChildAt(0) as TextView; powerLabel = left.getChildAt(1) as TextView
+        g.addView(left, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
+        val right = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER_VERTICAL }
+        powerBar = app.mg4dash.ui.PowerBar(this)
+        right.addView(powerBar, LinearLayout.LayoutParams(-1, (16 * d).toInt()))
+        powerAvg = TextView(this).apply { setTextColor(color(R.color.text_sub)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f) }
+        right.addView(powerAvg, LinearLayout.LayoutParams(-2, -2).apply { topMargin = (10 * d).toInt() })
+        g.addView(right, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1.4f).apply { marginEnd = (8 * d).toInt() })
+    }
+
+    /** Puissance batterie (tension × courant) : positive = tirée, négative = récupérée. */
+    private suspend fun updatePower() {
+        if (builtMode != 1) return
+        val kw = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            val v = app.mg4dash.car.CarProps.getFloat(app.mg4dash.car.CarProps.BMS_PACK_VOL)
+            val i = app.mg4dash.car.CarProps.getFloat(app.mg4dash.car.CarProps.BMS_PACK_CRNT)
+            if (v != null && i != null && v in 100f..900f) v * i / 1000f else null
+        }
+        val plugged = VehicleState.isCharging(CarBridge.state.value.chargeStatus)
+        val regen = kw != null && kw < -0.05f && !plugged
+        powerValue?.text = kw?.let { String.format(Locale.getDefault(), "%.1f kW", kotlin.math.abs(it)) } ?: "—"
+        powerValue?.setTextColor(color(if (regen) R.color.accent_energy else R.color.text_value))
+        powerLabel?.text = getString(when { plugged -> R.string.sw_charging; regen -> R.string.sw_recovering; else -> R.string.sw_drawn })
+        powerBar?.kw = if (plugged) 0f else kw ?: 0f
+        val avg = app.mg4dash.energy.EnergyMonitor.sinceStart.value.per100
+        powerAvg?.text = getString(R.string.sw_trip_avg) + "  " + (avg?.let { "${kwh(it)} kWh/100" } ?: "—")
+    }
+
+    /** Derniers appels du téléphone connecté ; un toucher rappelle. */
+    private fun renderPhoneCalls() {
+        b.secondaryTitle.text = getString(R.string.sw_phone)
+        lifecycleScope.launch {
+            val (device, calls) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                PhoneActivity.connectedPhone() to PhoneActivity.recentCalls(this@MainActivity, 30)
+                    .distinctBy { it.number.filter { c -> c.isDigit() } }.take(3)
+            }
+            if (prefs.secondaryWidget.coerceIn(0, 2) != 2) return@launch
+            val g = b.secondaryGrid
+            g.removeAllViews()
+            g.orientation = LinearLayout.VERTICAL
+            val d = resources.displayMetrics.density
+            if (calls.isEmpty()) {
+                g.addView(TextView(this@MainActivity).apply {
+                    text = getString(if (device == null) R.string.ph_no_phone else R.string.ph_no_calls)
+                    setTextColor(color(R.color.text_sub)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f); gravity = Gravity.CENTER
+                }, LinearLayout.LayoutParams(-1, -2))
+                return@launch
+            }
+            calls.forEach { e ->
+                val row = LinearLayout(this@MainActivity).apply {
+                    orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+                    setPadding((14 * d).toInt(), 0, (14 * d).toInt(), 0)
+                    background = androidx.core.content.ContextCompat.getDrawable(this@MainActivity, R.drawable.bg_aa_tile_idle)
+                    isClickable = true
+                    setOnClickListener { PhoneActivity.placeCall(this@MainActivity, e.number) }
+                }
+                val missed = e.type == android.provider.CallLog.Calls.MISSED_TYPE
+                row.addView(TextView(this@MainActivity).apply {
+                    text = e.name; maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END
+                    setTextColor(color(if (missed) R.color.accent_danger else R.color.text_value)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 19f)
+                }, LinearLayout.LayoutParams(0, -2, 1f))
+                row.addView(TextView(this@MainActivity).apply {
+                    text = e.detail; setTextColor(color(R.color.text_sub)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+                }, LinearLayout.LayoutParams(-2, -2).apply { marginEnd = (14 * d).toInt() })
+                row.addView(ImageView(this@MainActivity).apply {
+                    setImageResource(R.drawable.ic_phone); setColorFilter(color(R.color.accent_energy))
+                }, LinearLayout.LayoutParams((22 * d).toInt(), (22 * d).toInt()))
+                g.addView(row, LinearLayout.LayoutParams(-1, 0, 1f).apply { topMargin = (4 * d).toInt() })
+            }
         }
     }
 
@@ -456,6 +548,7 @@ class MainActivity : AppCompatActivity() {
                 launch { MediaHub.now.collect { renderMedia(it) } }
                 launch { WeatherRepo.weather.collect { renderWeather(it, CarBridge.state.value) } }
                 launch { LocationRepo.location.collect { renderLocation(it, CarBridge.state.value) } }
+                launch { while (true) { updatePower(); delay(1_000) } }
                 launch {
                     while (true) {
                         if (app.mg4dash.ui.Themes.signature(this@MainActivity) != themeSig) { app.mg4dash.ui.Themes.publish(this@MainActivity); recreate(); return@launch }

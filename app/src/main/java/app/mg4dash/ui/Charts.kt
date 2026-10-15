@@ -90,3 +90,36 @@ class LineChart @JvmOverloads constructor(context: Context, attrs: AttributeSet?
         canvas.drawLine(left, y(avg), right, y(avg), avgPaint)
     }
 }
+
+/**
+ * Puissance instantanée, zéro décalé à gauche : à gauche la récupération (vert, jusqu'à [maxRegenKw]),
+ * à droite la puissance tirée de la batterie (couleur des boutons, jusqu'à [maxDrawKw]).
+ */
+class PowerBar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
+    var kw: Float = 0f
+        set(v) { field = v; invalidate() }
+    var maxRegenKw = 50f
+    var maxDrawKw = 100f
+
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val rect = RectF()
+    private val d = resources.displayMetrics.density
+    private val off = app.mg4dash.ui.Themes.color(context, R.color.gauge_off)
+    private val regen = app.mg4dash.ui.Themes.color(context, R.color.accent_energy)
+    private val draw = app.mg4dash.ui.Themes.color(context, R.color.accent_action)
+    private val tick = app.mg4dash.ui.Themes.color(context, R.color.text_sub)
+
+    override fun onDraw(canvas: Canvas) {
+        val h = height.toFloat(); val w = width.toFloat(); val r = h / 2f
+        val zero = w * maxRegenKw / (maxRegenKw + maxDrawKw)
+        rect.set(0f, 0f, w, h); paint.color = off; canvas.drawRoundRect(rect, r, r, paint)
+        if (kw > 0.05f) {
+            rect.set(zero, 0f, zero + (w - zero) * (kw / maxDrawKw).coerceAtMost(1f), h); paint.color = draw
+            canvas.drawRoundRect(rect, r, r, paint)
+        } else if (kw < -0.05f) {
+            rect.set(zero - zero * (-kw / maxRegenKw).coerceAtMost(1f), 0f, zero, h); paint.color = regen
+            canvas.drawRoundRect(rect, r, r, paint)
+        }
+        paint.color = tick; canvas.drawRect(zero - d, -0f, zero + d, h, paint)
+    }
+}
