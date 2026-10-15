@@ -13,6 +13,7 @@ import android.media.session.PlaybackState
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.view.KeyEvent
 import app.mg4dash.BuildConfig
 import app.mg4dash.system.Log
 import kotlinx.coroutines.CoroutineScope
@@ -322,11 +323,29 @@ object MediaHub {
     fun playPause() {
         if (BuildConfig.MOCK) { _now.value = _now.value.copy(playing = !_now.value.playing); return }
         val c = current ?: return
-        if (c.playbackState?.state == PlaybackState.STATE_PLAYING) c.transportControls.pause() else c.transportControls.play()
+        val playing = c.playbackState?.state == PlaybackState.STATE_PLAYING
+        // Android Auto (RemoteUI) ne réagit qu'aux touches média, pas aux commandes play()/pause()
+        if (isAndroidAuto(c.packageName)) { mediaKey(c, if (playing) KeyEvent.KEYCODE_MEDIA_PAUSE else KeyEvent.KEYCODE_MEDIA_PLAY); return }
+        if (playing) c.transportControls.pause() else c.transportControls.play()
     }
 
-    fun next() { current?.transportControls?.skipToNext() }
-    fun previous() { current?.transportControls?.skipToPrevious() }
+    fun next() {
+        val c = current ?: return
+        if (isAndroidAuto(c.packageName)) mediaKey(c, KeyEvent.KEYCODE_MEDIA_NEXT) else c.transportControls.skipToNext()
+    }
+
+    fun previous() {
+        val c = current ?: return
+        if (isAndroidAuto(c.packageName)) mediaKey(c, KeyEvent.KEYCODE_MEDIA_PREVIOUS) else c.transportControls.skipToPrevious()
+    }
+
+    /** Appui + relâchement d'une touche média, envoyés à la session du lecteur. */
+    private fun mediaKey(c: MediaController, code: Int) {
+        val t = android.os.SystemClock.uptimeMillis()
+        val ok = c.dispatchMediaButtonEvent(KeyEvent(t, t, KeyEvent.ACTION_DOWN, code, 0)) and
+            c.dispatchMediaButtonEvent(KeyEvent(t, t, KeyEvent.ACTION_UP, code, 0))
+        Log.i(TAG, "touche média $code → ${c.packageName} : $ok")
+    }
 
     /** Composant à ouvrir quand on touche la carte média. */
     fun ownerComponent(): ComponentName? = current?.packageName?.let { pkg ->
