@@ -144,8 +144,11 @@ class MainActivity : AppCompatActivity() {
         b.chipAuto.setOnClickListener { CarBridge.toggleAuto() }
         b.chipAc.setOnClickListener { CarBridge.toggleAc() }
         b.chipRecirc.setOnClickListener { CarBridge.toggleRecirc() }
-        b.chipFront.setOnClickListener { CarBridge.toggleDefrostFront() }
-        b.chipRear.setOnClickListener { CarBridge.toggleDefrostRear() }
+        // Direction de l'air : visage → visage + pieds → pieds → pieds + pare-brise (le pare-brise seul a son bouton physique)
+        b.chipFlow.setOnClickListener {
+            val cur = CarBridge.state.value.fanDirection
+            CarBridge.setFanDirection(FLOW_CYCLE[(FLOW_CYCLE.indexOf(cur) + 1) % FLOW_CYCLE.size])
+        }
         b.temp.setOnClickListener { startActivity(Intent(this, ClimateActivity::class.java)) }
     }
 
@@ -185,14 +188,32 @@ class MainActivity : AppCompatActivity() {
         b.fanValue.setTextSize(TypedValue.COMPLEX_UNIT_SP, if (auto || !on) 16f else 20f)
         b.chipAuto.isSelected = s.autoOn == true
         b.chipAc.isSelected = s.acOn == true
-        b.chipRecirc.isSelected = s.recirc == 0
-        b.chipRecirc.text = when (s.recirc) { 0 -> getString(R.string.chip_recirc); 2 -> getString(R.string.chip_air_auto); else -> getString(R.string.chip_air_ext) }
-        b.chipFront.isSelected = s.defrostFront == true
-        b.chipRear.isSelected = s.defrostRear == true
-        listOf(b.tempDown, b.tempUp, b.fanDown, b.fanUp, b.chipAuto, b.chipAc, b.chipRecirc, b.chipFront, b.chipRear, b.climPower)
+        // Recyclage : 0 = recyclé, 1 = extérieur, 2 = auto (la voiture choisit ; état réel lu à part s'il existe)
+        val autoRecirc = s.recirc == 2
+        val inner = if (autoRecirc) actualRecirc else s.recirc == 0
+        b.chipRecirc.isSelected = s.recirc == 0 || autoRecirc
+        b.chipRecircIcon.setImageResource(if (inner == true) R.drawable.ic_air_recirc else R.drawable.ic_air_outside)
+        b.chipRecircAuto.visibility = if (autoRecirc) View.VISIBLE else View.GONE
+        // Direction de l'air ; en mode AUTO, c'est la voiture qui la choisit
+        b.chipFlowIcon.setImageResource(flowIcon(s.fanDirection))
+        b.chipFlow.isSelected = auto
+        b.chipFlowAuto.visibility = if (auto) View.VISIBLE else View.GONE
+        listOf(b.tempDown, b.tempUp, b.fanDown, b.fanUp, b.chipAuto, b.chipAc, b.chipRecirc, b.chipFlow, b.climPower)
             .forEach { it.isEnabled = known }
         b.climateCard.alpha = if (known) 1f else 0.6f
     }
+
+    private val FLOW_CYCLE = listOf(0, 1, 2, 3)
+
+    private fun flowIcon(d: Int?): Int = when (d) {
+        1, 5 -> R.drawable.ic_flow_face_feet
+        2 -> R.drawable.ic_flow_feet
+        3, 4 -> R.drawable.ic_flow_feet_screen
+        else -> R.drawable.ic_flow_face
+    }
+
+    /** Recyclage réellement actif (HVAC_RECIRC_ON), lu toutes les 5 s ; null si la voiture ne le fournit pas. */
+    @Volatile private var actualRecirc: Boolean? = null
 
     // ── Énergie ──────────────────────────────────────────────────────────────
 
@@ -430,6 +451,9 @@ class MainActivity : AppCompatActivity() {
                     while (true) {
                         renderSecondary()
                         renderWeatherFallbackOnly()
+                        actualRecirc = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                            app.mg4dash.car.CarProps.readAny(354419976).let { v -> when (v) { "true", "1" -> true; "false", "0" -> false; else -> null } }
+                        }
                         delay(5_000)
                     }
                 }

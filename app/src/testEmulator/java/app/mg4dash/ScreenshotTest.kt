@@ -96,6 +96,45 @@ class ScreenshotTest {
     @Test @Config(qualifiers = "fr-w1920dp-h720dp-land-mdpi")
     fun homeFr() = shoot(MainActivity::class.java, "home_fr.png")
 
+    /** Aperçu des icônes proposées pour les boutons de clim (repos / sélectionné). */
+    @Test fun climateIconsPreview() {
+        val act = Robolectric.buildActivity(app.mg4dash.apps.AppsActivity::class.java).setup().get()
+        val kit = app.mg4dash.ui.Kit(act)
+        val root = kit.column().apply { setBackgroundResource(R.drawable.bg_root); setPadding(kit.dp(30), kit.dp(24), kit.dp(30), kit.dp(24)) }
+        root.addView(kit.title("PROPOSITION · BOUTON RECYCLAGE (3 états) ET BOUTON DIRECTION DE L'AIR (5 états)").apply { textSize = 20f })
+        val rows = listOf(
+            listOf(R.drawable.ic_air_recirc to "Air recyclé", R.drawable.ic_air_outside to "Air extérieur"),
+            listOf(R.drawable.ic_flow_face to "Visage", R.drawable.ic_flow_face_feet to "Visage + pieds", R.drawable.ic_flow_feet to "Pieds",
+                R.drawable.ic_flow_feet_screen to "Pieds + pare-brise"),
+        )
+        rows.forEach { items ->
+            val row = kit.row()
+            items.forEachIndexed { i, (icon, label) ->
+                val col = kit.column().apply { gravity = android.view.Gravity.CENTER }
+                val chip = android.widget.FrameLayout(act).apply { setBackgroundResource(R.drawable.bg_chip); isSelected = i == 0 }
+                val iv = android.widget.ImageView(act).apply {
+                    setImageResource(icon); scaleType = android.widget.ImageView.ScaleType.FIT_CENTER
+                    setColorFilter(if (i == 0) 0xFF00D2FF.toInt() else 0xFFA0AEC0.toInt())
+                }
+                chip.addView(iv, android.widget.FrameLayout.LayoutParams(kit.dp(58), kit.dp(58), android.view.Gravity.CENTER))
+                col.addView(chip, kit.lp(kit.dp(150), kit.dp(72)))
+                col.addView(kit.text(label, 18f, R.color.text_sub).apply { gravity = android.view.Gravity.CENTER }, kit.lp(-1, -2, t = 8))
+                row.addView(col, kit.lp(0, -2, 1f, l = if (i > 0) 16 else 0))
+            }
+            if (items.size < 5) repeat(5 - items.size) { row.addView(android.view.View(act), kit.lp(0, 1, 1f, l = 16)) }
+            root.addView(row, kit.lp(-1, -2, t = 26))
+        }
+        act.setContentView(root)
+        repeat(3) { shadowOf(Looper.getMainLooper()).idleFor(200, TimeUnit.MILLISECONDS) }
+        val w = 1200; val h = 420
+        root.measure(View.MeasureSpec.makeMeasureSpec(w, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(h, View.MeasureSpec.EXACTLY))
+        root.layout(0, 0, w, h)
+        val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+        root.draw(Canvas(bmp))
+        val dir = File("build/screenshots").apply { mkdirs() }
+        File(dir, "climate_icons_preview.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
     private fun <T : Activity> shoot(cls: Class<T>, name: String) {
         val activity = Robolectric.buildActivity(cls).setup().get()
         repeat(5) { shadowOf(Looper.getMainLooper()).idleFor(200, TimeUnit.MILLISECONDS) }

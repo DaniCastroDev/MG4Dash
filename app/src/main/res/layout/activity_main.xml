@@ -165,9 +165,15 @@
 
                     <TextView android:id="@+id/chipAuto" style="@style/Chip" android:text="@string/chip_auto" />
                     <TextView android:id="@+id/chipAc" style="@style/Chip" android:layout_marginLeft="8dp" android:text="@string/chip_ac" />
-                    <TextView android:id="@+id/chipRecirc" style="@style/Chip" android:layout_marginLeft="8dp" android:text="@string/chip_recirc" />
-                    <TextView android:id="@+id/chipFront" style="@style/Chip" android:layout_marginLeft="8dp" android:background="@drawable/bg_chip_heat" android:text="@string/chip_front" />
-                    <TextView android:id="@+id/chipRear" style="@style/Chip" android:layout_marginLeft="8dp" android:background="@drawable/bg_chip_heat" android:text="@string/chip_rear" />
+                    <!-- Recyclage et direction de l'air : icônes ; « A » quand la voiture décide (mode auto) -->
+                    <FrameLayout android:id="@+id/chipRecirc" style="@style/Chip" android:layout_marginLeft="8dp" android:clickable="true" android:focusable="true" android:contentDescription="@string/cl_recirc">
+                        <ImageView android:id="@+id/chipRecircIcon" android:layout_width="40dp" android:layout_height="40dp" android:layout_gravity="center" android:duplicateParentState="true" android:scaleType="fitCenter" android:src="@drawable/ic_air_outside" android:tint="@color/chip_text" />
+                        <TextView android:id="@+id/chipRecircAuto" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="top|right" android:layout_marginTop="2dp" android:layout_marginRight="8dp" android:text="A" android:textColor="?attr/mgSelect" android:textSize="13sp" android:fontFamily="sans-serif-medium" android:visibility="gone" />
+                    </FrameLayout>
+                    <FrameLayout android:id="@+id/chipFlow" style="@style/Chip" android:layout_marginLeft="8dp" android:clickable="true" android:focusable="true" android:contentDescription="@string/cl_airflow">
+                        <ImageView android:id="@+id/chipFlowIcon" android:layout_width="40dp" android:layout_height="40dp" android:layout_gravity="center" android:duplicateParentState="true" android:scaleType="fitCenter" android:src="@drawable/ic_flow_face" android:tint="@color/chip_text" />
+                        <TextView android:id="@+id/chipFlowAuto" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="top|right" android:layout_marginTop="2dp" android:layout_marginRight="8dp" android:text="A" android:textColor="?attr/mgSelect" android:textSize="13sp" android:fontFamily="sans-serif-medium" android:visibility="gone" />
+                    </FrameLayout>
                 </LinearLayout>
             </LinearLayout>
 
