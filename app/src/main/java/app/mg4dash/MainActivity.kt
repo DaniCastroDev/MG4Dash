@@ -77,6 +77,11 @@ class MainActivity : AppCompatActivity() {
         b.kersGauge.onColor = color(R.color.accent_energy)
         if (prefs.homeStyle == 2) applyMapLayout()
         mapCard = MapCard(this, b.mapHolder)
+        navBanner = app.mg4dash.ui.NavBanner(this)
+        val nd = resources.displayMetrics.density
+        b.mapCard.addView(navBanner, android.widget.FrameLayout.LayoutParams((440 * nd).toInt(), -2, Gravity.TOP or Gravity.START).apply {
+            leftMargin = (12 * nd).toInt(); topMargin = (12 * nd).toInt()
+        })
         buildDock()
         setupWeatherClock()
         wireClimate()
@@ -106,6 +111,15 @@ class MainActivity : AppCompatActivity() {
         val box = StackBox(this) { dir -> showStackPage(Math.floorMod(prefs.stackPage + dir, 4)) }
         box.addView(b.energyCard, android.widget.FrameLayout.LayoutParams(-1, -1))
         box.addView(b.secondaryCard, android.widget.FrameLayout.LayoutParams(-1, -1))
+        val dd = resources.displayMetrics.density
+        stackDots = TextView(this).apply {
+            setTextColor(color(R.color.text_title)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f); letterSpacing = 0.3f
+            gravity = Gravity.CENTER
+            setPadding((24 * dd).toInt(), (6 * dd).toInt(), (24 * dd).toInt(), (2 * dd).toInt())
+            isClickable = true
+            setOnClickListener { showStackPage((prefs.stackPage + 1) % 4) }
+        }
+        box.addView(stackDots, android.widget.FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL))
         b.secondaryDots.visibility = View.GONE
         center.addView(box, lp(40f, 0)); center.addView(b.mediaCard, lp(60f, gap))
         right.addView(b.mapCard, lp(100f, 0))
@@ -119,6 +133,8 @@ class MainActivity : AppCompatActivity() {
 
 
     private var lastPlugged: Boolean? = null
+    private var navBanner: app.mg4dash.ui.NavBanner? = null
+    private var stackDots: TextView? = null
 
     /** Page de la pile : 0 = énergie, 1..3 = énergie du trajet, puissance, téléphone. */
     private fun showStackPage(p: Int) {
@@ -126,22 +142,11 @@ class MainActivity : AppCompatActivity() {
         b.energyCard.visibility = if (p == 0) View.VISIBLE else View.INVISIBLE
         b.secondaryCard.visibility = if (p == 0) View.INVISIBLE else View.VISIBLE
         if (p > 0) { prefs.secondaryWidget = p - 1; renderSecondary(); lifecycleScope.launch { updatePower() } }
-        stackTitle((b.energyCard.getChildAt(0) as LinearLayout).getChildAt(0) as TextView, getString(R.string.title_energy))
+        stackDots?.text = (0..3).joinToString(" ") { if (it == p) "●" else "○" }
     }
 
-    /**
-     * Style Carte : le titre de la carte affichée sert de bouton pour la pile (« ÉNERGIE  1/4  › ») ;
-     * un toucher passe à la page suivante.
-     */
-    private fun stackTitle(tv: TextView, base: String) {
-        if (!mapLayout) { tv.text = base; return }
-        val label = "$base   ${prefs.stackPage + 1}/4  ›"
-        tv.text = android.text.SpannableString(label).apply {
-            setSpan(android.text.style.ForegroundColorSpan(color(R.color.accent_action)), base.length, label.length, 0)
-        }
-        tv.isClickable = true
-        tv.setOnClickListener { showStackPage((prefs.stackPage + 1) % 4) }
-    }
+    /** Titre des pages du widget du bas / de la pile. */
+    private fun stackTitle(tv: TextView, base: String) { tv.text = base }
 
     /** Pile automatique : quand la voiture vient d'être branchée, on revient sur la batterie. */
     private fun stackAuto(s: VehicleState) {
@@ -513,12 +518,13 @@ class MainActivity : AppCompatActivity() {
         // La carte et ses commandes disparaissent derrière les raccourcis (et inversement).
         for (i in 0 until b.mapCard.childCount) {
             val v = b.mapCard.getChildAt(i)
-            if (v === b.widgetToggle) continue
+            if (v === b.widgetToggle || v === navBanner) continue
             if (v === b.shortcutsHolder) v.visibility = if (shortcuts) View.VISIBLE else View.GONE
             else v.visibility = if (shortcuts) View.INVISIBLE else View.VISIBLE
         }
         if (!shortcuts) renderLocation(LocationRepo.location.value, CarBridge.state.value)
         b.widgetToggle.setImageResource(if (shortcuts) R.drawable.ic_map else R.drawable.ic_apps)
+        navBanner?.show(app.mg4dash.map.NavRepo.nav.value?.takeIf { !shortcuts })
         if (shortcuts) renderShortcuts()
     }
 
@@ -669,6 +675,8 @@ class MainActivity : AppCompatActivity() {
                 launch { MediaHub.now.collect { renderMedia(it) } }
                 launch { WeatherRepo.weather.collect { renderWeather(it, CarBridge.state.value) } }
                 launch { LocationRepo.location.collect { renderLocation(it, CarBridge.state.value) } }
+                // Guidage DiAuto : bandeau sur la carte (pas sur les raccourcis)
+                launch { app.mg4dash.map.NavRepo.nav.collect { n -> navBanner?.show(n?.takeIf { prefs.homeWidget != 1 }) } }
                 launch { while (true) { updatePower(); delay(1_000) } }
                 launch {
                     while (true) {

@@ -124,6 +124,19 @@ class ScreenshotTest {
         shoot(MainActivity::class.java, "home_map_layout_wifi.png")
     }
 
+    @Test fun homeNavFull() {
+        app.mg4dash.map.NavRepo.setForTest(app.mg4dash.map.NavRepo.Nav(300, 25, "Rue de Rivoli", 4, "Turn right", 2, null, null, 12400, 1260L, "17:42"))
+        shoot(MainActivity::class.java, "home_nav.png")
+        app.mg4dash.map.NavRepo.setForTest(null)
+    }
+
+    @Test fun homeNavMapRoundabout() {
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit().putInt("home_style", 2).apply()
+        app.mg4dash.map.NavRepo.setForTest(app.mg4dash.map.NavRepo.Nav(850, 60, "Avenue de la Grande Armée", 13, "", 2, 3, 90, 12400, 1260L, "17:42"))
+        shoot(MainActivity::class.java, "home_map_layout_nav.png")
+        app.mg4dash.map.NavRepo.setForTest(null)
+    }
+
     @Test fun homeWidgetPower() {
         org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit().putInt("secondary_widget", 1).apply()
         shoot(MainActivity::class.java, "home_widget_power.png")

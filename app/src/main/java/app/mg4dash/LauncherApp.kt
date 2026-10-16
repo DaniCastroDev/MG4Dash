@@ -24,6 +24,7 @@ class LauncherApp : Application() {
         app.mg4dash.energy.EnergyLogger.start(this)
         MediaHub.start(this)
         app.mg4dash.map.LocationRepo.start(this)
+        app.mg4dash.map.NavRepo.start(this)
         WeatherRepo.start(this)
         app.mg4dash.ui.Themes.publish(this)
     }
