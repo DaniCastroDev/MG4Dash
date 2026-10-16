@@ -22,7 +22,31 @@ import android.content.pm.PackageManager
  */
 object HomeSwitcher {
     private const val TAG = "Home"
-    val STOCK = ComponentName("com.saicmotor.launcher", "com.saicmotor.launcher.view.MainActivity")
+    private val DEFAULT_STOCK = ComponentName("com.saicmotor.launcher", "com.saicmotor.launcher.view.MainActivity")
+
+    /**
+     * Accueil SAIC de ce firmware : com.saicmotor.launcher sur SWI69, com.saicmotor.hmi.launcher
+     * sur l'ancien SDK. Trouvé parmi les activités HOME (désactivées comprises) d'un paquet SAIC,
+     * puis mémorisé : une fois désactivé, il n'apparaît plus dans les résolutions ordinaires.
+     */
+    @Volatile var STOCK: ComponentName = DEFAULT_STOCK
+        private set
+
+    fun init(context: Context) {
+        val sp = Prefs(context).raw
+        sp.getString("stock_home", null)?.let { ComponentName.unflattenFromString(it) }?.let { STOCK = it; return }
+        val found = try {
+            val intent = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+            context.packageManager.queryIntentActivities(intent, PackageManager.MATCH_DISABLED_COMPONENTS)
+                .map { ComponentName(it.activityInfo.packageName, it.activityInfo.name) }
+                .filter { it.packageName.startsWith("com.saicmotor") }
+                .sortedBy { if (it == DEFAULT_STOCK) 0 else 1 }
+                .firstOrNull()
+        } catch (_: Exception) { null }
+        STOCK = found ?: DEFAULT_STOCK
+        if (found != null) sp.edit().putString("stock_home", found.flattenToString()).apply()
+        Log.i(TAG, "accueil SAIC : ${STOCK.flattenToShortString()}")
+    }
 
     fun ours(context: Context) = ComponentName(context.packageName, "app.mg4dash.MainActivity")
 

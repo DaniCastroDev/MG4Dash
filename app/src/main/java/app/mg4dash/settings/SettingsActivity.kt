@@ -193,6 +193,12 @@ class SettingsActivity : AppCompatActivity() {
             button(getString(R.string.st_style_simple), if (prefs.homeStyle == 1) R.color.accent_action else R.color.text_value) { prefs.homeStyle = 1; showStyle() },
         )
 
+        // ── Compatibilité (bêta multi-firmware) ──
+        val compat = panel(right, getString(R.string.st_compat))
+        text(compat, getString(R.string.st_compat_fw, app.mg4dash.system.Firmware.version, app.mg4dash.system.Firmware.gen.name), 18f, R.color.text_value)
+        text(compat, getString(if (app.mg4dash.system.Firmware.tested) R.string.st_compat_tested else R.string.st_compat_beta), 16f, R.color.text_title)
+        row(compat, button(getString(R.string.st_compat_run)) { Compat.show(this) })
+
         // ── Diagnostic énergie ──
         val diag = panel(right, getString(R.string.st_diag))
         val logState = text(diag, "", 18f, R.color.text_value)

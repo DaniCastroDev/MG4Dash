@@ -310,6 +310,9 @@ class EnergyActivity : PageActivity() {
         }))
         action.text = mainActionLabel(s)
         action.isEnabled = VehicleState.isPlugged(s.chargeStatus)
+        // Démarrer / arrêter la charge et le V2L : seulement là où le service EV répond (voie A9)
+        action.visibility = if (CarBridge.chargeControl) android.view.View.VISIBLE else android.view.View.INVISIBLE
+        v2lAction.visibility = if (CarBridge.chargeControl) android.view.View.VISIBLE else android.view.View.INVISIBLE
         action.isSelected = s.chargeCtrl == 1 || s.dischargeCtrl == 1
         v2lStatus.text = if (discharge) VehicleState.chargeStatusLabel(s.chargeStatus) +
             (s.dischargeRemainMin?.takeIf { it in 1..6000 }?.let { getString(R.string.en_remaining, it / 60, it % 60) } ?: "")

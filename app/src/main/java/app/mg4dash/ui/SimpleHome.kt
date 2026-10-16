@@ -324,7 +324,7 @@ class SimpleHome(private val a: AppCompatActivity) {
         chargeState.setTextColor(kit.color(if (discharge) R.color.accent_heat else R.color.accent_energy))
         // Le bouton n'apparaît que câble branché
         val plugged = VehicleState.isPlugged(s.chargeStatus)
-        chargeAction.visibility = if (plugged) View.VISIBLE else View.GONE
+        chargeAction.visibility = if (plugged && CarBridge.chargeControl) View.VISIBLE else View.GONE
         chargeAction.isSelected = if (discharge) s.dischargeCtrl == 1 else s.chargeCtrl == 1
         chargeAction.text = when {
             discharge -> a.getString(if (s.dischargeCtrl == 1) R.string.v2l_stop else R.string.v2l_start)

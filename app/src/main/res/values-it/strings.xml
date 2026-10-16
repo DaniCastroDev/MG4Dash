@@ -291,6 +291,15 @@
     <string name="sw_trip_avg">MEDIA VIAGGIO</string>
     <string name="sw_phone">TELEFONO</string>
     <string name="sw_fav_pick">Scegli un contatto</string>
+    <string name="st_compat">COMPATIBILITÀ (BETA)</string>
+    <string name="st_compat_fw">Firmware: %1$s (%2$s)</string>
+    <string name="st_compat_tested">MG4Dash è stato sviluppato e testato su questo firmware.</string>
+    <string name="st_compat_beta">Non ancora testato su questo firmware: alcune funzioni potrebbero mancare. Esegui il test e invia il rapporto.</string>
+    <string name="st_compat_run">Esegui il test</string>
+    <string name="st_compat_report">Rapporto di compatibilità</string>
+    <string name="st_compat_scan">Scansiona con il telefono per aprire una issue GitHub precompilata. Nulla viene inviato automaticamente e il rapporto non contiene dati personali.</string>
+    <string name="st_compat_open">Apri nel browser</string>
+    <string name="st_compat_no_browser">Nessun browser su questa unità: scansiona il codice QR con il telefono.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefono connesso · Tocca per aprire</string>
     <string name="aa_waiting">Collega il telefono via USB</string>

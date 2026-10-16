@@ -291,6 +291,15 @@
     <string name="sw_trip_avg">MOYENNE TRAJET</string>
     <string name="sw_phone">TÉLÉPHONE</string>
     <string name="sw_fav_pick">Choisir un contact</string>
+    <string name="st_compat">COMPATIBILITÉ (BÊTA)</string>
+    <string name="st_compat_fw">Firmware : %1$s (%2$s)</string>
+    <string name="st_compat_tested">MG4Dash a été mis au point et testé sur ce firmware.</string>
+    <string name="st_compat_beta">Pas encore testé sur ce firmware : certaines fonctions peuvent manquer. Lancez le test et envoyez le rapport pour aider à le prendre en charge.</string>
+    <string name="st_compat_run">Lancer le test</string>
+    <string name="st_compat_report">Rapport de compatibilité</string>
+    <string name="st_compat_scan">Scannez avec votre téléphone pour ouvrir une issue GitHub pré-remplie. Rien n\'est envoyé automatiquement et le rapport ne contient aucune donnée personnelle.</string>
+    <string name="st_compat_open">Ouvrir dans le navigateur</string>
+    <string name="st_compat_no_browser">Pas de navigateur sur cet autoradio : scannez le QR code avec votre téléphone.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Téléphone connecté · Appuyer pour ouvrir</string>
     <string name="aa_waiting">Branchez votre téléphone en USB</string>

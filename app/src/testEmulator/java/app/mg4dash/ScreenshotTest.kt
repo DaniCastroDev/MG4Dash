@@ -101,6 +101,18 @@ class ScreenshotTest {
 
     @Test fun phone() = shoot(app.mg4dash.pages.PhoneActivity::class.java, "phone.png")
 
+    @Test fun compatReport() {
+        val activity = Robolectric.buildActivity(SettingsActivity::class.java).setup().get()
+        val report = app.mg4dash.settings.Compat.report(activity)
+        val url = app.mg4dash.settings.Compat.issueUrl(report)
+        println(report); println("URL length: ${url.length}")
+        org.junit.Assert.assertTrue("URL trop longue pour un QR code", url.length < 2500)
+        app.mg4dash.settings.Compat.show(activity)
+        repeat(3) { shadowOf(Looper.getMainLooper()).idleFor(200, TimeUnit.MILLISECONDS) }
+        val dlg = org.robolectric.shadows.ShadowDialog.getLatestDialog()
+        save(dlg.window!!.decorView, "compat_dialog.png")
+    }
+
     @Test fun homeWidgetPower() {
         org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit().putInt("secondary_widget", 1).apply()
         shoot(MainActivity::class.java, "home_widget_power.png")

@@ -1,6 +1,6 @@
 # MG4Dash
 
-Full-screen launcher for the MG4 Standard (SWI69 firmware, A9 family) and its 1920 × 720 screen: a "dark glass" look, a three-column home screen, and Climate, Energy, Vehicle and Phone pages linked by a shared dock.
+Full-screen launcher for the MG4 and its 1920 × 720 screen, developed on the SWI69 firmware (A9 family), with beta support for the other firmwares: a "dark glass" look, a three-column home screen, and Climate, Energy, Vehicle and Phone pages linked by a shared dock.
 
 Languages: English (default), French, German, Spanish, Italian and Dutch, following the car's system language.
 
@@ -63,11 +63,28 @@ Recent calls, contacts with a search field and a keypad, from the phone connecte
 ![Settings](docs/screenshots/settings.png?v=11)
 Home screen (replace the SAIC home / maintenance mode), battery capacity, weather city, startup, full screen, energy data recorder, Home Assistant and a built-in log.
 
+## Compatibility (beta)
+
+MG4Dash detects the head unit firmware at startup (`ro.build.mt2712.version`) and picks the matching way to talk to the car, using what [MG4Control](https://github.com/SliDeeN/MG4Control) documented for each firmware:
+
+| Firmware | Car access | Status |
+|---|---|---|
+| SWI69 | `caradapter` service (climate, EV, settings, general) | tested by the author |
+| SWI131, SWI132 | same as SWI69 | beta, not tested |
+| SWI68, SWI165, SWI133 | climate through the stock launcher's `AirConditionManager` (`com.saicmotor.hmi.launcher`); battery, range, charge state, drive mode and KERS through `CarPropertyManager` | beta, not tested |
+
+Features a firmware does not expose are hidden instead of failing (for example the Charge / V2L start buttons, which need the A9 EV service). The stock home screen to replace is found automatically. Radio Dash only works on SWI69.
+
+**Help support your firmware**: open Settings › Compatibility › Run the test, then scan the QR code with your phone. It opens a pre-filled [compatibility issue](https://github.com/Skittle6938/MG4Dash/issues/new?template=compatibility.md) with a short report (versions, which services answer, a few car readings: no position, VIN or account). Nothing is sent automatically.
+
 ## Project layout
 
 - `app/src/main/java/app/mg4dash/`: the app (Kotlin)
   - `car/CarBridge.kt`: vehicle access through `com.saicmotor.caradapter` (climate code 7, EV code 4, settings code 8, general code 1)
   - `car/CarProps.kt`: BMS, charging and consumption properties through CarPropertyManager
+  - `car/LegacyCar.kt`: climate on the SWI68 / SWI165 / SWI133 firmwares (stock launcher SDK)
+  - `system/Firmware.kt`: firmware detection
+  - `settings/Compat.kt`: compatibility report and QR code
   - `car/CarApi.kt`: binder clients written for MG4Dash (descriptors and transaction numbers observed on the car)
   - `energy/ConsumptionEstimator.kt`: kWh/100 estimated from battery % and kilometres
   - `energy/EnergyLogger.kt`: read-only CSV recorder of battery power, consumption counters and equipment states
@@ -131,8 +148,13 @@ The SAIC launcher package (`com.saicmotor.launcher`) is never disabled: its serv
 
 ## Credits
 
-- [MG4Control](https://github.com/SliDeeN/MG4Control) (SliDeeN): documentation of the A9 carapi path and of the climate and air-direction ranges.
-- [MG4-Custom-Launcher](https://github.com/adammcdonagh/MG4-Custom-Launcher) (adammcdonagh): Bluetooth album art and the discovery of the AOSP test keys.
+- [MG4Control](https://github.com/SliDeeN/MG4Control) (SliDeeN): documentation of the A9 carapi path, of the climate and air-direction ranges, and of the per-firmware car access used by the compatibility beta.
+- [MG4-Custom-Launcher](https://github.com/adammcdonagh/MG4-Custom-Launcher) (adammcdonagh): Bluetooth album art, the discovery of the AOSP test keys and the stock launcher SDK on SWI68.
+- [MG4_Simple_Launcher](https://github.com/Tommasov/MG4_Simple_Launcher) (Tommasov): notes on the vehicle adapter service of other firmwares.
 - Maps © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (osmdroid), weather by [Open-Meteo](https://open-meteo.com/).
+
+## Licence
+
+MG4Dash is free software under the [GNU General Public License v3](COPYING) or later. Parts of the firmware detection and of the SWI68 / SWI165 / SWI133 climate code are adapted from [MG4Control](https://github.com/SliDeeN/MG4Control) (GPL v3; earlier MG4Control code under the MIT licence, notice kept in [licenses/MG4Control-MIT.txt](licenses/MG4Control-MIT.txt)).
 
 Personal project, not affiliated with SAIC / MG. Use at your own risk.

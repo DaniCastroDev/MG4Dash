@@ -254,6 +254,7 @@ class MainActivity : AppCompatActivity() {
         // Bouton comme sur le launcher d'origine : inactif câble débranché, et bascule
         // automatiquement en « V2L » quand un adaptateur de décharge est branché.
         b.chargeAction.isEnabled = VehicleState.isPlugged(s.chargeStatus)
+        b.chargeAction.visibility = if (CarBridge.chargeControl) View.VISIBLE else View.GONE
         b.chargeAction.setBackgroundResource(if (discharge) R.drawable.bg_chip_heat else R.drawable.bg_chip)
         b.chargeAction.setTextColor(androidx.core.content.ContextCompat.getColorStateList(this, if (discharge) R.color.chip_text_heat else R.color.chip_text))
         b.chargeAction.isSelected = if (discharge) s.dischargeCtrl == 1 else s.chargeCtrl == 1

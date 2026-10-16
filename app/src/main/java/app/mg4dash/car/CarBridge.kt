@@ -6,6 +6,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.IBinder
 import app.mg4dash.BuildConfig
+import app.mg4dash.system.Firmware
 import app.mg4dash.system.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -57,9 +58,26 @@ object CarBridge {
             MockCar.start(scope, _state)
             return
         }
-        bind()
+        // Firmware A9 (SWI69/131/132) : service caradapter. Ancien SDK (SWI68/165/133) : gestionnaires
+        // SAIC du launcher d'origine. Firmware inconnu : on tente les deux.
+        if (Firmware.family != Firmware.Family.LEGACY) bind()
+        if (Firmware.family != Firmware.Family.A9) LegacyCar.init(context)
+        Log.i(TAG, "firmware ${Firmware.version} (${Firmware.gen}, famille ${Firmware.family})")
         scope.launch { pollLoop() }
     }
+
+    /** Démarrage / arrêt de la charge et du V2L disponibles (service EV de la voie A9). */
+    val chargeControl: Boolean get() = BuildConfig.MOCK || ev != null
+
+    /** Services qui répondent, pour l'écran Compatibilité. */
+    fun probe(): List<Pair<String, String>> = listOf(
+        "caradapter" to if (adapter != null) "ok" else "absent",
+        "hvac (7)" to if (hvac != null) "ok" else "absent",
+        "ev (4)" to if (ev != null) "ok" else "absent",
+        "vehiclesetting (8)" to if (vs != null) "ok" else "absent",
+        "general (1)" to if (general != null) "ok" else "absent",
+        "AirConditionManager" to LegacyCar.probe(),
+    )
 
     /** Ralentit l'interrogation quand l'accueil n'est pas visible. */
     fun setForeground(foreground: Boolean) {
@@ -110,7 +128,7 @@ object CarBridge {
         while (scope.isActive) {
             try {
                 if (adapter == null) {
-                    if (tick % 5 == 0L) bind()
+                    if (tick % 5 == 0L && Firmware.family != Firmware.Family.LEGACY) bind()
                 } else if (tick % 5 == 0L) {
                     resolveClients()
                 }
@@ -127,7 +145,7 @@ object CarBridge {
     private inline fun <T> safe(block: () -> T): T? = try { block() } catch (_: Exception) { null }
 
     private fun refreshHvac() {
-        val h = hvac ?: return
+        val h = hvac ?: run { if (Firmware.family != Firmware.Family.A9) _state.value = LegacyCar.readHvac(_state.value); return }
         _state.value = _state.value.copy(
             connected = true,
             hvacOn = safe { h.hvacPowerStatus },
@@ -172,10 +190,51 @@ object CarBridge {
             odometerKm = g?.let { safe { it.totalMileage } }?.takeIf { it > 0 } ?: s.odometerKm,
             speedKmh = g?.let { safe { it.latestSpeed } } ?: s.speedKmh,
         )
+        if (e == null || v == null || g == null) refreshFromProps()
+    }
+
+    /**
+     * Repli commun à tous les firmwares : mesures du CarPropertyManager, mêmes identifiants sur
+     * SWI133 (relevés MG4Control) et SWI69. Ne remplit que ce que les services n'ont pas donné.
+     */
+    private fun refreshFromProps() {
+        val s = _state.value
+        val area = 0x1000000
+        fun i(id: Int) = CarProps.readIntArea(id, area)
+        fun f(id: Int) = CarProps.readFloatArea(id, area)?.takeIf { it.isFinite() && it != 82.3f && it != 511.5f }
+        val soc = f(0x2160f404)?.takeIf { it in 0f..100f }?.let { Math.round(it) }
+        val charging = i(0x2140f409) == 1
+        val dc = i(0x2140f43f)?.takeIf { it != 0 && it != 1023 } != null
+        val ac = i(0x2140f43e)?.takeIf { it != 0 && it != 1023 } != null
+        val status = when { charging && dc -> 10; charging -> 1; dc || ac -> 7; else -> 0 }
+        // Mode de conduite (propriété) : 0 neige, 1 éco, 3 normal, 4 sport → échelle A9 de VehicleState
+        val dm = when (i(0x2140a17c)) { 0 -> 6; 1 -> 2; 3 -> 3; 4 -> 4; else -> null }
+        _state.value = s.copy(
+            connected = s.connected || soc != null,
+            batteryPercent = s.batteryPercent ?: soc,
+            rangeKm = s.rangeKm ?: i(0x2140f41c)?.takeIf { it in 1..1500 },
+            chargeStatus = if (ev == null) status else s.chargeStatus,
+            odometerKm = s.odometerKm ?: i(0x21401566)?.takeIf { it > 0 },
+            driveMode = s.driveMode ?: dm,
+            regenLevel = s.regenLevel ?: i(0x2140a191)?.takeIf { it in 0..3 },
+            onePedal = s.onePedal ?: i(0x2140a193)?.takeIf { it in 0..1 },
+        )
     }
 
     // ── Commandes clim ────────────────────────────────────────────────────────
     // Exécutées hors thread principal, puis relecture rapide pour que l'UI suive l'état réel.
+
+    /** Commande clim des firmwares ancien SDK (bloquante, donc hors du fil principal). */
+    private fun legacy(label: String, action: () -> Boolean) {
+        scope.launch {
+            val ok = try { action() } catch (e: Exception) { Log.w(TAG, "SET $label : ${e.message}"); false }
+            Log.i(TAG, "SET $label (ancien SDK) → $ok")
+            delay(300); refreshHvac()
+            delay(700); refreshHvac()
+        }
+    }
+
+    private val useLegacy: Boolean get() = !BuildConfig.MOCK && hvac == null && LegacyCar.ready
 
     private fun command(label: String, action: (HvacService) -> Unit) {
         if (BuildConfig.MOCK) { MockCar.command(label, _state); return }
@@ -249,15 +308,15 @@ object CarBridge {
     private fun Boolean?.asInt(): Int? = this?.let { if (it) 1 else 0 }
     private fun toggleTarget(cur: Boolean?): Int = if (cur == true) 0 else 1
 
-    fun togglePower() = cycleTo("power", toggleTarget(_state.value.hvacOn), 2,
+    fun togglePower() = if (useLegacy) legacy("power") { LegacyCar.power(_state.value.hvacOn != true) } else cycleTo("power", toggleTarget(_state.value.hvacOn), 2,
         { it.hvacPowerStatus.asInt() }, { it.switchHvacPowerStatus() })
-    fun toggleAc() = cycleTo("ac", toggleTarget(_state.value.acOn), 2,
+    fun toggleAc() = if (useLegacy) legacy("ac") { LegacyCar.ac(_state.value.acOn != true) } else cycleTo("ac", toggleTarget(_state.value.acOn), 2,
         { it.acStatus.asInt() }, { it.switchACStatus() })
-    fun toggleAuto() = cycleTo("auto", toggleTarget(_state.value.autoOn), 2,
+    fun toggleAuto() = if (useLegacy) legacy("auto") { LegacyCar.auto(_state.value.autoOn != true) } else cycleTo("auto", toggleTarget(_state.value.autoOn), 2,
         { it.autoStatus.asInt() }, { it.switchAutoStatus() })
-    fun toggleDefrostFront() = cycleTo("defrostFront", toggleTarget(_state.value.defrostFront), 2,
+    fun toggleDefrostFront() = if (useLegacy) legacy("defrostFront") { LegacyCar.defrostFront(_state.value.defrostFront != true) } else cycleTo("defrostFront", toggleTarget(_state.value.defrostFront), 2,
         { it.frontDefrostStatus.asInt() }, { it.switchFrontDefrostStatus() })
-    fun toggleDefrostRear() = cycleTo("defrostRear", toggleTarget(_state.value.defrostRear), 2,
+    fun toggleDefrostRear() = if (useLegacy) legacy("defrostRear") { LegacyCar.defrostRear(_state.value.defrostRear != true) } else cycleTo("defrostRear", toggleTarget(_state.value.defrostRear), 2,
         { it.rearDefrostStatus.asInt() }, { it.switchRearDefrostStatus() })
 
     fun toggleEco() = cycleTo("eco", toggleTarget(_state.value.ecoOn), 2,
@@ -272,6 +331,7 @@ object CarBridge {
     fun toggleRecirc() {
         val cur = _state.value.recirc
         val (target, steps) = when (cur) { 1 -> 0 to 3; 0 -> 2 to 2; else -> 1 to 3 }
+        if (useLegacy) { legacy("recirc=$target") { LegacyCar.loop(target) }; return }
         cycleTo("recirc", target, steps, { it.airCirculationStatus.takeIf { v -> v >= 0 } }, { it.switchAirCirculationStatus() })
     }
 
@@ -290,7 +350,8 @@ object CarBridge {
         }.let { t -> if (t < 18f) min else if (t > 32f) max else t }
         if (target == cur) return
         _state.value = _state.value.copy(driverTemp = target)   // retour visuel immédiat
-        command("temp=$target") { it.setDriverTemperature(target) }
+        if (useLegacy) legacy("temp=$target") { LegacyCar.temp(Math.round(target)) }
+        else command("temp=$target") { it.setDriverTemperature(target) }
     }
 
     fun stepFan(delta: Int) {
@@ -298,13 +359,15 @@ object CarBridge {
         val target = (cur + delta).coerceIn(VehicleState.FAN_MIN, VehicleState.FAN_MAX)
         if (target == cur) return
         _state.value = _state.value.copy(fanSpeed = target)
-        command("fan=$target") { it.setFanSpeed(target) }
+        if (useLegacy) legacy("fan=$target") { LegacyCar.fan(target) }
+        else command("fan=$target") { it.setFanSpeed(target) }
     }
 
     /** Direction de l'air, échelle 0–6 (table AirFlow de MG4Control). */
     fun setFanDirection(value: Int) {
         if (value !in 0..6) return
         _state.value = _state.value.copy(fanDirection = value)
-        command("direction=$value") { it.setFanDirection(value) }
+        if (useLegacy) legacy("direction=$value") { LegacyCar.direction(value) }
+        else command("direction=$value") { it.setFanDirection(value) }
     }
 }

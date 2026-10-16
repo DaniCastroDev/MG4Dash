@@ -291,6 +291,15 @@
     <string name="sw_trip_avg">TRIP AVERAGE</string>
     <string name="sw_phone">PHONE</string>
     <string name="sw_fav_pick">Choose a contact</string>
+    <string name="st_compat">COMPATIBILITY (BETA)</string>
+    <string name="st_compat_fw">Firmware: %1$s (%2$s)</string>
+    <string name="st_compat_tested">MG4Dash was developed and tested on this firmware.</string>
+    <string name="st_compat_beta">Not tested on this firmware yet: some features may be missing. Run the test and send the report to help support it.</string>
+    <string name="st_compat_run">Run the test</string>
+    <string name="st_compat_report">Compatibility report</string>
+    <string name="st_compat_scan">Scan with your phone to open a pre-filled GitHub issue. Nothing is sent automatically, and the report contains no personal data.</string>
+    <string name="st_compat_open">Open in browser</string>
+    <string name="st_compat_no_browser">No browser on this head unit: scan the QR code with your phone.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Phone connected · Tap to open</string>
     <string name="aa_waiting">Connect your phone via USB</string>

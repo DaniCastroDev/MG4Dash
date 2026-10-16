@@ -15,6 +15,7 @@ class LauncherApp : Application() {
         Tr.app = this
         installCrashGuard()
         Log.i("App", "démarrage ${BuildConfig.VERSION_NAME} (${BuildConfig.FLAVOR})")
+        app.mg4dash.system.HomeSwitcher.init(this)
         CarBridge.start(this)
         app.mg4dash.car.CarProps.start(this)
         app.mg4dash.energy.ChargeGuard.start(this)
