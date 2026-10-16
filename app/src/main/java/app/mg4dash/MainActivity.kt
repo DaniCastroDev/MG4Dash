@@ -111,15 +111,23 @@ class MainActivity : AppCompatActivity() {
         val box = StackBox(this) { dir -> showStackPage(Math.floorMod(prefs.stackPage + dir, 4)) }
         box.addView(b.energyCard, android.widget.FrameLayout.LayoutParams(-1, -1))
         box.addView(b.secondaryCard, android.widget.FrameLayout.LayoutParams(-1, -1))
+        // Points de la pile dans la barre de titre, juste après le titre (le centre est pris par
+        // l'état de charge sur la page Énergie) ; un toucher passe à la page suivante.
         val dd = resources.displayMetrics.density
-        stackDots = TextView(this).apply {
-            setTextColor(color(R.color.text_title)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f); letterSpacing = 0.3f
-            gravity = Gravity.CENTER
-            setPadding((24 * dd).toInt(), (6 * dd).toInt(), (24 * dd).toInt(), (2 * dd).toInt())
-            isClickable = true
-            setOnClickListener { showStackPage((prefs.stackPage + 1) % 4) }
+        fun dotsIn(header: LinearLayout): TextView {
+            val title = header.getChildAt(0)
+            title.layoutParams = (title.layoutParams as LinearLayout.LayoutParams).apply { width = LinearLayout.LayoutParams.WRAP_CONTENT; weight = 0f }
+            val dots = TextView(this).apply {
+                setTextColor(color(R.color.accent_action)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f); letterSpacing = 0.25f
+                setPadding((18 * dd).toInt(), 0, (18 * dd).toInt(), 0)
+                isClickable = true
+                setOnClickListener { showStackPage((prefs.stackPage + 1) % 4) }
+            }
+            header.addView(dots, 1, LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT))
+            header.addView(View(this), 2, LinearLayout.LayoutParams(0, 1, 1f))
+            return dots
         }
-        box.addView(stackDots, android.widget.FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL))
+        stackDotViews = listOf(dotsIn(b.energyCard.getChildAt(0) as LinearLayout), dotsIn(b.secondaryTitle.parent as LinearLayout))
         b.secondaryDots.visibility = View.GONE
         center.addView(box, lp(40f, 0)); center.addView(b.mediaCard, lp(60f, gap))
         right.addView(b.mapCard, lp(100f, 0))
@@ -134,7 +142,7 @@ class MainActivity : AppCompatActivity() {
 
     private var lastPlugged: Boolean? = null
     private var navBanner: app.mg4dash.ui.NavBanner? = null
-    private var stackDots: TextView? = null
+    private var stackDotViews: List<TextView> = emptyList()
 
     /** Page de la pile : 0 = énergie, 1..3 = énergie du trajet, puissance, téléphone. */
     private fun showStackPage(p: Int) {
@@ -142,7 +150,8 @@ class MainActivity : AppCompatActivity() {
         b.energyCard.visibility = if (p == 0) View.VISIBLE else View.INVISIBLE
         b.secondaryCard.visibility = if (p == 0) View.INVISIBLE else View.VISIBLE
         if (p > 0) { prefs.secondaryWidget = p - 1; renderSecondary(); lifecycleScope.launch { updatePower() } }
-        stackDots?.text = (0..3).joinToString(" ") { if (it == p) "●" else "○" }
+        val dots = (0..3).joinToString(" ") { if (it == p) "●" else "○" }
+        stackDotViews.forEach { it.text = dots }
     }
 
     /** Titre des pages du widget du bas / de la pile. */
