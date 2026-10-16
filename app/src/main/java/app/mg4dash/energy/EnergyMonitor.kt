@@ -97,9 +97,14 @@ object EnergyMonitor {
                         Log.i(TAG, "nouvelle période depuis recharge ($soc %)")
                         _sinceCharge.value = Totals()
                         chargeKm = km ?: -1
-                        sp.edit().putInt("em_c_km0", chargeKm).apply()
+                        sp.edit().putInt("em_c_km0", chargeKm).putInt("em_c_soc0", soc).apply()
                     }
-                    if (soc != lastSoc) { lastSoc = soc; sp.edit().putInt("em_last_soc", soc).apply() }
+                    if (soc != lastSoc) {
+                        lastSoc = soc; sp.edit().putInt("em_last_soc", soc).apply()
+                        // Capacité : énergie nette mesurée depuis la recharge / baisse du %
+                        val soc0 = sp.getInt("em_c_soc0", -1)
+                        if (soc0 > soc) _sinceCharge.value.let { BatteryCapacity.learn(context, it.netKwh, soc0 - soc) }
+                    }
                 }
 
                 val v = CarProps.getFloat(CarProps.BMS_PACK_VOL)

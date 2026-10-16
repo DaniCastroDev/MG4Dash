@@ -311,6 +311,11 @@
     <string name="dock_slot_clock">Orologio</string>
     <string name="dock_slot_wifi">Impostazioni Wi-Fi</string>
     <string name="dock_slot_wifi_short">Wi-Fi</string>
+    <string name="st_cap_car">Letta dall\'auto: %1$s kWh.</string>
+    <string name="st_cap_est">Misurata da MG4Dash: %1$s kWh (su %2$d %% di batteria).</string>
+    <string name="st_cap_none" formatted="false">L\'auto non la fornisce: MG4Dash la misurerà dopo un calo del 15 % dall\'ultima ricarica.</string>
+    <string name="st_cap_manual">Impostata a mano (Auto: torna al valore dell\'auto o misurato).</string>
+    <string name="st_cap_auto">Auto</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefono connesso · Tocca per aprire</string>
     <string name="aa_waiting">Collega il telefono via USB</string>

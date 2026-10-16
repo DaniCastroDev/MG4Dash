@@ -311,6 +311,11 @@
     <string name="dock_slot_clock">Clock</string>
     <string name="dock_slot_wifi">Wi-Fi settings</string>
     <string name="dock_slot_wifi_short">Wi-Fi</string>
+    <string name="st_cap_car">Read from the car: %1$s kWh.</string>
+    <string name="st_cap_est">Measured by MG4Dash: %1$s kWh (over %2$d %% of battery).</string>
+    <string name="st_cap_none" formatted="false">The car does not report it: MG4Dash will measure it after a 15 % drop since the last charge.</string>
+    <string name="st_cap_manual">Set by hand (Auto: back to the car\'s or the measured value).</string>
+    <string name="st_cap_auto">Auto</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Phone connected · Tap to open</string>
     <string name="aa_waiting">Connect your phone via USB</string>

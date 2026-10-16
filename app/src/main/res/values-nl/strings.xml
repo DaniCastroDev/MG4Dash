@@ -311,6 +311,11 @@
     <string name="dock_slot_clock">Klok</string>
     <string name="dock_slot_wifi">Wifi-instellingen</string>
     <string name="dock_slot_wifi_short">Wifi</string>
+    <string name="st_cap_car">Uitgelezen uit de auto: %1$s kWh.</string>
+    <string name="st_cap_est">Gemeten door MG4Dash: %1$s kWh (over %2$d %% batterij).</string>
+    <string name="st_cap_none" formatted="false">De auto geeft hem niet: MG4Dash meet hem na 15 % daling sinds het laatste laden.</string>
+    <string name="st_cap_manual">Handmatig ingesteld (Auto: terug naar de waarde van de auto of de meting).</string>
+    <string name="st_cap_auto">Auto</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefoon verbonden · Tik om te openen</string>
     <string name="aa_waiting">Sluit je telefoon aan via USB</string>

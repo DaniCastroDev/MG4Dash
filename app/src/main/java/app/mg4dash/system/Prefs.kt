@@ -13,6 +13,11 @@ class Prefs(context: Context) {
         get() = sp.getFloat("battery_kwh", 49f)
         set(v) = sp.edit().putFloat("battery_kwh", v).apply()
 
+    /** Capacité ajustée à la main (sinon elle suit la voiture ou l'estimation mesurée). */
+    var batteryKwhManual: Boolean
+        get() = sp.getBoolean("battery_kwh_manual", sp.contains("battery_kwh"))   // réglée avant cette option : on la garde
+        set(v) = sp.edit().putBoolean("battery_kwh_manual", v).apply()
+
     /** Position météo de repli quand le véhicule ne fournit pas de localisation. */
     var weatherLat: Float
         get() = sp.getFloat("weather_lat", 48.8566f)
