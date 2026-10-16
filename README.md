@@ -69,9 +69,12 @@ Drive mode, KERS, driver assistance and vehicle status, read only, with a shortc
 ![Phone](docs/screenshots/phone.png?v=12)
 Recent calls, contacts with a search field and a keypad, from the phone connected over Bluetooth. Calls go through the hands-free (HFP) account, like the stock phone app, whose in-call screen is kept.
 
+### Battery health (estimated)
+Between two charges, MG4Dash measures the energy actually taken from the battery (regeneration deducted) and divides it by the drop in battery %: from a 15 % drop, that gives the real usable capacity. Each charge-to-charge period is kept as a dated measurement; the average, weighted by the % drop, is shown over the last 30 days and since the first measurement, against the usable capacity of a new battery of your model (51, 64 or 77 kWh, chosen in Settings › Energy). The car's integer % and charging losses make it an estimate: it settles after a few charges.
+
 ### Launcher settings
 ![Settings](docs/screenshots/settings.png?v=12)
-Home screen (replace the SAIC home / maintenance mode), battery capacity, weather city, startup, full screen, energy data recorder, Home Assistant and a built-in log.
+Home screen (replace the SAIC home / maintenance mode), battery capacity (read from the car or measured by MG4Dash) and estimated battery health, weather city, startup, full screen, energy data recorder, Home Assistant and a built-in log.
 
 ## Compatibility (beta)
 
