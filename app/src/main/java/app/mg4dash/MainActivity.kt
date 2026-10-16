@@ -538,7 +538,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun renderShortcuts() {
-        app.mg4dash.shortcuts.Shortcuts.render(this, b.shortcutsHolder, shortcutsPage) { p ->
+        app.mg4dash.shortcuts.Shortcuts.render(this, b.shortcutsHolder, shortcutsPage, if (mapLayout) 3 else 2) { p ->
             shortcutsPage = p; renderShortcuts()
         }
     }

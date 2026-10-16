@@ -137,6 +137,14 @@ class ScreenshotTest {
         app.mg4dash.map.NavRepo.setForTest(null)
     }
 
+    @Test fun homeMapLayoutShortcuts() {
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
+            .putInt("home_style", 2).putInt("home_widget", 1)
+            .putString("sc_0", "ha|cover.gate|Gate").putString("sc_1", "ha|cover.garage_door|Garage")
+            .putString("sc_8", "ha|scene.arriving_home|Arriving").apply()
+        shoot(MainActivity::class.java, "home_map_layout_shortcuts.png")
+    }
+
     @Test fun homeWidgetPower() {
         org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit().putInt("secondary_widget", 1).apply()
         shoot(MainActivity::class.java, "home_widget_power.png")

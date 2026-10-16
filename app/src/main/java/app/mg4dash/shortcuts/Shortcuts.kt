@@ -67,7 +67,8 @@ object Shortcuts {
     // ─── Vue ───
 
     /** Construit (ou reconstruit) la grille dans [holder] ; [page] = page affichée. */
-    fun render(activity: Activity, holder: LinearLayout, page: Int, onPage: (Int) -> Unit) {
+    /** [rows] : 2 sur l'accueil Complet, 3 dans le style Carte (cases 8 à 11 en plus). */
+    fun render(activity: Activity, holder: LinearLayout, page: Int, rows: Int = ROWS, onPage: (Int) -> Unit) {
         val kit = Kit(activity)
         val prefs = Prefs(activity)
         holder.removeAllViews()
@@ -75,11 +76,11 @@ object Shortcuts {
         head.addView(kit.title(activity.getString(R.string.title_shortcuts)), kit.lp(0, -2, 1f, l = Kit.FOG_SAFE_DP - 20))
         holder.addView(head, kit.lp(-1, kit.dp(48)))
         val grid = kit.column()
-        for (r in 0 until ROWS) {
+        for (r in 0 until rows) {
             val row = kit.row()
             for (c in 0 until COLS) {
-                val i = page * COLS * ROWS + r * COLS + c
-                row.addView(cell(activity, kit, prefs, i) { render(activity, holder, page, onPage) },
+                val i = page * COLS * rows + r * COLS + c
+                row.addView(cell(activity, kit, prefs, i) { render(activity, holder, page, rows, onPage) },
                     kit.lp(0, -1, 1f, l = if (c > 0) 10 else 0))
             }
             grid.addView(row, kit.lp(-1, 0, 1f, t = if (r > 0) 10 else 0))
