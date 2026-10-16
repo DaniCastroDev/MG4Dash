@@ -338,18 +338,19 @@ class MainActivity : AppCompatActivity() {
     private fun fillForecast(row: LinearLayout, items: List<Triple<String, Int, String>>) {
         row.removeAllViews()
         items.forEach { (label, code, value) ->
+            // Heure, icône et température empilées : plus gros, et la hauteur du cadre est mieux utilisée
             val cell = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
+                orientation = LinearLayout.VERTICAL
                 gravity = Gravity.CENTER
             }
             cell.addView(TextView(this).apply {
-                text = label; setTextColor(color(R.color.text_title)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f)
+                text = label; setTextColor(color(R.color.text_title)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f); gravity = Gravity.CENTER
             })
             cell.addView(ImageView(this).apply {
                 setImageResource(WeatherRepo.icon(code)); setColorFilter(color(R.color.text_sub))
-            }, LinearLayout.LayoutParams(dp(22), dp(22)).apply { leftMargin = dp(6); rightMargin = dp(6) })
+            }, LinearLayout.LayoutParams(dp(30), dp(30)).apply { topMargin = dp(2); bottomMargin = dp(2) })
             cell.addView(TextView(this).apply {
-                text = value; setTextColor(color(R.color.text_value)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+                text = value; setTextColor(color(R.color.text_value)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 23f); gravity = Gravity.CENTER
             })
             row.addView(cell, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
         }
