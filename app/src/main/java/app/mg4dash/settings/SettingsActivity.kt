@@ -140,10 +140,11 @@ class SettingsActivity : AppCompatActivity() {
         row(upd, button(getString(R.string.st_update_check), R.color.accent_action) {
             updState.text = getString(R.string.st_update_checking)
             lifecycleScope.launch {
-                val r = withContext(Dispatchers.IO) { try { app.mg4dash.system.Updater.latest() } catch (e: Exception) { Log.w("MàJ", "${e.message}"); null } }
+                var failed = false
+                val r = withContext(Dispatchers.IO) { try { app.mg4dash.system.Updater.latest(prefs.updateBeta) } catch (e: Exception) { Log.w("MàJ", "${e.message}"); failed = true; null } }
                 val newer = r?.takeIf { app.mg4dash.system.Updater.isNewer(it.version) }
                 updState.text = when {
-                    r == null -> getString(R.string.st_update_error)
+                    failed -> getString(R.string.st_update_error)
                     newer != null -> getString(R.string.st_update_available, BuildConfig.VERSION_NAME, r.version)
                     else -> getString(R.string.st_update_uptodate, BuildConfig.VERSION_NAME)
                 }
@@ -165,6 +166,11 @@ class SettingsActivity : AppCompatActivity() {
                 }
             }
         })
+
+        val betaState = text(upd, "", 18f, R.color.text_value)
+        fun showBeta() { betaState.text = getString(R.string.st_update_beta, getString(if (prefs.updateBeta) R.string.yes else R.string.no)) }
+        showBeta()
+        row(upd, button(getString(R.string.st_toggle)) { prefs.updateBeta = !prefs.updateBeta; showBeta() })
 
         // ── Thème : fond et couleur des boutons ──
         val theme = panel(right, getString(R.string.st_theme))

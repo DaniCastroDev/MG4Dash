@@ -73,6 +73,11 @@ class Prefs(context: Context) {
         set(v) = sp.edit().putString("ha_token", v.trim()).apply()
 
     /** Enregistreur de données énergie (diagnostic, fichier CSV). */
+    /** Mise à jour : proposer aussi les versions bêta (pré-versions GitHub). */
+    var updateBeta: Boolean
+        get() = sp.getBoolean("update_beta", true)
+        set(v) = sp.edit().putBoolean("update_beta", v).apply()
+
     var energyLog: Boolean
         get() = sp.getBoolean("energy_log", true)
         set(v) = sp.edit().putBoolean("energy_log", v).apply()

@@ -300,6 +300,7 @@
     <string name="st_compat_scan">Scan with your phone to open a pre-filled GitHub issue. Nothing is sent automatically, and the report contains no personal data.</string>
     <string name="st_compat_open">Open in browser</string>
     <string name="st_compat_no_browser">No browser on this head unit: scan the QR code with your phone.</string>
+    <string name="st_update_beta">Include beta versions: %1$s</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Phone connected · Tap to open</string>
     <string name="aa_waiting">Connect your phone via USB</string>

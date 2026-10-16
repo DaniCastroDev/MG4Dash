@@ -24,8 +24,8 @@ object Updater {
 
     data class Release(val version: String, val url: String, val size: Long, val notes: String)
 
-    /** Dernière release publiée (la plus récente, pré-version ou non), ou null. Réseau : à appeler hors du fil principal. */
-    fun latest(): Release? {
+    /** Dernière release publiée (pré-versions comprises si [beta]), ou null s'il n'y en a pas. Réseau : hors du fil principal. */
+    fun latest(beta: Boolean = true): Release? {
         val c = URL(API).openConnection() as HttpURLConnection
         try {
             c.connectTimeout = 8000; c.readTimeout = 15000
@@ -36,6 +36,7 @@ object Updater {
             for (i in 0 until arr.length()) {
                 val r = arr.getJSONObject(i)
                 if (r.optBoolean("draft")) continue
+                if (!beta && r.optBoolean("prerelease")) continue
                 val assets = r.optJSONArray("assets") ?: continue
                 for (j in 0 until assets.length()) {
                     val a = assets.getJSONObject(j)

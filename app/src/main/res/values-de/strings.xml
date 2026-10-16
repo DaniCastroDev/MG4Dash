@@ -300,6 +300,7 @@
     <string name="st_compat_scan">Mit dem Telefon scannen, um ein vorausgefülltes GitHub-Issue zu öffnen. Nichts wird automatisch gesendet, der Bericht enthält keine persönlichen Daten.</string>
     <string name="st_compat_open">Im Browser öffnen</string>
     <string name="st_compat_no_browser">Kein Browser auf diesem Gerät: QR-Code mit dem Telefon scannen.</string>
+    <string name="st_update_beta">Beta-Versionen einbeziehen: %1$s</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefon verbunden · Zum Öffnen tippen</string>
     <string name="aa_waiting">Telefon per USB verbinden</string>

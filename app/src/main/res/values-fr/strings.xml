@@ -300,6 +300,7 @@
     <string name="st_compat_scan">Scannez avec votre téléphone pour ouvrir une issue GitHub pré-remplie. Rien n\'est envoyé automatiquement et le rapport ne contient aucune donnée personnelle.</string>
     <string name="st_compat_open">Ouvrir dans le navigateur</string>
     <string name="st_compat_no_browser">Pas de navigateur sur cet autoradio : scannez le QR code avec votre téléphone.</string>
+    <string name="st_update_beta">Inclure les versions bêta : %1$s</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Téléphone connecté · Appuyer pour ouvrir</string>
     <string name="aa_waiting">Branchez votre téléphone en USB</string>
