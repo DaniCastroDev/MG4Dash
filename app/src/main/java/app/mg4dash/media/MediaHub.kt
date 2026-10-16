@@ -80,6 +80,11 @@ object MediaHub {
         bindAndroidAuto()
         watchAudioSource(context)
         reevaluate()
+        // Filet de sécurité : relecture régulière du lecteur (titre, pochette, état), au cas où un
+        // rappel de la radio se perd (service radio redémarré, session remplacée).
+        main.postDelayed(object : Runnable {
+            override fun run() { reevaluate(); main.postDelayed(this, 5_000) }
+        }, 5_000)
     }
 
     /**
@@ -303,12 +308,39 @@ object MediaHub {
         val artUri = md?.getString(MediaMetadata.METADATA_KEY_ALBUM_ART_URI)
             ?: md?.getString(MediaMetadata.METADATA_KEY_ART_URI)
         val key = "$title|$artist"
-        if (bmp == null && artUri != null && key != lastArtKey) {
+        // Radio DAB sans image : la radio efface la pochette à chaque changement de station et ne
+        // l'envoie qu'à l'arrivée du slideshow. Comme Radio Dash, on prend l'image en cache de la station.
+        if (bmp == null && artUri == null && c.packageName == "com.saicmotor.radio" && title.isNotBlank() && key != lastArtKey) {
+            lastArtKey = key
+            io.launch { cachedDabArt(title)?.let { a -> if (_now.value.title == title && _now.value.packageName == "com.saicmotor.radio") _now.value = _now.value.copy(art = a) } }
+        } else if (bmp == null && artUri != null && key != lastArtKey) {
             lastArtKey = key
             io.launch { loadArt(artUri)?.let { a -> if (_now.value.title == title) _now.value = _now.value.copy(art = a) } }
         } else if (bmp != null) {
             lastArtKey = key
         }
+    }
+
+    /**
+     * Image en cache de la station DAB en cours (fichiers/dab_<serviceId>.jpg du patch DAB+), si le
+     * nom de la station correspond au titre affiché (évite l'image d'une station DAB précédente en FM).
+     * La radio tourne en uid système comme MG4Dash : ses fichiers sont lisibles.
+     */
+    private fun cachedDabArt(title: String): Bitmap? = try {
+        val db = android.database.sqlite.SQLiteDatabase.openDatabase(
+            "/data/data/com.saicmotor.radio/databases/RadioDatabase", null, android.database.sqlite.SQLiteDatabase.OPEN_READONLY)
+        val (id, name) = db.use { d ->
+            d.rawQuery("SELECT service_id, service_name FROM dab_current_station_table LIMIT 1", null).use { cur ->
+                if (cur.moveToFirst()) cur.getLong(0) to (cur.getString(1) ?: "") else null
+            }
+        } ?: return null
+        fun norm(t: String) = t.uppercase().replace("DAB+", "").replace(Regex("[^A-Z0-9]"), "")
+        val a = norm(name); val b = norm(title)
+        if (a.isEmpty() || !(b.startsWith(a) || a.startsWith(b))) null
+        else java.io.File("/data/data/com.saicmotor.radio/files/dab_$id.jpg").takeIf { it.canRead() }
+            ?.let { android.graphics.BitmapFactory.decodeFile(it.path) }
+    } catch (e: Exception) {
+        Log.w(TAG, "image DAB en cache : ${e.message}"); null
     }
 
     /** Pochette Bluetooth AVRCP : /storage/emulated/0/bluetooth/<MAC>/AVRCP_BIP_IMG_*.JPEG */
