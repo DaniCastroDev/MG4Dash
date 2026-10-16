@@ -226,6 +226,7 @@ object MediaHub {
     private fun reevaluate() {
         val active = try { manager?.getActiveSessions(null).orEmpty() } catch (_: SecurityException) { emptyList() }
         val candidates = active + browserControllers.values
+        lastCandidates = candidates
         candidates.forEach { c ->
             if (watched.add(c.sessionToken)) c.registerCallback(callback, main)
         }
@@ -245,6 +246,21 @@ object MediaHub {
             Log.i(TAG, "lecteur affiché : ${chosen?.packageName ?: "aucun"}")
         }
         publish()
+    }
+
+    @Volatile private var lastCandidates: List<MediaController> = emptyList()
+
+    /**
+     * Un même lecteur peut avoir deux contrôleurs (session active et navigateur média) : sur la
+     * voiture, l'état Bluetooth ne suivait que sur l'un des deux, et le bouton lecture/pause du
+     * widget restait figé. On prend l'état le plus récemment mis à jour.
+     */
+    private fun isPlaying(c: MediaController): Boolean {
+        // L'état le plus récent parmi les contrôleurs de ce lecteur fait foi.
+        val st = (lastCandidates.filter { it.packageName == c.packageName } + c)
+            .mapNotNull { it.playbackState }
+            .maxByOrNull { it.lastPositionUpdateTime }
+        return st?.state == PlaybackState.STATE_PLAYING
     }
 
     private val callback = object : MediaController.Callback() {
@@ -278,7 +294,7 @@ object MediaHub {
             artist = artist,
             album = album,
             art = bmp ?: _now.value.art.takeIf { lastArtKey == "$title|$artist" },
-            playing = st?.state == PlaybackState.STATE_PLAYING,
+            playing = isPlaying(c),
             durationMs = md?.getLong(MediaMetadata.METADATA_KEY_DURATION) ?: 0,
             positionMs = st?.position ?: 0,
             androidAuto = androidAutoAvailable(),
@@ -326,7 +342,7 @@ object MediaHub {
     fun playPause() {
         if (BuildConfig.MOCK) { _now.value = _now.value.copy(playing = !_now.value.playing); return }
         val c = current ?: return
-        val playing = c.playbackState?.state == PlaybackState.STATE_PLAYING
+        val playing = isPlaying(c)
         // La voiture est sur une autre source (ex. FM) : un « lecture » envoyé au Bluetooth ou à
         // l'USB est ignoré. On demande d'abord à la voiture de changer de source (comme le launcher
         // d'origine), puis on lance la lecture si elle n'a pas démarré toute seule.
