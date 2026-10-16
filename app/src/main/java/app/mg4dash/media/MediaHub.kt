@@ -326,6 +326,14 @@ object MediaHub {
         if (BuildConfig.MOCK) { _now.value = _now.value.copy(playing = !_now.value.playing); return }
         val c = current ?: return
         val playing = c.playbackState?.state == PlaybackState.STATE_PLAYING
+        // La voiture est sur une autre source (ex. FM) : un « lecture » envoyé au Bluetooth ou à
+        // l'USB est ignoré. On ouvre brièvement l'appli d'origine de cette source, ce qui bascule
+        // la source audio de la voiture, puis on revient à l'accueil et on lance la lecture.
+        if (!playing && !isAndroidAuto(c.packageName) && sourcePkg != null && sourcePkg != c.packageName &&
+            activateSource(c.packageName)) {
+            main.postDelayed({ current?.takeIf { it.packageName == c.packageName }?.transportControls?.play() }, 2500)
+            return
+        }
         // Android Auto (RemoteUI) ne réagit qu'aux touches média, pas aux commandes play()/pause()
         if (isAndroidAuto(c.packageName)) { aaControl(c, if (playing) AA_PAUSE else AA_PLAY, if (playing) KeyEvent.KEYCODE_MEDIA_PAUSE else KeyEvent.KEYCODE_MEDIA_PLAY); return }
         if (playing) c.transportControls.pause() else c.transportControls.play()
@@ -390,8 +398,27 @@ object MediaHub {
     }
 
     /** Composant à ouvrir quand on touche la carte média. */
-    fun ownerComponent(): ComponentName? = current?.packageName?.let { pkg ->
-        if (pkg == AA_MBS) return app.mg4dash.system.Apps.ANDROID_AUTO
-        appContext?.packageManager?.getLaunchIntentForPackage(pkg)?.component
+    fun ownerComponent(): ComponentName? = current?.packageName?.let { pkg -> ownerOf(pkg) }
+
+    /** Appli d'origine d'une source ; le Bluetooth (sans appli à lui) est lu par l'appli Média SAIC. */
+    private fun ownerOf(pkg: String): ComponentName? = when (pkg) {
+        AA_MBS -> app.mg4dash.system.Apps.ANDROID_AUTO
+        "com.android.bluetooth" -> app.mg4dash.system.Apps.MEDIA
+        else -> appContext?.packageManager?.getLaunchIntentForPackage(pkg)?.component
+    }
+
+    /** Ouvre l'appli d'origine de [pkg] puis revient à MG4Dash ; false si rien à ouvrir. */
+    private fun activateSource(pkg: String): Boolean {
+        val ctx = appContext ?: return false
+        val owner = ownerOf(pkg) ?: return false
+        Log.i(TAG, "bascule de la source audio vers $pkg (ouverture brève de ${owner.flattenToShortString()})")
+        if (!app.mg4dash.system.Apps.open(ctx, owner, "source")) return false
+        main.postDelayed({
+            try {
+                ctx.startActivity(android.content.Intent(ctx, app.mg4dash.MainActivity::class.java)
+                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
+            } catch (e: Exception) { Log.w(TAG, "retour à l'accueil : ${e.message}") }
+        }, 1500)
+        return true
     }
 }
