@@ -108,8 +108,10 @@ class SettingsActivity : AppCompatActivity() {
         }
         showSoh()
         row(energy, *app.mg4dash.energy.BatteryCapacity.MODELS.map { (gross, _) ->
-            button("$gross kWh", if (prefs.batteryModel == gross) R.color.accent_action else R.color.text_value) { prefs.batteryModel = gross; recreate() }
-        }.toTypedArray())
+            gross
+        }.let { models ->
+            choiceButtons(models.map { "$it kWh" }, { models.indexOf(prefs.batteryModel) }) { prefs.batteryModel = models[it]; showSoh() }
+        })
         text(energy, getString(R.string.st_capacity_desc), 16f, R.color.text_title)
 
         // ── Météo ──
@@ -220,9 +222,7 @@ class SettingsActivity : AppCompatActivity() {
         showStyle()
         text(style, getString(R.string.st_style_desc), 16f, R.color.text_title)
         row(style,
-            button(getString(R.string.st_style_full), if (prefs.homeStyle == 0) R.color.accent_action else R.color.text_value) { prefs.homeStyle = 0; showStyle() },
-            button(getString(R.string.st_style_simple), if (prefs.homeStyle == 1) R.color.accent_action else R.color.text_value) { prefs.homeStyle = 1; showStyle() },
-            button(getString(R.string.st_style_map), if (prefs.homeStyle == 2) R.color.accent_action else R.color.text_value) { prefs.homeStyle = 2; showStyle() },
+            *styleButtons(listOf(R.string.st_style_full, R.string.st_style_simple, R.string.st_style_map), { prefs.homeStyle }) { prefs.homeStyle = it; showStyle() },
         )
         val stackState = text(style, "", 18f, R.color.text_value)
         fun showStack() { stackState.text = getString(R.string.st_stack_auto, getString(if (prefs.stackAuto) R.string.yes else R.string.no)) }
@@ -405,6 +405,18 @@ class SettingsActivity : AppCompatActivity() {
             setBackgroundResource(R.drawable.bg_button); minHeight = dp(56); setPadding(dp(20), 0, dp(20), 0)
             setOnClickListener { onClick() }
         }
+
+    /** Boutons à choix unique : celui qui est actif est en couleur, et la couleur suit tout de suite le choix. */
+    private fun choiceButtons(labels: List<String>, current: () -> Int, onPick: (Int) -> Unit): Array<Button> {
+        lateinit var buttons: List<Button>
+        fun paint() = buttons.forEachIndexed { i, btn -> btn.setTextColor(color(if (i == current()) R.color.accent_action else R.color.text_value)) }
+        buttons = labels.mapIndexed { i, l -> button(l) { onPick(i); paint() } }
+        paint()
+        return buttons.toTypedArray()
+    }
+
+    private fun styleButtons(labels: List<Int>, current: () -> Int, onPick: (Int) -> Unit) =
+        choiceButtons(labels.map { getString(it) }, current, onPick)
 
     private fun row(parent: LinearLayout, vararg views: View) {
         val r = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
