@@ -312,10 +312,13 @@
     <string name="dock_slot_wifi">Wifi-instellingen</string>
     <string name="dock_slot_wifi_short">Wifi</string>
     <string name="st_cap_car">Uitgelezen uit de auto: %1$s kWh.</string>
-    <string name="st_cap_est">Gemeten door MG4Dash: %1$s kWh (over %2$d %% batterij).</string>
     <string name="st_cap_none" formatted="false">De auto geeft hem niet: MG4Dash meet hem na 15 % daling sinds het laatste laden.</string>
     <string name="st_cap_manual">Handmatig ingesteld (Auto: terug naar de waarde van de auto of de meting).</string>
     <string name="st_cap_auto">Auto</string>
+    <string name="st_cap_est">Gemeten door MG4Dash: %1$s kWh (%2$d meting(en) tussen twee laadbeurten, afgevlakt over 30 dagen).</string>
+    <string name="st_cap_est_current">Gemeten door MG4Dash op de huidige lading: %1$s kWh (voorlopig).</string>
+    <string name="st_soh">Batterijgezondheid (geschat): %1$d %% over 30 dagen, %2$d %% sinds de eerste meting (%3$d metingen, vergeleken met een nieuwe %4$d kWh-batterij).</string>
+    <string name="st_soh_none">Batterijgezondheid: gemeten vanaf de volgende laadbeurt (15 %% daling nodig), vergeleken met een nieuwe %1$d kWh-batterij. Kies uw model:</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefoon verbonden · Tik om te openen</string>
     <string name="aa_waiting">Sluit je telefoon aan via USB</string>

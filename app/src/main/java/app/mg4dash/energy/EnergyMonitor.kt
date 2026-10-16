@@ -95,6 +95,9 @@ object EnergyMonitor {
                 if (soc != null) {
                     if (lastSoc >= 0 && soc > lastSoc + 1 || chargeKm < 0 && km != null) {
                         Log.i(TAG, "nouvelle période depuis recharge ($soc %)")
+                        // La période qui se termine devient une mesure de capacité (santé batterie)
+                        val soc0 = sp.getInt("em_c_soc0", -1)
+                        if (soc0 > 0 && lastSoc in 0 until soc0) BatteryCapacity.closePeriod(context, _sinceCharge.value.netKwh, soc0 - lastSoc)
                         _sinceCharge.value = Totals()
                         chargeKm = km ?: -1
                         sp.edit().putInt("em_c_km0", chargeKm).putInt("em_c_soc0", soc).apply()

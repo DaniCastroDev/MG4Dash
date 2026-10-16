@@ -312,10 +312,13 @@
     <string name="dock_slot_wifi">Ajustes Wi-Fi</string>
     <string name="dock_slot_wifi_short">Wi-Fi</string>
     <string name="st_cap_car">Leída del coche: %1$s kWh.</string>
-    <string name="st_cap_est">Medida por MG4Dash: %1$s kWh (sobre %2$d %% de batería).</string>
     <string name="st_cap_none" formatted="false">El coche no la indica: MG4Dash la medirá tras un 15 % de descenso desde la última carga.</string>
     <string name="st_cap_manual">Ajustada a mano (Auto: volver al valor del coche o medido).</string>
     <string name="st_cap_auto">Auto</string>
+    <string name="st_cap_est">Medida por MG4Dash: %1$s kWh (%2$d medición(es) entre cargas, suavizadas en 30 días).</string>
+    <string name="st_cap_est_current">Medida por MG4Dash en la carga actual: %1$s kWh (provisional).</string>
+    <string name="st_soh">Salud de la batería (estimada): %1$d %% en 30 días, %2$d %% desde la primera medición (%3$d mediciones, frente a una batería nueva de %4$d kWh).</string>
+    <string name="st_soh_none">Salud de la batería: se mide a partir de la próxima carga (hace falta un 15 %% de descenso), frente a una batería nueva de %1$d kWh. Elija su modelo:</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Teléfono conectado · Pulse para abrir</string>
     <string name="aa_waiting">Conecte su teléfono por USB</string>

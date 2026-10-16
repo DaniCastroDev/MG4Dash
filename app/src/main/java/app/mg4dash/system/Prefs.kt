@@ -13,6 +13,11 @@ class Prefs(context: Context) {
         get() = sp.getFloat("battery_kwh", 49f)
         set(v) = sp.edit().putFloat("battery_kwh", v).apply()
 
+    /** Batterie d'origine du modèle, en kWh bruts : 51, 64 ou 77 (référence de la santé batterie). */
+    var batteryModel: Int
+        get() = sp.getInt("battery_model", 51)
+        set(v) = sp.edit().putInt("battery_model", v).apply()
+
     /** Capacité ajustée à la main (sinon elle suit la voiture ou l'estimation mesurée). */
     var batteryKwhManual: Boolean
         get() = sp.getBoolean("battery_kwh_manual", sp.contains("battery_kwh"))   // réglée avant cette option : on la garde
