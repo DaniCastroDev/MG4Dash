@@ -7,7 +7,7 @@ Languages: English (default), French, German, Spanish, Italian and Dutch, follow
 > Screenshots are rendered on a PC with simulated data (the OpenStreetMap map only shows on the car).
 
 ### Home
-![Home](docs/screenshots/home.png?v=11)
+![Home](docs/screenshots/home.png?v=12)
 Climate (temperature, fan, AUTO, A/C, recirculation, defrost), energy (battery, range, estimated consumption, drive mode, KERS, Charge / Start V2L button), vehicle position, Open-Meteo weather, a media card that follows the car's active audio source (DAB/FM radio, Bluetooth, USB, Android Auto) and a bottom-right widget with three pages (see below).
 
 Long press the Android Auto button in the dock to make it open Android Auto, CarPlay or the app of your choice.
@@ -20,47 +20,57 @@ Tap it to switch between three pages, all readable at a glance while driving:
 
 | | |
 |---|---|
-| ![Live power](docs/screenshots/home_widget_power.png?v=11) | ![Phone favourites](docs/screenshots/home_widget_phone.png?v=11) |
+| ![Live power](docs/screenshots/home_widget_power.png?v=12) | ![Phone favourites](docs/screenshots/home_widget_phone.png?v=12) |
+
+### Map home layout
+![Map layout](docs/screenshots/home_map_layout.png?v=12)
+A third layout (Settings › Home layout › Map), suggested in [issue #6](https://github.com/Skittle6938/MG4Dash/issues/6): weather and climate on the left, a stack (energy, trip energy, live power, phone) above the media in the centre, and the map over the whole right column with 3 rows of shortcuts. Swipe the stack or tap its dots to change page; with the automatic option, it jumps back to the battery once when the car is plugged in. The date and time are shown in the weather card.
+
+The dock's clock can be swapped for a Wi-Fi settings button: long press the clock.
+
+### Turn-by-turn on the map
+![Navigation banner](docs/screenshots/home_map_layout_nav.png?v=12)
+With [DiAuto](https://github.com/merthankaraman/DiAuto-MG4) (or another Headunit Revived-based Android Auto app that broadcasts `com.andrerinas.headunitrevived.NAVIGATION_UPDATE`), the next manoeuvre is shown over the home map: arrow, distance, street, time and distance left, arrival time. The stock Android Auto app does not receive this information from the phone, so it only works with these apps.
 
 ### Simple home layout
-![Simple home](docs/screenshots/home_simple.png?v=11)
+![Simple home](docs/screenshots/home_simple.png?v=12)
 An alternative, calmer home screen for those who want fewer buttons and bigger text: three large panels (climate, battery, media), two configurable shortcuts and today's weather, with a reduced dock (Home, Phone, Android Auto, Settings). Choose it in the launcher settings, under "Home layout"; tap a panel to open the matching page.
 
 ### Shortcuts and Home Assistant
-![Shortcuts](docs/screenshots/home_shortcuts.png?v=11)
+![Shortcuts](docs/screenshots/home_shortcuts.png?v=12)
 The button at the top right of the map swaps it for 2 pages of 4 × 2 shortcuts: apps or Home Assistant actions (scripts, automations, scenes, buttons, gate, garage door…). Tap an empty slot, or long press any slot, to change it. The Home Assistant address and token are set in the launcher settings.
 
 ### Themes
-![Charcoal background, orange buttons](docs/screenshots/home_theme_charcoal_orange.png?v=11)
+![Charcoal background, orange buttons](docs/screenshots/home_theme_charcoal_orange.png?v=12)
 Background (night blue, black, charcoal, dark green, dark burgundy) and button colour (blue, grey, red, green, orange) are chosen separately in the launcher settings and apply to every page. Battery green, heating orange, cooling cyan and alert red keep their meaning. Radio Dash 1.2 follows the same theme.
 
 Light mode: dark, light or auto in the same settings. In auto, every page (and Radio Dash) switches to dark when the car's lights come on, and back to light when they go off.
 
-![Light mode, home](docs/screenshots/home_light.png?v=11)
+![Light mode, home](docs/screenshots/home_light.png?v=12)
 
 | | |
 |---|---|
-| ![Climate, light](docs/screenshots/climate_light.png?v=11) | ![Energy, light](docs/screenshots/energy_light.png?v=11) |
-| ![Simple home, light](docs/screenshots/home_simple_light.png?v=11) | ![Settings, light](docs/screenshots/settings_light.png?v=11) |
+| ![Climate, light](docs/screenshots/climate_light.png?v=12) | ![Energy, light](docs/screenshots/energy_light.png?v=12) |
+| ![Simple home, light](docs/screenshots/home_simple_light.png?v=12) | ![Settings, light](docs/screenshots/settings_light.png?v=12) |
 
 ### Climate
-![Climate](docs/screenshots/climate.png?v=11)
+![Climate](docs/screenshots/climate.png?v=12)
 Temperature in 1° steps (LO → HI), fan speed, combinable air direction, AUTO, A/C, ECO, recirculation and front / rear defrost.
 
 ### Energy
-![Energy](docs/screenshots/energy.png?v=11)
+![Energy](docs/screenshots/energy.png?v=12)
 Charging (start / stop, charge limit enforced by MG4Dash, AC current), scheduled charging, V2L (stop threshold, start / stop), battery heating while driving (same switch as the stock Energy app) and consumption (driving, climate, accessories, regeneration, curve of the last kilometres).
 
 ### Vehicle
-![Vehicle](docs/screenshots/vehicle.png?v=11)
+![Vehicle](docs/screenshots/vehicle.png?v=12)
 Drive mode, KERS, driver assistance and vehicle status, read only, with a shortcut to MG4 Control.
 
 ### Phone
-![Phone](docs/screenshots/phone.png?v=11)
+![Phone](docs/screenshots/phone.png?v=12)
 Recent calls, contacts with a search field and a keypad, from the phone connected over Bluetooth. Calls go through the hands-free (HFP) account, like the stock phone app, whose in-call screen is kept.
 
 ### Launcher settings
-![Settings](docs/screenshots/settings.png?v=11)
+![Settings](docs/screenshots/settings.png?v=12)
 Home screen (replace the SAIC home / maintenance mode), battery capacity, weather city, startup, full screen, energy data recorder, Home Assistant and a built-in log.
 
 ## Compatibility (beta)
@@ -143,6 +153,7 @@ The SAIC launcher package (`com.saicmotor.launcher`) is never disabled: its serv
 
 - Long press "Settings" in the dock: launcher settings
 - Long press "Home" in the dock: list of installed apps
+- Long press the clock in the dock: clock or Wi-Fi settings button
 - Long press "Android Auto" in the dock: Android Auto, CarPlay or another app
 - Tap the bottom-right widget: trip energy → live power → phone; long press a phone favourite to change it
 - Button at the top right of the map: map ↔ shortcuts; long press a shortcut to edit it
