@@ -106,17 +106,18 @@ class MainActivity : AppCompatActivity() {
         val box = StackBox(this) { dir -> showStackPage(Math.floorMod(prefs.stackPage + dir, 4)) }
         box.addView(b.energyCard, android.widget.FrameLayout.LayoutParams(-1, -1))
         box.addView(b.secondaryCard, android.widget.FrameLayout.LayoutParams(-1, -1))
-        stackDots = TextView(this).apply {
-            setTextColor(color(R.color.text_title)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f); letterSpacing = 0.3f
-        }
-        box.addView(stackDots, android.widget.FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply { bottomMargin = gap / 4 })
         b.secondaryDots.visibility = View.GONE
         center.addView(box, lp(40f, 0)); center.addView(b.mediaCard, lp(60f, gap))
         right.addView(b.mapCard, lp(100f, 0))
+        // Le bouton antibrouillards de MG se superpose en haut à gauche : la marge passe du titre
+        // Climatisation (qui descend) au titre Météo (qui monte).
+        val fogSafe = (64 * resources.displayMetrics.density).toInt()
+        ((b.climateCard.getChildAt(0) as LinearLayout).getChildAt(0).layoutParams as LinearLayout.LayoutParams).leftMargin = 0
+        ((b.weatherPlace.parent as LinearLayout).getChildAt(0).layoutParams as LinearLayout.LayoutParams).leftMargin = fogSafe
         showStackPage(prefs.stackPage)
     }
 
-    private var stackDots: TextView? = null
+
     private var lastPlugged: Boolean? = null
 
     /** Page de la pile : 0 = énergie, 1..3 = énergie du trajet, puissance, téléphone. */
@@ -125,7 +126,21 @@ class MainActivity : AppCompatActivity() {
         b.energyCard.visibility = if (p == 0) View.VISIBLE else View.INVISIBLE
         b.secondaryCard.visibility = if (p == 0) View.INVISIBLE else View.VISIBLE
         if (p > 0) { prefs.secondaryWidget = p - 1; renderSecondary(); lifecycleScope.launch { updatePower() } }
-        stackDots?.text = (0..3).joinToString(" ") { if (it == p) "●" else "○" }
+        stackTitle((b.energyCard.getChildAt(0) as LinearLayout).getChildAt(0) as TextView, getString(R.string.title_energy))
+    }
+
+    /**
+     * Style Carte : le titre de la carte affichée sert de bouton pour la pile (« ÉNERGIE  1/4  › ») ;
+     * un toucher passe à la page suivante.
+     */
+    private fun stackTitle(tv: TextView, base: String) {
+        if (!mapLayout) { tv.text = base; return }
+        val label = "$base   ${prefs.stackPage + 1}/4  ›"
+        tv.text = android.text.SpannableString(label).apply {
+            setSpan(android.text.style.ForegroundColorSpan(color(R.color.accent_action)), base.length, label.length, 0)
+        }
+        tv.isClickable = true
+        tv.setOnClickListener { showStackPage((prefs.stackPage + 1) % 4) }
     }
 
     /** Pile automatique : quand la voiture vient d'être branchée, on revient sur la batterie. */
@@ -548,7 +563,7 @@ class MainActivity : AppCompatActivity() {
 
     /** Énergie depuis le démarrage, répartie comme sur la page Énergie (mesures de MG4Dash). */
     private fun renderTripEnergy() {
-        b.secondaryTitle.text = getString(R.string.sw_energy)
+        stackTitle(b.secondaryTitle, getString(R.string.sw_energy))
         val t = app.mg4dash.energy.EnergyMonitor.sinceStart.value
         val ok = t.outKwh > 0f
         val g = b.secondaryGrid
@@ -573,7 +588,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun buildPower() {
-        b.secondaryTitle.text = getString(R.string.sw_power)
+        stackTitle(b.secondaryTitle, getString(R.string.sw_power))
         val g = b.secondaryGrid
         g.removeAllViews()
         g.orientation = LinearLayout.VERTICAL
@@ -611,7 +626,7 @@ class MainActivity : AppCompatActivity() {
 
     /** Trois contacts favoris, choisis dans le répertoire ; toucher = appeler, appui long = changer. */
     private fun renderPhoneFavs() {
-        b.secondaryTitle.text = getString(R.string.sw_phone)
+        stackTitle(b.secondaryTitle, getString(R.string.sw_phone))
         val g = b.secondaryGrid
         g.removeAllViews()
         g.orientation = LinearLayout.HORIZONTAL
