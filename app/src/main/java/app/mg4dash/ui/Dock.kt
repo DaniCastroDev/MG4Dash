@@ -87,14 +87,15 @@ object Dock {
             // Bouton Android Auto : remplaçable par une autre appli (appui long)
             val custom = if (item.label == R.string.dock_aa) customAa(activity) else null
             cell.addView(ImageView(activity).apply {
-                val appIcon = custom?.let { Shortcuts.appIcon(activity, it) }
+                val appIcon = custom?.let { Shortcuts.appIcon(activity, it) ?: if (it.packageName == Apps.CARPLAY.packageName) pkgIcon(activity, it.packageName) else null }
                 if (appIcon != null) setImageDrawable(appIcon) else {
                     setImageResource(item.icon)
                     setColorFilter(color(if (selected || item.accent) R.color.accent_action else R.color.text_sub))
                 }
             }, LinearLayout.LayoutParams(kit.dp(if (simple) 40 else 30), kit.dp(if (simple) 40 else 30)))
             cell.addView(TextView(activity).apply {
-                if (custom != null) text = Shortcuts.appLabel(activity, custom) else setText(item.label)
+                if (custom == Apps.CARPLAY) setText(R.string.dock_cp)
+                else if (custom != null) text = Shortcuts.appLabel(activity, custom) else setText(item.label)
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, if (simple) 26f else 19f); maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END
                 setTextColor(color(if (selected || item.accent) R.color.text_value else R.color.text_sub))
                 setPadding(kit.dp(12), 0, 0, 0)
@@ -102,10 +103,21 @@ object Dock {
             when (item.label) {
                 R.string.dock_home -> cell.setOnLongClickListener { activity.startActivity(Intent(activity, AppsActivity::class.java)); true }
                 R.string.dock_aa -> cell.setOnLongClickListener {
-                    Shortcuts.pickApp(activity, activity.getString(R.string.dock_aa_pick), activity.getString(R.string.dock_aa_stock)) { cn ->
-                        Prefs(activity).dockAaTarget = cn?.flattenToString()
-                        build(activity, dock, current, simple)
-                    }
+                    // Comme le launcher d'origine : Android Auto ou CarPlay, ou n'importe quelle appli
+                    val choices = arrayOf(activity.getString(R.string.dock_aa_stock), activity.getString(R.string.dock_cp_stock), activity.getString(R.string.dock_other_app))
+                    android.app.AlertDialog.Builder(activity)
+                        .setTitle(R.string.dock_aa_pick)
+                        .setItems(choices) { _, w ->
+                            when (w) {
+                                0 -> { Prefs(activity).dockAaTarget = null; build(activity, dock, current, simple) }
+                                1 -> { Prefs(activity).dockAaTarget = Apps.CARPLAY.flattenToString(); build(activity, dock, current, simple) }
+                                else -> Shortcuts.pickApp(activity, activity.getString(R.string.dock_aa_pick)) { cn ->
+                                    if (cn != null) { Prefs(activity).dockAaTarget = cn.flattenToString(); build(activity, dock, current, simple) }
+                                }
+                            }
+                        }
+                        .setNegativeButton(R.string.cancel, null)
+                        .show()
                     true
                 }
                 R.string.dock_settings -> cell.setOnLongClickListener { activity.startActivity(Intent(activity, SettingsActivity::class.java)); true }
@@ -114,6 +126,9 @@ object Dock {
         }
     }
 
+    private fun pkgIcon(activity: Activity, pkg: String): android.graphics.drawable.Drawable? =
+        try { activity.packageManager.getApplicationIcon(pkg) } catch (_: Exception) { null }
+
     private fun customAa(activity: Activity): android.content.ComponentName? =
         Prefs(activity).dockAaTarget?.let { android.content.ComponentName.unflattenFromString(it) }
 
@@ -121,7 +136,8 @@ object Dock {
         when (item.label) {
             R.string.dock_aa -> {
                 val custom = customAa(activity)
-                if (custom != null) Shortcuts.launch(activity, custom)
+                if (custom == Apps.CARPLAY) Apps.open(activity, Apps.CARPLAY, activity.getString(R.string.dock_cp))
+                else if (custom != null) Shortcuts.launch(activity, custom)
                 else Apps.open(activity, Apps.ANDROID_AUTO, activity.getString(R.string.dock_aa))
                 return
             }

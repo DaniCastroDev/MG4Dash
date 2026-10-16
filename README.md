@@ -10,7 +10,7 @@ Languages: English (default), French, German, Spanish, Italian and Dutch, follow
 ![Home](docs/screenshots/home.png?v=11)
 Climate (temperature, fan, AUTO, A/C, recirculation, defrost), energy (battery, range, estimated consumption, drive mode, KERS, Charge / Start V2L button), vehicle position, Open-Meteo weather, a media card that follows the car's active audio source (DAB/FM radio, Bluetooth, USB, Android Auto) and a bottom-right widget with three pages (see below).
 
-Long press the Android Auto button in the dock to replace it with the app of your choice.
+Long press the Android Auto button in the dock to make it open Android Auto, CarPlay or the app of your choice.
 
 ### Bottom-right widget
 Tap it to switch between three pages, all readable at a glance while driving:
@@ -142,7 +142,7 @@ The SAIC launcher package (`com.saicmotor.launcher`) is never disabled: its serv
 
 - Long press "Settings" in the dock: launcher settings
 - Long press "Home" in the dock: list of installed apps
-- Long press "Android Auto" in the dock: choose the app this button opens
+- Long press "Android Auto" in the dock: Android Auto, CarPlay or another app
 - Tap the bottom-right widget: trip energy → live power → phone; long press a phone favourite to change it
 - Button at the top right of the map: map ↔ shortcuts; long press a shortcut to edit it
 

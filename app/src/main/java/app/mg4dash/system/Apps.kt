@@ -14,6 +14,8 @@ object Apps {
     val HVAC = ComponentName("com.saicmotor.hvac", "com.saicmotor.hvac.ui.activity.MainActivity")
     val ENERGY = ComponentName("com.saicmotor.saicev", "com.saicmotor.saicev.activity.MainActivity")
     val ANDROID_AUTO = ComponentName("com.allgo.app.androidauto", "com.allgo.app.androidauto.ProjectionActivity")
+    /** CarPlay de la pile allgo (relevé sur SWI68 par adammcdonagh ; repli sur le lanceur du paquet). */
+    val CARPLAY = ComponentName("com.allgo.carplay.service", "com.allgo.carplay.service.CarPlayActivity")
     val SETTINGS = ComponentName("com.saicmotor.settings", "com.saicmotor.settings.ui.MainActivity")
     val RADIO = ComponentName("com.saicmotor.radio", "com.saicmotor.radio.view.RadioMainActivity")
     val MEDIA = ComponentName("com.saicmotor.media", "com.saicmotor.media.ui.activity.MainActivity")

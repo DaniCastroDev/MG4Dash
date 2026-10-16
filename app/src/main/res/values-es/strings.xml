@@ -301,6 +301,9 @@
     <string name="st_compat_open">Abrir en el navegador</string>
     <string name="st_compat_no_browser">No hay navegador en esta unidad: escanee el código QR con su teléfono.</string>
     <string name="st_update_beta">Incluir versiones beta: %1$s</string>
+    <string name="dock_cp">CarPlay</string>
+    <string name="dock_cp_stock">CarPlay (original)</string>
+    <string name="dock_other_app">Otra aplicación…</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Teléfono conectado · Pulse para abrir</string>
     <string name="aa_waiting">Conecte su teléfono por USB</string>

@@ -301,6 +301,9 @@
     <string name="st_compat_open">Open in browser</string>
     <string name="st_compat_no_browser">No browser on this head unit: scan the QR code with your phone.</string>
     <string name="st_update_beta">Include beta versions: %1$s</string>
+    <string name="dock_cp">CarPlay</string>
+    <string name="dock_cp_stock">CarPlay (original)</string>
+    <string name="dock_other_app">Another app…</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Phone connected · Tap to open</string>
     <string name="aa_waiting">Connect your phone via USB</string>
