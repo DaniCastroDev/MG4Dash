@@ -67,7 +67,7 @@ object CarBridge {
     }
 
     /** Démarrage / arrêt de la charge et du V2L disponibles (service EV de la voie A9). */
-    val chargeControl: Boolean get() = BuildConfig.MOCK || ev != null
+    val chargeControl: Boolean get() = BuildConfig.MOCK || ev != null || LegacyCar.chargingReady
 
     /** Services qui répondent, pour l'écran Compatibilité. */
     fun probe(): List<Pair<String, String>> = listOf(
@@ -77,6 +77,7 @@ object CarBridge {
         "vehiclesetting (8)" to if (vs != null) "ok" else "absent",
         "general (1)" to if (general != null) "ok" else "absent",
         "AirConditionManager" to LegacyCar.probe(),
+        "VehicleChargingManager" to LegacyCar.probeCharging(),
     )
 
     /** Ralentit l'interrogation quand l'accueil n'est pas visible. */
@@ -191,6 +192,7 @@ object CarBridge {
             speedKmh = g?.let { safe { it.latestSpeed } } ?: s.speedKmh,
         )
         if (e == null || v == null || g == null) refreshFromProps()
+        if (e == null && Firmware.family != Firmware.Family.A9) _state.value = LegacyCar.readCharging(_state.value)
     }
 
     /**
@@ -257,7 +259,19 @@ object CarBridge {
     private fun evCommand(label: String, action: (EvService) -> Unit) {
         if (BuildConfig.MOCK) { MockCar.command(label, _state); return }
         scope.launch {
-            val e = ev ?: run { Log.w(TAG, "$label ignoré : service EV non connecté"); return@launch }
+            val e = ev ?: run {
+                if (LegacyCar.chargingReady) {
+                    val ok = when (label) {
+                        "startCharge" -> LegacyCar.chargeCtrl(1)
+                        "stopCharge" -> LegacyCar.chargeCtrl(2)
+                        "startV2L" -> LegacyCar.dischargeCtrl(1)
+                        else -> LegacyCar.dischargeCtrl(2)
+                    }
+                    Log.i(TAG, "EV $label (ancien SDK) → $ok")
+                    delay(1500); refreshEnergy(); delay(3000); refreshEnergy()
+                } else Log.w(TAG, "$label ignoré : service EV non connecté")
+                return@launch
+            }
             try { action(e); Log.i(TAG, "EV $label → envoyé") } catch (ex: Exception) { Log.w(TAG, "EV $label → échec : ${ex.message}") }
             delay(1500); refreshEnergy()
             delay(3000); refreshEnergy()

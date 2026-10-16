@@ -57,6 +57,12 @@ object Firmware {
         Gen.UNKNOWN -> Family.UNKNOWN
     }
 
+    /**
+     * L'ancien SDK arrête lui-même la charge à la limite choisie : la fonction « arrêt auto »
+     * de MG4Dash (pensée pour SWI69) y est masquée.
+     */
+    val nativeChargeLimit: Boolean get() = family == Family.LEGACY
+
     /** Firmware sur lequel MG4Dash a été mis au point et testé. */
     val tested: Boolean get() = gen == Gen.SWI69
 

@@ -37,6 +37,7 @@ object LegacyCar {
     fun init(context: Context) {
         appContext = context.applicationContext
         connect()
+        connectCharging()
     }
 
     private fun connect() {
@@ -140,9 +141,75 @@ object LegacyCar {
         return prop(id) == target
     }
 
+    // ── Recharge et V2L : VehicleChargingManager du même SDK ──
+    // Même logique que la voie A9 : 1 = démarrer, 2 = arrêter (signaux CHARGING / DISCHARGING
+    // _CONTROL_SWITCH) ; l'état de charge suit la même table que le launcher A9.
+    private const val CHARGING_CLASS = "com.saicmotor.sdk.vehiclesettings.manager.VehicleChargingManager"
+    @Volatile private var charging: Any? = null
+    @Volatile private var chargingInit = false
+
+    val chargingReady: Boolean get() = charging != null
+
+    private fun connectCharging() {
+        if (charging != null || chargingInit) return
+        val ctx = appContext ?: return
+        chargingInit = true
+        charging = sdkManager(ctx, CHARGING_CLASS) { charging = it }
+    }
+
+    /** Charge un gestionnaire du SDK SAIC depuis le launcher d'origine et l'initialise (écouteur factice). */
+    private fun sdkManager(ctx: Context, className: String, onConnected: (Any?) -> Unit): Any? {
+        val launcher = listOf(Firmware.LEGACY_LAUNCHER, "com.saicmotor.launcher").firstNotNullOfOrNull { pkg ->
+            try { ctx.createPackageContext(pkg, Context.CONTEXT_INCLUDE_CODE or Context.CONTEXT_IGNORE_SECURITY) } catch (_: Exception) { null }
+        } ?: return null
+        val cls = try { launcher.classLoader.loadClass(className) } catch (_: Exception) { return null }
+        fun singleton(): Any? = try { cls.getMethod("getInstance").invoke(null) } catch (_: Exception) { null }
+        val initM = cls.methods.firstOrNull { it.name == "init" && it.parameterCount == 2 && Context::class.java.isAssignableFrom(it.parameterTypes[0]) }
+        if (initM != null) {
+            val lt = initM.parameterTypes[1]
+            val listener = if (lt.isInterface) try {
+                java.lang.reflect.Proxy.newProxyInstance(lt.classLoader, arrayOf(lt)) { _, m, _ ->
+                    if (m.name == "onServiceConnected") { onConnected(singleton()); Log.i(TAG, "${className.substringAfterLast('.')} connecté") }
+                    null
+                }
+            } catch (_: Exception) { null } else null
+            try { initM.invoke(null, ctx, listener) } catch (e: Exception) { Log.w(TAG, "${className.substringAfterLast('.')}.init : ${e.message}") }
+        }
+        return singleton()
+    }
+
+    private fun chInt(name: String): Int? {
+        val c = charging ?: return null
+        return try { c.javaClass.getMethod(name).invoke(c) as? Int } catch (_: Exception) { null }
+    }
+
+    private fun chSet(name: String, v: Int): Boolean {
+        val c = charging ?: return false
+        return try { c.javaClass.getMethod(name, Int::class.javaPrimitiveType).invoke(c, v); true }
+        catch (e: Exception) { Log.w(TAG, "$name($v) : ${(e.cause ?: e).message}"); false }
+    }
+
+    /** État de charge et commandes en cours ; inchangé si le service ne répond pas. */
+    fun readCharging(s: VehicleState): VehicleState {
+        if (charging == null) { chargingInit = false; connectCharging() }
+        if (charging == null) return s
+        return s.copy(
+            chargeStatus = chInt("getChargingStatus")?.takeIf { it >= 0 } ?: s.chargeStatus,
+            chargeCtrl = chInt("getChargingControlSwitch")?.takeIf { it >= 0 } ?: s.chargeCtrl,
+            dischargeCtrl = chInt("getDischrgControlStatus")?.takeIf { it >= 0 } ?: s.dischargeCtrl,
+            chargeRemainMin = chInt("getPredictChargingTime")?.takeIf { it in 0..6000 } ?: s.chargeRemainMin,
+            dischargeRemainMin = chInt("getPredictDischrgTime")?.takeIf { it in 0..6000 } ?: s.dischargeRemainMin,
+        )
+    }
+
+    fun chargeCtrl(v: Int) = chSet("setChargingControlSwitch", v)
+    fun dischargeCtrl(v: Int) = chSet("setDischrgControlSwitch", v)
+
     /** Pour l'écran Compatibilité. */
     fun probe(): String = when {
         ac == null -> "absent"
         else -> "ok (temp ${int("getDrvTemp")}, fan ${int("getAirVolumeLevel")})"
     }
+
+    fun probeCharging(): String = if (charging == null) "absent" else "ok (status ${chInt("getChargingStatus")}, ctrl ${chInt("getChargingControlSwitch")})"
 }

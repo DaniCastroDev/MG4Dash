@@ -71,9 +71,9 @@ MG4Dash detects the head unit firmware at startup (`ro.build.mt2712.version`) an
 |---|---|---|
 | SWI69 | `caradapter` service (climate, EV, settings, general) | tested by the author |
 | SWI131, SWI132 | same as SWI69 | beta, not tested |
-| SWI68, SWI165, SWI133 | climate through the stock launcher's `AirConditionManager` (`com.saicmotor.hmi.launcher`); battery, range, charge state, drive mode and KERS through `CarPropertyManager` | beta, not tested |
+| SWI68, SWI165, SWI133 | climate, charging and V2L through the stock launcher's SDK (`AirConditionManager`, `VehicleChargingManager` in `com.saicmotor.hmi.launcher`); battery, range, charge state, drive mode and KERS through `CarPropertyManager` | beta, not tested |
 
-Features a firmware does not expose are hidden instead of failing (for example the Charge / V2L start buttons, which need the A9 EV service). The stock home screen to replace is found automatically. Radio Dash only works on SWI69.
+Features a firmware does not expose are hidden instead of failing (for example MG4Dash's own "auto stop" at the charge limit, which these firmwares already do by themselves). The stock home screen to replace is found automatically. Radio Dash only works on SWI69.
 
 **Help support your firmware**: open Settings › Compatibility › Run the test, then scan the QR code with your phone. It opens a pre-filled [compatibility issue](https://github.com/Skittle6938/MG4Dash/issues/new?template=compatibility.md) with a short report (versions, which services answer, a few car readings: no position, VIN or account). Nothing is sent automatically.
 

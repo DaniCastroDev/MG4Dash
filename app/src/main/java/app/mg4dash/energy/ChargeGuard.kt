@@ -68,7 +68,7 @@ object ChargeGuard {
     }
 
     private fun enforce(prefs: Prefs, s: VehicleState) {
-        if (!prefs.enforceChargeLimit) return
+        if (!prefs.enforceChargeLimit || app.mg4dash.system.Firmware.nativeChargeLimit) return
         val limit = prefs.chargeLimit
         if (limit >= 100) return
         val soc = s.batteryPercent ?: return

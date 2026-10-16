@@ -260,9 +260,12 @@ class EnergyActivity : PageActivity() {
     private fun renderLimit(carLimit: Int? = null) {
         val wanted = prefs.chargeLimit
         setLimit(listOf(50, 60, 70, 80, 90, 100).indexOf(wanted).takeIf { it >= 0 })
+        val native = app.mg4dash.system.Firmware.nativeChargeLimit
         enforce.isSelected = prefs.enforceChargeLimit
+        enforce.visibility = if (native) android.view.View.GONE else android.view.View.VISIBLE
         limitNote.text = when {
             wanted >= 100 -> getString(R.string.en_no_limit)
+            native -> getString(R.string.en_car_only) + (carLimit?.let { " ($it %)." } ?: ".")
             prefs.enforceChargeLimit -> getString(R.string.en_enforced, wanted) +
                 (carLimit?.let { getString(R.string.en_car_limit, it) } ?: "")
             else -> getString(R.string.en_car_only) + (carLimit?.let { " ($it %)." } ?: ".")
