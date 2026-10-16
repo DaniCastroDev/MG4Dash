@@ -95,7 +95,7 @@ object Shortcuts {
             isClickable = true; isFocusable = true
         }
         val icon = ImageView(activity)
-        val label = kit.text("", 16f, R.color.text_sub).apply { gravity = Gravity.CENTER; maxLines = 1 }
+        val label = kit.text("", 20f, R.color.text_value).apply { gravity = Gravity.CENTER; maxLines = 1 }
         when (slot) {
             Slot.Empty -> {
                 icon.setImageResource(R.drawable.ic_plus); icon.setColorFilter(kit.color(R.color.text_title))
@@ -111,7 +111,7 @@ object Shortcuts {
                 label.text = slot.label
             }
         }
-        cell.addView(icon, LinearLayout.LayoutParams(kit.dp(52), kit.dp(52)))
+        cell.addView(icon, LinearLayout.LayoutParams(kit.dp(64), kit.dp(64)))
         cell.addView(label, kit.lp(-1, -2, t = 6))
         cell.setOnClickListener {
             when (slot) {

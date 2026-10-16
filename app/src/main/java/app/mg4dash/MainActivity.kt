@@ -427,7 +427,7 @@ class MainActivity : AppCompatActivity() {
                 fontFeatureSettings = "tnum"; maxLines = 1; gravity = Gravity.CENTER
             })
             addView(TextView(this@MainActivity).apply {
-                text = title; setTextColor(color(R.color.text_title)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+                text = title; setTextColor(color(R.color.text_title)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
                 letterSpacing = 0.12f; maxLines = 1; gravity = Gravity.CENTER
             })
         }
@@ -454,7 +454,7 @@ class MainActivity : AppCompatActivity() {
         }, LinearLayout.LayoutParams(-1, (34 * d).toInt()).apply { marginStart = (8 * d).toInt(); marginEnd = (8 * d).toInt() })
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         parts.forEach { (label, v, c) ->
-            row.addView(statColumn(getString(label), if (ok) "${Math.round(v / t.outKwh * 100)} %" else "—", 30f, c),
+            row.addView(statColumn(getString(label), if (ok) "${Math.round(v / t.outKwh * 100)} %" else "—", 38f, c),
                 LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
         }
         g.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = (12 * d).toInt() })
@@ -470,9 +470,9 @@ class MainActivity : AppCompatActivity() {
         powerBar = app.mg4dash.ui.PowerBar(this)
         g.addView(powerBar, LinearLayout.LayoutParams(-1, (34 * d).toInt()).apply { marginStart = (8 * d).toInt(); marginEnd = (8 * d).toInt() })
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        val left = statColumn(getString(R.string.sw_drawn), "—", 30f)
+        val left = statColumn(getString(R.string.sw_drawn), "—", 38f)
         powerValue = left.getChildAt(0) as TextView; powerLabel = left.getChildAt(1) as TextView
-        val right = statColumn(getString(R.string.sw_trip_avg), "—", 30f)
+        val right = statColumn(getString(R.string.sw_trip_avg), "—", 38f)
         powerAvg = right.getChildAt(0) as TextView
         row.addView(left, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
         row.addView(right, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
@@ -521,10 +521,10 @@ class MainActivity : AppCompatActivity() {
             cell.addView(ImageView(this).apply {
                 setImageResource(if (fav == null) R.drawable.ic_plus else R.drawable.ic_phone)
                 setColorFilter(color(if (fav == null) R.color.text_title else R.color.accent_energy))
-            }, LinearLayout.LayoutParams((40 * d).toInt(), (40 * d).toInt()))
+            }, LinearLayout.LayoutParams((56 * d).toInt(), (56 * d).toInt()))
             if (fav != null) cell.addView(TextView(this).apply {
                 text = fav.name; maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END; gravity = Gravity.CENTER
-                setTextColor(color(R.color.text_value)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 19f)
+                setTextColor(color(R.color.text_value)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 24f)
             }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = (8 * d).toInt() })
             g.addView(cell, LinearLayout.LayoutParams(0, -1, 1f).apply {
                 marginStart = (4 * d).toInt(); marginEnd = (4 * d).toInt(); topMargin = (6 * d).toInt()

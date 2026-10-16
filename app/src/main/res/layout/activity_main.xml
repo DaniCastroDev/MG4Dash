@@ -57,7 +57,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginRight="12dp"
-                        android:textSize="17sp"
+                        android:textSize="19sp"
                         tools:text="Ext. 13°" />
 
                     <ImageButton
@@ -146,7 +146,7 @@
                         android:gravity="center"
                         android:maxLines="1"
                         android:textColor="?attr/mgTextValue"
-                        android:textSize="20sp"
+                        android:textSize="23sp"
                         tools:text="4" />
 
                     <ImageButton
@@ -210,7 +210,7 @@
                         android:layout_gravity="center_vertical"
                         android:layout_marginRight="10dp"
                         android:textColor="@color/accent_energy"
-                        android:textSize="17sp"
+                        android:textSize="19sp"
                         tools:text="En charge · 1 h 20" />
 
                     <!-- Charger / Arrêter, ou Lancer / Arrêter le V2L quand un adaptateur est branché -->
@@ -238,7 +238,7 @@
                         style="@style/ValueBig"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="52sp"
+                        android:textSize="60sp"
                         tools:text="78 %" />
 
                     <LinearLayout
@@ -253,7 +253,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textColor="?attr/mgTextValue"
-                            android:textSize="24sp"
+                            android:textSize="30sp"
                             tools:text="284 km" />
 
                         <TextView
@@ -261,7 +261,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/range_label"
-                            android:textSize="16sp" />
+                            android:textSize="19sp" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -275,7 +275,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:textColor="?attr/mgTextValue"
-                            android:textSize="24sp"
+                            android:textSize="30sp"
                             tools:text="15,8" />
 
                         <TextView
@@ -283,7 +283,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/cons_avg"
-                            android:textSize="16sp" />
+                            android:textSize="19sp" />
                     </LinearLayout>
                 </LinearLayout>
 
@@ -304,7 +304,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/mode"
-                        android:textSize="15sp" />
+                        android:textSize="17sp" />
 
                     <TextView
                         android:id="@+id/driveMode"
@@ -312,7 +312,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="8dp"
                         android:textColor="?attr/mgTextValue"
-                        android:textSize="18sp"
+                        android:textSize="21sp"
                         tools:text="Normal" />
 
                     <TextView
@@ -321,7 +321,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="24dp"
                         android:text="@string/kers"
-                        android:textSize="15sp" />
+                        android:textSize="17sp" />
 
                     <app.mg4dash.ui.SegmentedGauge
                         android:id="@+id/kersGauge"
@@ -336,7 +336,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="10dp"
-                        android:textSize="17sp"
+                        android:textSize="19sp"
                         tools:text="Fort" />
                 </LinearLayout>
             </LinearLayout>
@@ -413,7 +413,7 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginLeft="14dp"
-                        android:textSize="17sp"
+                        android:textSize="19sp"
                         tools:text="Cap S · alt. 91 m" />
                 </LinearLayout>
 
@@ -505,7 +505,7 @@
                         style="@style/Sub"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:textSize="17sp"
+                        android:textSize="19sp"
                         tools:text="Paris" />
                 </LinearLayout>
 
@@ -685,7 +685,7 @@
                             android:ellipsize="end"
                             android:maxLines="2"
                             android:textColor="?attr/mgTextValue"
-                            android:textSize="22sp"
+                            android:textSize="26sp"
                             tools:text="France Inter" />
 
                         <TextView
@@ -694,7 +694,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
-                            android:textSize="19sp"
+                            android:textSize="22sp"
                             tools:text="Le 7/9" />
 
                         <TextView
@@ -704,7 +704,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
                             android:textColor="?attr/mgTextTitle"
-                            android:textSize="17sp"
+                            android:textSize="19sp"
                             tools:text="DAB+" />
 
                         <Space
