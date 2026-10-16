@@ -133,8 +133,9 @@ The SAIC launcher package (`com.saicmotor.launcher`) is never disabled: its serv
 ## Going back
 
 - Maintenance mode: long press "Settings" in the dock, then "Maintenance mode".
-- If MG4Dash no longer starts after an update (seen once on the car: "ClassNotFoundException" in logcat), recompile it on the car, then make it the home screen again:
-  `adb shell cmd package compile -m speed -f app.mg4dash` then `adb shell cmd package set-home-activity --user 0 app.mg4dash/.MainActivity`
+- If MG4Dash no longer starts after an update ("ClassNotFoundException" or "oat_file ... Check failed" in logcat), stop it, recompile it while it is stopped, then make it the home screen again:
+  `adb shell am force-stop app.mg4dash`, `adb shell cmd package compile -m speed -f app.mg4dash`, `adb shell am force-stop app.mg4dash`, then `adb shell cmd package set-home-activity --user 0 app.mg4dash/.MainActivity`.
+  Compiling while MG4Dash runs (it relaunches itself right after an install) corrupts its compiled code: always force-stop first.
 - Note: `adb shell pm enable com.saicmotor.launcher/.view.MainActivity` is refused on this head unit (the shell may not change component state); only MG4Dash's Maintenance mode can re-enable the SAIC home. Until then, Android offers a launcher chooser.
 - Uninstall: `adb uninstall app.mg4dash`
 
