@@ -49,6 +49,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var prefs: Prefs
     private lateinit var mapCard: MapCard
     private var simpleMode = false
+    private var mapLayout = false
     private var themeSig = 0
     private var simple: SimpleHome? = null
     private val handler = Handler(Looper.getMainLooper())
@@ -74,8 +75,10 @@ class MainActivity : AppCompatActivity() {
         b.batteryGauge.segments = 20
         b.kersGauge.segments = 4
         b.kersGauge.onColor = color(R.color.accent_energy)
+        if (prefs.homeStyle == 2) applyMapLayout()
         mapCard = MapCard(this, b.mapHolder)
         buildDock()
+        setupWeatherClock()
         wireClimate()
         wireMedia()
         wireCards()
@@ -83,11 +86,111 @@ class MainActivity : AppCompatActivity() {
         warmUpStockLauncherIfNeeded()
     }
 
+    /**
+     * Style « Carte » (proposition d'un utilisateur, issue #6) : mêmes widgets, autre place.
+     * Gauche : météo (petite) au-dessus de la clim (grande) ; centre : énergie (petite) au-dessus
+     * de la musique (grande) ; droite : la carte sur toute la hauteur. Les rangées sont inversées
+     * (petite en haut, grande en bas) pour que chaque widget garde sa taille.
+     */
+    private fun applyMapLayout() {
+        mapLayout = true
+        val left = b.climateCard.parent as LinearLayout
+        val center = b.mapCard.parent as LinearLayout
+        val right = b.mediaCard.parent as LinearLayout
+        listOf(b.climateCard, b.energyCard, b.mapCard, b.weatherCard, b.mediaCard, b.secondaryCard)
+            .forEach { (it.parent as? android.view.ViewGroup)?.removeView(it) }
+        val gap = resources.getDimensionPixelSize(R.dimen.gap)
+        fun lp(weight: Float, top: Int) = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, weight).apply { topMargin = top }
+        left.addView(b.weatherCard, lp(40f, 0)); left.addView(b.climateCard, lp(60f, gap))
+        // Pile : énergie et widget du bas réunis, on passe d'une page à l'autre en balayant
+        val box = StackBox(this) { dir -> showStackPage(Math.floorMod(prefs.stackPage + dir, 4)) }
+        box.addView(b.energyCard, android.widget.FrameLayout.LayoutParams(-1, -1))
+        box.addView(b.secondaryCard, android.widget.FrameLayout.LayoutParams(-1, -1))
+        stackDots = TextView(this).apply {
+            setTextColor(color(R.color.text_title)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f); letterSpacing = 0.3f
+        }
+        box.addView(stackDots, android.widget.FrameLayout.LayoutParams(-2, -2, Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL).apply { bottomMargin = gap / 4 })
+        b.secondaryDots.visibility = View.GONE
+        center.addView(box, lp(40f, 0)); center.addView(b.mediaCard, lp(60f, gap))
+        right.addView(b.mapCard, lp(100f, 0))
+        showStackPage(prefs.stackPage)
+    }
+
+    private var stackDots: TextView? = null
+    private var lastPlugged: Boolean? = null
+
+    /** Page de la pile : 0 = énergie, 1..3 = énergie du trajet, puissance, téléphone. */
+    private fun showStackPage(p: Int) {
+        prefs.stackPage = p
+        b.energyCard.visibility = if (p == 0) View.VISIBLE else View.INVISIBLE
+        b.secondaryCard.visibility = if (p == 0) View.INVISIBLE else View.VISIBLE
+        if (p > 0) { prefs.secondaryWidget = p - 1; renderSecondary(); lifecycleScope.launch { updatePower() } }
+        stackDots?.text = (0..3).joinToString(" ") { if (it == p) "●" else "○" }
+    }
+
+    /** Pile automatique : quand la voiture vient d'être branchée, on revient sur la batterie. */
+    private fun stackAuto(s: VehicleState) {
+        val plugged = VehicleState.isPlugged(s.chargeStatus)
+        if (mapLayout && prefs.stackAuto && plugged && lastPlugged == false) showStackPage(0)
+        lastPlugged = plugged
+    }
+
+    /** Conteneur de la pile : un balayage horizontal change de page, les touchers restent aux cartes. */
+    private class StackBox(context: android.content.Context, val onSwipe: (Int) -> Unit) : android.widget.FrameLayout(context) {
+        private var downX = 0f; private var downY = 0f; private var swiping = false
+        override fun onInterceptTouchEvent(ev: android.view.MotionEvent): Boolean {
+            when (ev.actionMasked) {
+                android.view.MotionEvent.ACTION_DOWN -> { downX = ev.x; downY = ev.y; swiping = false }
+                android.view.MotionEvent.ACTION_MOVE -> {
+                    val dx = ev.x - downX; val dy = ev.y - downY
+                    if (Math.abs(dx) > 60 && Math.abs(dx) > 2 * Math.abs(dy)) swiping = true
+                }
+            }
+            return swiping
+        }
+        override fun onTouchEvent(ev: android.view.MotionEvent): Boolean {
+            if (ev.actionMasked == android.view.MotionEvent.ACTION_UP && swiping) {
+                onSwipe(if (ev.x < downX) 1 else -1); swiping = false
+            }
+            return true
+        }
+    }
+
+    /** Heure et date dans l'en-tête de la météo (style Carte, ou quand le dock affiche le Wi-Fi). */
+    private var weatherClock: TextView? = null
+
+    private fun setupWeatherClock() {
+        val header = b.weatherPlace.parent as LinearLayout
+        weatherClock?.let { header.removeView(it) }
+        weatherClock = null
+        if (!mapLayout && prefs.dockSlot != 1) return
+        weatherClock = TextView(this).apply {
+            setTextColor(color(R.color.text_value)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 19f)
+            setPadding(0, 0, (16 * resources.displayMetrics.density).toInt(), 0)
+        }
+        header.addView(weatherClock, header.indexOfChild(b.weatherPlace))
+        tickWeatherClock()
+    }
+
+    private val weatherClockTick = Runnable { tickWeatherClock() }
+
+    private fun tickWeatherClock() {
+        val c = weatherClock ?: return
+        val now = java.util.Date()
+        c.text = java.text.SimpleDateFormat("HH:mm", Locale.getDefault()).format(now) + "  ·  " +
+            java.text.SimpleDateFormat("EEE d MMM", Locale.getDefault()).format(now).trimEnd('.')
+        c.removeCallbacks(weatherClockTick)
+        c.postDelayed(weatherClockTick, 60_000L - System.currentTimeMillis() % 60_000L)
+    }
+
+    /** Appelé par le dock quand la case horloge / Wi-Fi change. */
+    fun onDockSlotChanged() { if (!simpleMode) setupWeatherClock() }
+
     override fun onResume() {
         super.onResume()
         CarBridge.setForeground(true)
         // Style d'accueil changé dans les paramètres : on reconstruit l'écran
-        if ((prefs.homeStyle == 1) != simpleMode || app.mg4dash.ui.Themes.signature(this) != themeSig) { recreate(); return }
+        if ((prefs.homeStyle == 1) != simpleMode || (prefs.homeStyle == 2) != mapLayout || app.mg4dash.ui.Themes.signature(this) != themeSig) { recreate(); return }
         if (simpleMode) { simple?.onResume(); Fullscreen.apply(this); return }
         mapCard.onResume()
         if (prefs.homeWidget == 1) renderShortcuts()
@@ -364,6 +467,8 @@ class MainActivity : AppCompatActivity() {
         b.chargeAction.setOnClickListener { onChargeAction() }
         b.weatherCard.setOnClickListener { WeatherRepo.refreshNow(this) }
         b.secondaryCard.setOnClickListener {
+            // Style Carte : le toucher fait avancer la pile (énergie → trajet → puissance → téléphone)
+            if (mapLayout) { showStackPage((prefs.stackPage + 1) % 4); return@setOnClickListener }
             prefs.secondaryWidget = (prefs.secondaryWidget.coerceIn(0, 2) + 1) % 3
             renderSecondary()
             lifecycleScope.launch { updatePower() }
@@ -544,7 +649,7 @@ class MainActivity : AppCompatActivity() {
     private fun observe() {
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
-                launch { CarBridge.state.collect { s -> renderClimate(s); renderEnergy(s, ConsumptionEstimator.average.value) } }
+                launch { CarBridge.state.collect { s -> renderClimate(s); renderEnergy(s, ConsumptionEstimator.average.value); stackAuto(s) } }
                 launch { ConsumptionEstimator.average.collect { renderEnergy(CarBridge.state.value, it) } }
                 launch { MediaHub.now.collect { renderMedia(it) } }
                 launch { WeatherRepo.weather.collect { renderWeather(it, CarBridge.state.value) } }

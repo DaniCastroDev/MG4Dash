@@ -304,6 +304,13 @@
     <string name="dock_cp">CarPlay</string>
     <string name="dock_cp_stock">CarPlay (original)</string>
     <string name="dock_other_app">Andere App…</string>
+    <string name="st_style_map">Karte</string>
+    <string name="st_stack_auto">Stil Karte: Stapel zeigt beim Anstecken die Batterie: %1$s</string>
+    <string name="st_stack_desc">Karte: Wetter und Klima links, ein Stapel (Energie, Fahrt, Leistung, Telefon: wischen oder tippen) über den Medien in der Mitte, die Karte über die ganze rechte Spalte.</string>
+    <string name="dock_slot_pick">Linkes Dock-Feld</string>
+    <string name="dock_slot_clock">Uhr</string>
+    <string name="dock_slot_wifi">WLAN-Einstellungen</string>
+    <string name="dock_slot_wifi_short">WLAN</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefon verbunden · Zum Öffnen tippen</string>
     <string name="aa_waiting">Telefon per USB verbinden</string>

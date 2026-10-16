@@ -304,6 +304,13 @@
     <string name="dock_cp">CarPlay</string>
     <string name="dock_cp_stock">CarPlay (origineel)</string>
     <string name="dock_other_app">Andere app…</string>
+    <string name="st_style_map">Kaart</string>
+    <string name="st_stack_auto">Stijl Kaart: stapel toont de batterij bij aansluiten: %1$s</string>
+    <string name="st_stack_desc">Kaart: weer en klimaat links, een stapel (energie, rit, vermogen, telefoon: veeg of tik) boven de media in het midden, de kaart over de hele rechterkolom.</string>
+    <string name="dock_slot_pick">Linkervak van het dock</string>
+    <string name="dock_slot_clock">Klok</string>
+    <string name="dock_slot_wifi">Wifi-instellingen</string>
+    <string name="dock_slot_wifi_short">Wifi</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefoon verbonden · Tik om te openen</string>
     <string name="aa_waiting">Sluit je telefoon aan via USB</string>

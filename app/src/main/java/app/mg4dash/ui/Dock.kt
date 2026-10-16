@@ -54,13 +54,38 @@ object Dock {
         dock.elevation = kit.dp(6).toFloat()
 
         val clockCell = kit.column().apply { gravity = Gravity.CENTER; setPadding(kit.dp(12), 0, kit.dp(20), 0) }
+        // Case de gauche : horloge ou raccourci Wi-Fi, au choix par appui long
+        val wifi = app.mg4dash.system.Prefs(activity).dockSlot == 1
+        clockCell.setOnLongClickListener {
+            android.app.AlertDialog.Builder(activity)
+                .setTitle(R.string.dock_slot_pick)
+                .setItems(arrayOf(activity.getString(R.string.dock_slot_clock), activity.getString(R.string.dock_slot_wifi))) { _, w ->
+                    app.mg4dash.system.Prefs(activity).dockSlot = w
+                    build(activity, dock, current, simple)
+                    (activity as? app.mg4dash.MainActivity)?.onDockSlotChanged()
+                }
+                .setNegativeButton(R.string.cancel, null)
+                .show()
+            true
+        }
+        if (wifi) {
+            clockCell.setBackgroundResource(R.drawable.bg_dock_item)
+            clockCell.setOnClickListener { openWifi(activity) }
+            clockCell.addView(android.widget.ImageView(activity).apply {
+                setImageResource(R.drawable.ic_wifi); setColorFilter(color(R.color.accent_action))
+            }, LinearLayout.LayoutParams(kit.dp(30), kit.dp(30)))
+            clockCell.minimumWidth = kit.dp(96)
+            clockCell.addView(TextView(activity).apply {
+                setText(R.string.dock_slot_wifi_short); setTextColor(color(R.color.text_sub)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f); maxLines = 1
+            })
+            dock.addView(clockCell, LinearLayout.LayoutParams(-2, -1))
+        }
         val clock = TextView(activity).apply {
             setTextColor(color(R.color.text_value)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 28f)
             typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL); includeFontPadding = false
         }
         val date = TextView(activity).apply { setTextColor(color(R.color.text_sub)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f) }
-        clockCell.addView(clock); clockCell.addView(date)
-        dock.addView(clockCell, LinearLayout.LayoutParams(-2, -1))
+        if (!wifi) { clockCell.addView(clock); clockCell.addView(date); dock.addView(clockCell, LinearLayout.LayoutParams(-2, -1)) }
         val tick = object : Runnable {
             override fun run() {
                 val now = Date()
@@ -128,6 +153,15 @@ object Dock {
 
     private fun pkgIcon(activity: Activity, pkg: String): android.graphics.drawable.Drawable? =
         try { activity.packageManager.getApplicationIcon(pkg) } catch (_: Exception) { null }
+
+    /** Réglages Wi-Fi d'Android, sinon les réglages de la voiture. */
+    fun openWifi(activity: Activity) {
+        try {
+            activity.startActivity(Intent(android.provider.Settings.ACTION_WIFI_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+        } catch (_: Exception) {
+            Apps.open(activity, Apps.SETTINGS, activity.getString(R.string.dock_settings))
+        }
+    }
 
     private fun customAa(activity: Activity): android.content.ComponentName? =
         Prefs(activity).dockAaTarget?.let { android.content.ComponentName.unflattenFromString(it) }

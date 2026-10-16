@@ -304,6 +304,13 @@
     <string name="dock_cp">CarPlay</string>
     <string name="dock_cp_stock">CarPlay (originale)</string>
     <string name="dock_other_app">Altra app…</string>
+    <string name="st_style_map">Mappa</string>
+    <string name="st_stack_auto">Stile Mappa: la pila torna alla batteria quando è collegata: %1$s</string>
+    <string name="st_stack_desc">Mappa: meteo e clima a sinistra, una pila (energia, viaggio, potenza, telefono: scorri o tocca) sopra la musica al centro, la mappa su tutta la colonna destra.</string>
+    <string name="dock_slot_pick">Casella sinistra del dock</string>
+    <string name="dock_slot_clock">Orologio</string>
+    <string name="dock_slot_wifi">Impostazioni Wi-Fi</string>
+    <string name="dock_slot_wifi_short">Wi-Fi</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefono connesso · Tocca per aprire</string>
     <string name="aa_waiting">Collega il telefono via USB</string>

@@ -113,6 +113,17 @@ class ScreenshotTest {
         save(dlg.window!!.decorView, "compat_dialog.png")
     }
 
+    @Test fun homeMapLayout() {
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit().putInt("home_style", 2).apply()
+        shoot(MainActivity::class.java, "home_map_layout.png")
+    }
+
+    @Test fun homeMapLayoutWifi() {
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
+            .putInt("home_style", 2).putInt("dock_slot", 1).putInt("stack_page", 2).apply()
+        shoot(MainActivity::class.java, "home_map_layout_wifi.png")
+    }
+
     @Test fun homeWidgetPower() {
         org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit().putInt("secondary_widget", 1).apply()
         shoot(MainActivity::class.java, "home_widget_power.png")

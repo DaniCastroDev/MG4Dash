@@ -73,6 +73,21 @@ class Prefs(context: Context) {
         set(v) = sp.edit().putString("ha_token", v.trim()).apply()
 
     /** Enregistreur de données énergie (diagnostic, fichier CSV). */
+    /** Style « Carte » : page affichée dans la pile (0 énergie, 1 trajet, 2 puissance, 3 téléphone). */
+    var stackPage: Int
+        get() = sp.getInt("stack_page", 0)
+        set(v) = sp.edit().putInt("stack_page", v).apply()
+
+    /** Pile automatique : revient sur la batterie quand la voiture est branchée. */
+    var stackAuto: Boolean
+        get() = sp.getBoolean("stack_auto", true)
+        set(v) = sp.edit().putBoolean("stack_auto", v).apply()
+
+    /** Case de gauche du dock : 0 = horloge, 1 = réglages Wi-Fi. */
+    var dockSlot: Int
+        get() = sp.getInt("dock_slot", 0)
+        set(v) = sp.edit().putInt("dock_slot", v).apply()
+
     /** Carte de l'accueil orientée selon le cap de la voiture (sinon nord en haut). */
     var mapHeadingUp: Boolean
         get() = sp.getBoolean("map_heading_up", false)
