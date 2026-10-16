@@ -29,6 +29,17 @@ class LauncherApp : Application() {
         app.mg4dash.map.NavRepo.start(this)
         WeatherRepo.start(this)
         app.mg4dash.ui.Themes.publish(this)
+        // Thème auto pour Radio Dash : l'accueil ne republie le thème que lorsqu'il est affiché ; quand
+        // la radio est au premier plan, les feux qui s'allument n'étaient donc jamais transmis.
+        val h = android.os.Handler(android.os.Looper.getMainLooper())
+        var lastSig = app.mg4dash.ui.Themes.signature(this)
+        h.postDelayed(object : Runnable {
+            override fun run() {
+                val sig = app.mg4dash.ui.Themes.signature(this@LauncherApp)
+                if (sig != lastSig) { lastSig = sig; app.mg4dash.ui.Themes.publish(this@LauncherApp) }
+                h.postDelayed(this, 5_000)
+            }
+        }, 5_000)
     }
 
     /** Langue de la voiture changée : la météo (libellés, lieu, heures) est recalculée dans la nouvelle langue. */

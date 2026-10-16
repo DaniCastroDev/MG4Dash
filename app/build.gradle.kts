@@ -13,8 +13,8 @@ android {
         // Cible Android 9 comme le reste du système : pas de restrictions d'arrière-plan
         // ni de permissions d'exécution à gérer pour une appli au uid système.
         targetSdk = 28
-        versionCode = 54
-        versionName = "0.10.13-beta"
+        versionCode = 55
+        versionName = "0.10.14-beta"
     }
 
     flavorDimensions += "target"
