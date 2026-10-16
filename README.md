@@ -145,6 +145,7 @@ The SAIC launcher package (`com.saicmotor.launcher`) is never disabled: its serv
 - Long press "Android Auto" in the dock: Android Auto, CarPlay or another app
 - Tap the bottom-right widget: trip energy → live power → phone; long press a phone favourite to change it
 - Button at the top right of the map: map ↔ shortcuts; long press a shortcut to edit it
+- Map "recenter" button: resume following the car; press again to switch between north up and car heading up (green)
 
 ## Credits
 

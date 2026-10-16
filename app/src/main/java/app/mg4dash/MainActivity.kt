@@ -370,7 +370,8 @@ class MainActivity : AppCompatActivity() {
         }
         b.mapZoomIn.setOnClickListener { mapCard.zoom(1) }
         b.mapZoomOut.setOnClickListener { mapCard.zoom(-1) }
-        b.mapCenter.setOnClickListener { mapCard.recenter(LocationRepo.location.value) }
+        b.mapCenter.setOnClickListener { mapCard.recenter(LocationRepo.location.value); tintMapCenter() }
+        tintMapCenter()
         b.widgetToggle.setOnClickListener {
             prefs.homeWidget = if (prefs.homeWidget == 1) 0 else 1
             applyHomeWidget()
@@ -381,6 +382,11 @@ class MainActivity : AppCompatActivity() {
     // ── Carte ou raccourcis ──────────────────────────────────────────────────
 
     private var shortcutsPage = 0
+
+    /** Bouton « recentrer » vert quand la carte suit le cap de la voiture, couleur des boutons en nord en haut. */
+    private fun tintMapCenter() {
+        b.mapCenter.setColorFilter(color(if (mapCard.headingUp) R.color.accent_energy else R.color.accent_action))
+    }
 
     private fun applyHomeWidget() {
         val shortcuts = prefs.homeWidget == 1

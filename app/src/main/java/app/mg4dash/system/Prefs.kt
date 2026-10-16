@@ -73,6 +73,11 @@ class Prefs(context: Context) {
         set(v) = sp.edit().putString("ha_token", v.trim()).apply()
 
     /** Enregistreur de données énergie (diagnostic, fichier CSV). */
+    /** Carte de l'accueil orientée selon le cap de la voiture (sinon nord en haut). */
+    var mapHeadingUp: Boolean
+        get() = sp.getBoolean("map_heading_up", false)
+        set(v) = sp.edit().putBoolean("map_heading_up", v).apply()
+
     /** Mise à jour : proposer aussi les versions bêta (pré-versions GitHub). */
     var updateBeta: Boolean
         get() = sp.getBoolean("update_beta", true)

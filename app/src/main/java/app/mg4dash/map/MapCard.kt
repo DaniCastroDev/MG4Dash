@@ -28,6 +28,11 @@ class MapCard(private val context: Context, holder: ViewGroup) {
     private val marker: Marker?
     private var follow = true
     private var lastTouch = 0L
+    /** Niveau de zoom voulu : le suivi l'utilise, sinon chaque position annulait le zoom en cours. */
+    private var zoomLevel = 16.0
+    /** Carte orientée selon le cap de la voiture (sinon nord en haut) ; 2e appui sur « recentrer ». */
+    var headingUp = app.mg4dash.system.Prefs(context).mapHeadingUp
+        private set
     private companion object { const val RESUME_FOLLOW_MS = 20_000L }
 
     init {
@@ -69,6 +74,8 @@ class MapCard(private val context: Context, holder: ViewGroup) {
                     MotionEvent.ACTION_MOVE -> if (Math.hypot((ev.x - downX).toDouble(), (ev.y - downY).toDouble()) > 24) {
                         follow = false; lastTouch = System.currentTimeMillis()
                     }
+                    // Zoom au doigt (pincement) : on garde le niveau choisi pour le suivi
+                    MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> zoomLevel = m.zoomLevelDouble
                 }
                 false
             }
@@ -105,17 +112,26 @@ class MapCard(private val context: Context, holder: ViewGroup) {
         marker?.position = p
         if (location.hasBearing()) marker?.rotation = -location.bearing
         if (!follow && System.currentTimeMillis() - lastTouch > RESUME_FOLLOW_MS) follow = true
-        if (follow) m.controller.animateTo(p, m.zoomLevelDouble, 800L)
+        if (follow && headingUp && location.hasBearing() && location.speed > 1f) m.mapOrientation = -location.bearing
+        if (follow) m.controller.animateTo(p, zoomLevel, 800L)
         m.invalidate()
     }
 
+    /** 1er appui : reprendre le suivi ; appui suivant (déjà centrée) : nord en haut ↔ cap de la voiture. */
     fun recenter(location: Location?) {
+        if (follow) {
+            headingUp = !headingUp
+            app.mg4dash.system.Prefs(context).mapHeadingUp = headingUp
+            if (!headingUp) map?.mapOrientation = 0f
+        }
         follow = true
         location?.let { update(it) }
     }
 
     fun zoom(delta: Int) {
-        map?.controller?.apply { if (delta > 0) zoomIn() else zoomOut() }
+        val m = map ?: return
+        zoomLevel = (zoomLevel + delta).coerceIn(m.minZoomLevel, m.maxZoomLevel)
+        m.controller.setZoom(zoomLevel)
     }
 
     fun onResume() = map?.onResume()

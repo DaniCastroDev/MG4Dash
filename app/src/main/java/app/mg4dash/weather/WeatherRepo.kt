@@ -70,6 +70,16 @@ object WeatherRepo {
         }
     }
 
+    @Volatile private var usedFallback = false
+
+    /**
+     * Au démarrage, la météo est demandée avant le premier relevé GPS : elle partait alors sur la
+     * ville de repli jusqu'au rafraîchissement suivant. Dès qu'une position arrive, on la redemande.
+     */
+    fun onLocation(context: Context) {
+        if (usedFallback) { usedFallback = false; refreshNow(context) }
+    }
+
     fun refreshNow(context: Context) {
         scope.launch {
             try { refresh(context.applicationContext) } catch (e: Exception) {
@@ -83,7 +93,8 @@ object WeatherRepo {
     private fun refresh(context: Context): Boolean {
         Log.i(TAG, "requête Open-Meteo (internet : ${StatusMonitor.hasInternet(context)})")
         val prefs = Prefs(context)
-        val loc = lastLocation(context)
+        val loc = app.mg4dash.map.LocationRepo.location.value?.let { it.latitude to it.longitude } ?: lastLocation(context)
+        usedFallback = loc == null
         val lat = loc?.first ?: prefs.weatherLat.toDouble()
         val lon = loc?.second ?: prefs.weatherLon.toDouble()
         val place = if (loc != null) Tr.s(R.string.weather_here) else prefs.weatherCity

@@ -23,7 +23,10 @@ object LocationRepo {
     val location: StateFlow<Location?> = _location
 
     @SuppressLint("MissingPermission")
+    private var appContext: Context? = null
+
     fun start(context: Context) {
+        appContext = context.applicationContext
         if (BuildConfig.MOCK) {
             _location.value = Location("mock").apply {
                 latitude = 48.8584; longitude = 2.2945; bearing = 120f; speed = 0f; altitude = 35.0
@@ -70,6 +73,7 @@ object LocationRepo {
             if (cur != null && location.provider != "fused" && cur.provider == "fused" &&
                 location.time - cur.time < 5_000) return
             _location.value = location
+            appContext?.let { app.mg4dash.weather.WeatherRepo.onLocation(it) }
             if (System.currentTimeMillis() - lastLog > 60_000) {
                 lastLog = System.currentTimeMillis()
                 Log.i(TAG, "position reçue (${location.provider}, ${Math.round(location.speed * 3.6f)} km/h)")
