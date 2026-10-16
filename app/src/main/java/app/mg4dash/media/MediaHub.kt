@@ -1,5 +1,6 @@
 package app.mg4dash.media
 
+import com.saicmotor.common.CommandParcelable as SaicCommand
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
@@ -327,11 +328,14 @@ object MediaHub {
         val c = current ?: return
         val playing = c.playbackState?.state == PlaybackState.STATE_PLAYING
         // La voiture est sur une autre source (ex. FM) : un « lecture » envoyé au Bluetooth ou à
-        // l'USB est ignoré. On ouvre brièvement l'appli d'origine de cette source, ce qui bascule
-        // la source audio de la voiture, puis on revient à l'accueil et on lance la lecture.
+        // l'USB est ignoré. On demande d'abord à la voiture de changer de source (comme le launcher
+        // d'origine), puis on lance la lecture si elle n'a pas démarré toute seule.
         if (!playing && !isAndroidAuto(c.packageName) && sourcePkg != null && sourcePkg != c.packageName &&
             activateSource(c.packageName)) {
-            main.postDelayed({ current?.takeIf { it.packageName == c.packageName }?.transportControls?.play() }, 2500)
+            main.postDelayed({
+                current?.takeIf { it.packageName == c.packageName && it.playbackState?.state != PlaybackState.STATE_PLAYING }
+                    ?.transportControls?.play()
+            }, 1500)
             return
         }
         // Android Auto (RemoteUI) ne réagit qu'aux touches média, pas aux commandes play()/pause()
@@ -407,18 +411,28 @@ object MediaHub {
         else -> appContext?.packageManager?.getLaunchIntentForPackage(pkg)?.component
     }
 
-    /** Ouvre l'appli d'origine de [pkg] puis revient à MG4Dash ; false si rien à ouvrir. */
+    /**
+     * Bascule la source audio de la voiture comme le launcher d'origine (ModeManager.switchSource,
+     * relevé sur SWI69) : commande 0x8001 « changer de source » envoyée au service de l'appli
+     * média ou radio. Types du launcher : USB = 0, Bluetooth = 2 ; la radio reprend sa bande.
+     * L'appli média lance elle-même la lecture de la source choisie.
+     */
     private fun activateSource(pkg: String): Boolean {
         val ctx = appContext ?: return false
-        val owner = ownerOf(pkg) ?: return false
-        Log.i(TAG, "bascule de la source audio vers $pkg (ouverture brève de ${owner.flattenToShortString()})")
-        if (!app.mg4dash.system.Apps.open(ctx, owner, "source")) return false
-        main.postDelayed({
-            try {
-                ctx.startActivity(android.content.Intent(ctx, app.mg4dash.MainActivity::class.java)
-                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK or android.content.Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
-            } catch (e: Exception) { Log.w(TAG, "retour à l'accueil : ${e.message}") }
-        }, 1500)
-        return true
+        val (target, type) = when (pkg) {
+            "com.android.bluetooth" -> ComponentName("com.saicmotor.media", "com.saicmotor.media.service.MediaService") to 2
+            "com.saicmotor.media" -> ComponentName("com.saicmotor.media", "com.saicmotor.media.service.MediaService") to 0
+            "com.saicmotor.radio" -> ComponentName("com.saicmotor.radio", "com.saicmotor.radio.service.RadioService") to -2
+            else -> return false
+        }
+        val cmd = SaicCommand()
+            .setEvent(0x8001).setTargetType(type).setTargetPackage("com.saicmotor.launcher")
+        return try {
+            ctx.startService(android.content.Intent().setComponent(target).setPackage(target.packageName).putExtra("command", cmd))
+            Log.i(TAG, "bascule de la source audio : $cmd → ${target.flattenToShortString()}")
+            true
+        } catch (e: Exception) {
+            Log.w(TAG, "bascule de la source audio impossible : ${e.message}"); false
+        }
     }
 }
