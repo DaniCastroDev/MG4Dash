@@ -53,7 +53,7 @@ class NavBanner(context: Context) : LinearLayout(context) {
         if (n == null) { visibility = GONE; return }
         visibility = VISIBLE
         arrow.set(n)
-        distance.text = n.distanceMeters?.let { formatDistance(it) } ?: ""
+        distance.text = n.distanceMeters?.takeIf { it > 0 }?.let { formatDistance(it) } ?: ""
         distance.visibility = if (distance.text.isEmpty()) GONE else VISIBLE
         road.text = n.road.ifBlank { n.actionText }
         road.visibility = if (road.text.isEmpty()) GONE else VISIBLE
