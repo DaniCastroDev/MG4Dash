@@ -26,6 +26,8 @@ class MapCard(private val context: Context, holder: ViewGroup) {
 
     private val map: MapView?
     private val marker: Marker?
+    /** Captures d'écran (PC) : extrait de carte fixe, tuiles OpenStreetMap fournies par les tests. */
+    private var preview: android.view.View? = null
     private var follow = true
     private var lastTouch = 0L
     /** Niveau de zoom voulu : le suivi l'utilise, sinon chaque position annulait le zoom en cours. */
@@ -39,6 +41,7 @@ class MapCard(private val context: Context, holder: ViewGroup) {
         // Robolectric (captures sur PC) ne sait pas dessiner osmdroid : on laisse le fond.
         if (Build.FINGERPRINT == "robolectric") {
             map = null; marker = null
+            preview = screenshotPreview(holder)
         } else {
             val conf = Configuration.getInstance()
             conf.userAgentValue = "MG4Launcher/${context.packageName}"
@@ -104,7 +107,41 @@ class MapCard(private val context: Context, holder: ViewGroup) {
         return ColorMatrixColorFilter(invert)
     }
 
-    val available: Boolean get() = map != null
+    val available: Boolean get() = map != null || preview != null
+
+
+    private fun screenshotPreview(holder: ViewGroup): android.view.View? = try {
+        val cl = javaClass.classLoader!!
+        val (cx, cy) = cl.getResourceAsStream("map_preview/center.txt")!!.bufferedReader().readText().trim().split(" ").map { it.toFloat() }
+        val mosaic = android.graphics.Bitmap.createBitmap(5 * 256, 5 * 256, android.graphics.Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(mosaic)
+        for (x in 0..4) for (y in 0..4) {
+            cl.getResourceAsStream("map_preview/tile_${x}_$y.png")?.use { android.graphics.BitmapFactory.decodeStream(it) }
+                ?.let { canvas.drawBitmap(it, x * 256f, y * 256f, null) }
+        }
+        // Zone centrée sur le point, à la taille du widget
+        val frame = object : android.widget.FrameLayout(context) {
+            override fun onLayout(changed: Boolean, l: Int, t: Int, r: Int, b: Int) {
+                super.onLayout(changed, l, t, r, b)
+                val w = r - l; val h = b - t
+                if (w <= 0 || h <= 0) return
+                val img = getChildAt(0) as android.widget.ImageView
+                val scale = maxOf(1.3f, w / 1000f, h / 1000f)
+                img.imageMatrix = android.graphics.Matrix().apply { setTranslate(w / 2f / scale - cx, h / 2f / scale - cy); postScale(scale, scale) }
+            }
+        }
+        frame.addView(android.widget.ImageView(context).apply {
+            scaleType = android.widget.ImageView.ScaleType.MATRIX
+            setImageBitmap(mosaic)
+            if (!app.mg4dash.ui.Themes.isLight(context)) colorFilter = darkFilter()
+        }, android.widget.FrameLayout.LayoutParams(-1, -1))
+        val d = context.resources.displayMetrics.density
+        frame.addView(android.widget.ImageView(context).apply {
+            setImageDrawable(ContextCompat.getDrawable(context, R.drawable.ic_car_marker))
+        }, android.widget.FrameLayout.LayoutParams((44 * d).toInt(), (44 * d).toInt(), android.view.Gravity.CENTER))
+        holder.addView(frame, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        frame
+    } catch (_: Throwable) { null }
 
     fun update(location: Location) {
         val m = map ?: return
