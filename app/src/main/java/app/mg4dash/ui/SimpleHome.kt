@@ -305,7 +305,7 @@ class SimpleHome(private val a: AppCompatActivity) {
 
     private fun renderBattery(s: VehicleState) {
         val pct = s.batteryPercent
-        battery.text = pct?.let { "$it %" } ?: "— %"
+        battery.text = VehicleState.socLabel(s) ?: "— %"
         val c = when {
             pct == null -> R.color.text_disabled
             pct <= 15 -> R.color.accent_danger

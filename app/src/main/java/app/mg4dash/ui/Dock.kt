@@ -209,8 +209,14 @@ object Dock {
             }
             val icon = ImageView(activity)
             val custom = if (item.label == R.string.dock_aa) customAa(activity) else null
-            val appIcon = custom?.let { Shortcuts.appIcon(activity, it) ?: if (it.packageName == Apps.CARPLAY.packageName) pkgIcon(activity, it.packageName) else null }
-            if (appIcon != null) {
+            // Android Auto et CarPlay : un seul pictogramme neutre ; une autre appli garde son icône (en gris)
+            val projection = item.label == R.string.dock_aa && (custom == null || custom.packageName == Apps.CARPLAY.packageName ||
+                custom.packageName.startsWith("com.allgo.app.androidauto"))
+            val appIcon = if (projection) null else custom?.let { Shortcuts.appIcon(activity, it) }
+            if (projection) {
+                icon.setImageResource(R.drawable.ic_projection)
+                icon.setColorFilter(color(if (selected) R.color.accent_action else R.color.text_sub))
+            } else if (appIcon != null) {
                 // Icône d'appli en niveaux de gris, pour s'accorder aux autres icônes de la barre
                 icon.setImageDrawable(appIcon.mutate().apply {
                     colorFilter = android.graphics.ColorMatrixColorFilter(android.graphics.ColorMatrix().apply { setSaturation(0f) })

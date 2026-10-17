@@ -158,9 +158,9 @@ class MainActivity : AppCompatActivity() {
         showStackPage(prefs.stackPage)
         // Sans titres (option) : moins chargé ; les points de la pile et les infos utiles restent
         if (prefs.hideTitles) {
-            listOf((b.climateCard.getChildAt(0) as LinearLayout).getChildAt(0),
-                (b.energyCard.getChildAt(0) as LinearLayout).getChildAt(0),
-                b.secondaryTitle, b.mediaSource).forEach { it.visibility = View.INVISIBLE }
+            b.climHeader.visibility = View.GONE
+            listOf((b.energyCard.getChildAt(0) as LinearLayout).getChildAt(0),
+                b.secondaryTitle).forEach { it.visibility = View.INVISIBLE }
         }
     }
 
@@ -202,10 +202,10 @@ class MainActivity : AppCompatActivity() {
      * décaler les widgets) ; les infos utiles de l'en-tête (ville, points, boutons) restent visibles.
      */
     private fun hideFullTitles() {
-        listOf((b.climateCard.getChildAt(0) as LinearLayout).getChildAt(0),
-            (b.energyCard.getChildAt(0) as LinearLayout).getChildAt(0),
+        b.climHeader.visibility = if (Dock.vertical(this)) View.GONE else View.INVISIBLE
+        listOf((b.energyCard.getChildAt(0) as LinearLayout).getChildAt(0),
             (b.weatherPlace.parent as LinearLayout).getChildAt(0),
-            b.secondaryTitle, b.mediaSource).forEach { it.visibility = View.INVISIBLE }
+            b.secondaryTitle).forEach { it.visibility = View.INVISIBLE }
         (0 until b.mapCard.childCount).map { b.mapCard.getChildAt(it) }
             .filter { it is TextView && it.text?.toString() == getString(R.string.title_position) }
             .forEach { b.mapCard.removeView(it) }
@@ -324,15 +324,29 @@ class MainActivity : AppCompatActivity() {
         b.climPower.setOnClickListener { CarBridge.togglePower() }
         repeatOnHold(b.tempDown) { CarBridge.stepTemp(-1) }
         repeatOnHold(b.tempUp) { CarBridge.stepTemp(1) }
-        b.fanDown.setOnClickListener { CarBridge.stepFan(-1) }
+        // Ventilation : sous la vitesse 1, la clim s'arrête ; appui long − = arrêt, appui long + = maximum
+        b.fanDown.setOnClickListener {
+            val s = CarBridge.state.value
+            if (s.hvacOn == true && s.autoOn != true && (s.fanSpeed ?: 0) <= VehicleState.FAN_MIN) CarBridge.togglePower()
+            else CarBridge.stepFan(-1)
+        }
         b.fanUp.setOnClickListener { CarBridge.stepFan(1) }
+        b.fanDown.setOnLongClickListener { if (CarBridge.state.value.hvacOn == true) CarBridge.togglePower(); true }
+        b.fanUp.setOnLongClickListener {
+            val cur = CarBridge.state.value.fanSpeed ?: VehicleState.FAN_MIN
+            CarBridge.stepFan(VehicleState.FAN_MAX - cur); true
+        }
         b.chipAuto.setOnClickListener { CarBridge.toggleAuto() }
         b.chipAc.setOnClickListener { CarBridge.toggleAc() }
+        b.chipEco.setOnClickListener { CarBridge.toggleEco() }
         b.chipRecirc.setOnClickListener { CarBridge.toggleRecirc() }
-        // Direction de l'air : visage → visage + pieds → pieds → pieds + pare-brise (le pare-brise seul a son bouton physique)
-        b.chipFlow.setOnClickListener {
-            val cur = CarBridge.state.value.fanDirection
-            CarBridge.setFanDirection(FLOW_CYCLE[(FLOW_CYCLE.indexOf(cur) + 1) % FLOW_CYCLE.size])
+        // Direction de l'air : pare-brise, visage et pieds se combinent (au moins une sortie reste active)
+        listOf(b.chipFace to 0, b.chipFeet to 1, b.chipScreen to 2).forEach { (chip, i) ->
+            chip.setOnClickListener {
+                val parts = flowParts(CarBridge.state.value.fanDirection)?.copyOf() ?: booleanArrayOf(false, false, false)
+                parts[i] = !parts[i]
+                flowDirection(parts)?.let { CarBridge.setFanDirection(it) }
+            }
         }
         b.temp.setOnClickListener { startActivity(Intent(this, ClimateActivity::class.java)) }
     }
@@ -358,7 +372,7 @@ class MainActivity : AppCompatActivity() {
         b.climPower.setColorFilter(color(if (on) R.color.accent_energy else R.color.text_sub))
         b.temp.text = if (on || s.driverTemp != null) VehicleState.tempLabel(s.driverTemp) else getString(R.string.no_data)
         b.temp.setTextColor(color(if (on) R.color.text_value else R.color.text_disabled))
-        b.climOutside.text = s.outsideTemp?.let { getString(R.string.outside_short, Math.round(it)) } ?: ""
+        b.climOutside.text = s.outsideTemp?.let { getString(R.string.cl_outside, Math.round(it)) } ?: ""
         // En mode AUTO, la voiture rapporte une vitesse peu parlante (souvent le maximum) :
         // on affiche « AUTO » et une jauge grisée plutôt qu'un niveau trompeur.
         val auto = on && s.autoOn == true
@@ -380,21 +394,38 @@ class MainActivity : AppCompatActivity() {
         b.chipRecircIcon.setImageResource(if (inner == true) R.drawable.ic_air_recirc else R.drawable.ic_air_outside)
         b.chipRecircAuto.visibility = if (autoRecirc) View.VISIBLE else View.GONE
         // Direction de l'air ; en mode AUTO, c'est la voiture qui la choisit
-        b.chipFlowIcon.setImageResource(flowIcon(s.fanDirection))
-        b.chipFlow.isSelected = auto
-        b.chipFlowAuto.visibility = if (auto) View.VISIBLE else View.GONE
-        listOf(b.tempDown, b.tempUp, b.fanDown, b.fanUp, b.chipAuto, b.chipAc, b.chipRecirc, b.chipFlow, b.climPower)
+        b.chipEco.isSelected = s.ecoOn == true
+        val parts = flowParts(s.fanDirection)
+        b.chipFace.isSelected = parts?.get(0) == true
+        b.chipFeet.isSelected = parts?.get(1) == true
+        b.chipScreen.isSelected = parts?.get(2) == true
+        listOf(b.tempDown, b.tempUp, b.fanDown, b.fanUp, b.chipAuto, b.chipAc, b.chipEco, b.chipRecirc,
+            b.chipFace, b.chipFeet, b.chipScreen, b.climPower)
             .forEach { it.isEnabled = known }
         b.climateCard.alpha = if (known) 1f else 0.6f
     }
 
-    private val FLOW_CYCLE = listOf(0, 1, 2, 3)
+    /** Direction de l'air (échelle 0–6) en sorties actives : visage, pieds, pare-brise. */
+    private fun flowParts(d: Int?): BooleanArray? = when (d) {
+        0 -> booleanArrayOf(true, false, false)
+        1 -> booleanArrayOf(true, true, false)
+        2 -> booleanArrayOf(false, true, false)
+        3 -> booleanArrayOf(false, true, true)
+        4 -> booleanArrayOf(false, false, true)
+        5 -> booleanArrayOf(true, true, true)
+        6 -> booleanArrayOf(true, false, true)
+        else -> null
+    }
 
-    private fun flowIcon(d: Int?): Int = when (d) {
-        1, 5 -> R.drawable.ic_flow_face_feet
-        2 -> R.drawable.ic_flow_feet
-        3, 4 -> R.drawable.ic_flow_feet_screen
-        else -> R.drawable.ic_flow_face
+    private fun flowDirection(p: BooleanArray): Int? = when {
+        p[0] && p[1] && p[2] -> 5
+        p[0] && p[2] -> 6
+        p[0] && p[1] -> 1
+        p[1] && p[2] -> 3
+        p[0] -> 0
+        p[1] -> 2
+        p[2] -> 4
+        else -> null
     }
 
     /** Recyclage réellement actif (HVAC_RECIRC_ON), lu toutes les 5 s ; null si la voiture ne le fournit pas. */
@@ -404,7 +435,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun renderEnergy(s: VehicleState, avg: Float?) {
         val pct = s.batteryPercent
-        b.battery.text = pct?.let { "$it %" } ?: "— %"
+        b.battery.text = VehicleState.socLabel(s) ?: "— %"
         val battColor = when {
             pct == null -> R.color.text_disabled
             pct <= 15 -> R.color.accent_danger
@@ -460,31 +491,58 @@ class MainActivity : AppCompatActivity() {
         b.mediaNext.setOnClickListener { MediaHub.next() }
         b.mediaPrev.setOnClickListener { MediaHub.previous() }
         // Les puces basculent la source affichée ; l'appli ne s'ouvre qu'en touchant la pochette / les infos.
-        b.srcRadio.setOnClickListener { MediaHub.select("com.saicmotor.radio") }
-        b.srcMedia.setOnClickListener { MediaHub.selectUsbBt() }
-        b.srcAa.setOnClickListener { MediaHub.selectAndroidAuto() }
+        // Source en haut à gauche (« Radio ▾ ») : un toucher ouvre la liste des sources disponibles
+        listOf(b.srcRadio, b.srcMedia, b.srcAa).forEach { it.visibility = View.GONE }
+        b.mediaSource.isClickable = true
+        b.mediaSource.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
+        b.mediaSource.setTextColor(color(R.color.text_value))
+        b.mediaSource.setPadding(0, (8 * resources.displayMetrics.density).toInt(), (24 * resources.displayMetrics.density).toInt(), (8 * resources.displayMetrics.density).toInt())
+        b.mediaSource.setOnClickListener { showSourceMenu(it) }
         b.mediaInfo.setOnClickListener {
             val owner = MediaHub.ownerComponent()
             if (owner != null) Apps.open(this, owner, "Media") else Apps.open(this, Apps.RADIO, "Radio")
         }
     }
 
+    /** Menu des sources sous le nom de la source : la source active est en couleur. */
+    private fun showSourceMenu(anchor: View) {
+        val d = resources.displayMetrics.density
+        val list = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundResource(R.drawable.bg_panel)
+            setPadding((8 * d).toInt(), (8 * d).toInt(), (8 * d).toInt(), (8 * d).toInt())
+            elevation = 12 * d
+        }
+        val popup = android.widget.PopupWindow(list, (300 * d).toInt(), LinearLayout.LayoutParams.WRAP_CONTENT, true)
+        val cur = MediaHub.currentSource()
+        MediaHub.availableSources().forEach { pkg ->
+            list.addView(TextView(this).apply {
+                text = MediaHub.sourceLabel(pkg)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 21f)
+                setTextColor(color(if (pkg == cur) R.color.accent_action else R.color.text_value))
+                setPadding((18 * d).toInt(), 0, (18 * d).toInt(), 0)
+                gravity = Gravity.CENTER_VERTICAL
+                setBackgroundResource(R.drawable.bg_chip)
+                isSelected = pkg == cur
+                setOnClickListener { popup.dismiss(); MediaHub.switchTo(pkg) }
+            }, LinearLayout.LayoutParams(-1, (60 * d).toInt()).apply { topMargin = (4 * d).toInt() })
+        }
+        popup.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+        popup.showAsDropDown(anchor, 0, (4 * d).toInt())
+    }
+
     private fun renderMedia(m: MediaHub.NowPlaying) {
         if (!m.available) {
-            b.mediaSource.text = getString(R.string.title_media)
+            b.mediaSource.text = getString(R.string.title_media) + "  ▾"
             b.mediaTitle.text = getString(R.string.no_media)
             b.mediaArtist.text = getString(R.string.media_hint)
             b.mediaAlbum.text = ""
         } else {
-            b.mediaSource.text = m.source.ifEmpty { getString(R.string.title_media) }
+            b.mediaSource.text = m.source.ifEmpty { getString(R.string.title_media) } + "  ▾"
             b.mediaTitle.text = m.title.ifEmpty { m.source }
             b.mediaArtist.text = m.artist
             b.mediaAlbum.text = m.album
         }
-        b.srcRadio.isSelected = m.packageName == "com.saicmotor.radio"
-        b.srcMedia.isSelected = m.packageName == "com.saicmotor.media" || m.packageName == "com.android.bluetooth"
-        b.srcAa.isSelected = MediaHub.isAndroidAuto(m.packageName)
-        b.srcAa.visibility = if (m.androidAuto || b.srcAa.isSelected) View.VISIBLE else View.GONE
         b.mediaArt.setImageBitmap(m.art)
         b.mediaArtPlaceholder.visibility = if (m.art == null) View.VISIBLE else View.INVISIBLE
         b.mediaPlay.setImageResource(if (m.playing) R.drawable.ic_pause else R.drawable.ic_play)

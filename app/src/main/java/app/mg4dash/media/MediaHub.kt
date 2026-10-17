@@ -120,11 +120,12 @@ object MediaHub {
      * parmi celles disponibles (radio, Bluetooth connecté, clé USB, Android Auto connecté),
      * puis bascule de la source de la voiture et lecture.
      */
-    fun cycleSource(dir: Int) {
-        if (BuildConfig.MOCK) return
-        val ctx = appContext ?: return
+    /** Sources disponibles maintenant, dans l'ordre : radio, Bluetooth connecté, clé USB, Android Auto connecté. */
+    fun availableSources(): List<String> {
+        if (BuildConfig.MOCK) return listOf("com.saicmotor.radio", "com.android.bluetooth", AA_MBS)
+        val ctx = appContext ?: return emptyList()
         val order = listOf("com.saicmotor.radio", "com.android.bluetooth", "com.saicmotor.media", AA_MBS)
-        val available = order.filter { pkg ->
+        return order.filter { pkg ->
             when (pkg) {
                 "com.android.bluetooth" -> try {
                     android.bluetooth.BluetoothAdapter.getDefaultAdapter()?.getProfileConnectionState(11) == android.bluetooth.BluetoothProfile.STATE_CONNECTED
@@ -137,10 +138,26 @@ object MediaHub {
                 else -> true
             }
         }
-        val cur = current?.packageName?.let { if (isAndroidAuto(it)) AA_MBS else it }
+    }
+
+    /** Source affichée, Android Auto ramené à son lecteur. */
+    fun currentSource(): String? = current?.packageName?.let { if (isAndroidAuto(it)) AA_MBS else it }
+
+    fun cycleSource(dir: Int) {
+        if (BuildConfig.MOCK) return
+        val available = availableSources()
+        if (available.isEmpty()) return
+        val cur = currentSource()
         val i = available.indexOf(cur)
         val next = available.getOrNull(Math.floorMod((if (i < 0) 0 else i) + dir, available.size)) ?: return
         Log.i(TAG, "balayage : source $cur → $next (disponibles : $available)")
+        switchTo(next)
+    }
+
+    /** Bascule la voiture sur cette source et lance la lecture (balayage ou menu des sources). */
+    fun switchTo(next: String) {
+        if (BuildConfig.MOCK) return
+        Log.i(TAG, "source choisie : $next")
         pinnedPkg = next
         main.post { reevaluate() }
         if (next == AA_MBS) {

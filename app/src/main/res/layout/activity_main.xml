@@ -37,6 +37,8 @@
                 android:orientation="vertical">
 
                 <LinearLayout
+                    android:id="@+id/climHeader"
+                    android:minHeight="40dp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_vertical"
@@ -50,27 +52,9 @@
                         android:layout_marginLeft="64dp"
                         android:layout_weight="1"
                         android:text="@string/title_climate" />
-
-                    <TextView
-                        android:id="@+id/climOutside"
-                        style="@style/Sub"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginRight="12dp"
-                        android:textSize="19sp"
-                        tools:text="Ext. 13°" />
-
-                    <ImageButton
-                        android:id="@+id/climPower"
-                        style="@style/RoundButton"
-                        android:layout_width="48dp"
-                        android:layout_height="48dp"
-                        android:contentDescription="@string/cd_power"
-                        android:padding="12dp"
-                        android:src="@drawable/ic_power" />
                 </LinearLayout>
 
-                <!-- Température -->
+                <!-- Température, avec la température extérieure en petit dessous -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="0dp"
@@ -81,38 +65,54 @@
                     <ImageButton
                         android:id="@+id/tempDown"
                         style="@style/RoundButton"
-                        android:layout_width="84dp"
-                        android:layout_height="84dp"
+                        android:layout_width="68dp"
+                        android:layout_height="68dp"
                         android:contentDescription="@string/cd_temp_down"
-                        android:padding="20dp"
+                        android:padding="18dp"
                         android:src="@drawable/ic_minus"
                         android:tint="@color/accent_cold" />
 
-                    <TextView
-                        android:id="@+id/temp"
-                        style="@style/ValueBig"
+                    <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:gravity="center"
-                        android:textSize="64sp"
-                        tools:text="21.5°" />
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/temp"
+                            style="@style/ValueBig"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:includeFontPadding="false"
+                            android:textSize="58sp"
+                            tools:text="21.5°" />
+
+                        <TextView
+                            android:id="@+id/climOutside"
+                            style="@style/Sub"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textSize="16sp"
+                            tools:text="Ext. 13°" />
+                    </LinearLayout>
 
                     <ImageButton
                         android:id="@+id/tempUp"
                         style="@style/RoundButton"
-                        android:layout_width="84dp"
-                        android:layout_height="84dp"
+                        android:layout_width="68dp"
+                        android:layout_height="68dp"
                         android:contentDescription="@string/cd_temp_up"
-                        android:padding="20dp"
+                        android:padding="18dp"
                         android:src="@drawable/ic_plus"
                         android:tint="@color/accent_heat" />
                 </LinearLayout>
 
-                <!-- Ventilation -->
+                <!-- Ventilation : mêmes boutons que la température ; appui long − = arrêt, + = maximum -->
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="56dp"
+                    android:layout_height="68dp"
                     android:gravity="center_vertical"
                     android:orientation="horizontal">
 
@@ -122,6 +122,7 @@
                         android:layout_width="68dp"
                         android:layout_height="68dp"
                         android:contentDescription="@string/cd_fan_down"
+                        android:padding="18dp"
                         android:src="@drawable/ic_minus" />
 
                     <ImageView
@@ -157,26 +158,42 @@
                         android:layout_width="68dp"
                         android:layout_height="68dp"
                         android:contentDescription="@string/cd_fan_up"
+                        android:padding="18dp"
                         android:src="@drawable/ic_plus" />
                 </LinearLayout>
 
-                <!-- Bascules -->
+                <!-- Bascules, 1re rangée : marche, A/C, AUTO, ECO -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="10dp"
                     android:orientation="horizontal">
 
-                    <TextView android:id="@+id/chipAuto" style="@style/Chip" android:text="@string/chip_auto" />
-                    <TextView android:id="@+id/chipAc" style="@style/Chip" android:layout_marginLeft="8dp" android:text="@string/chip_ac" />
-                    <!-- Recyclage et direction de l'air : icônes ; « A » quand la voiture décide (mode auto) -->
-                    <FrameLayout android:id="@+id/chipRecirc" style="@style/Chip" android:layout_marginLeft="8dp" android:clickable="true" android:focusable="true" android:contentDescription="@string/cl_recirc">
-                        <ImageView android:id="@+id/chipRecircIcon" android:layout_width="40dp" android:layout_height="40dp" android:layout_gravity="center" android:duplicateParentState="true" android:scaleType="fitCenter" android:src="@drawable/ic_air_outside" android:tint="@color/chip_text" />
-                        <TextView android:id="@+id/chipRecircAuto" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="top|right" android:layout_marginTop="2dp" android:layout_marginRight="8dp" android:text="A" android:textColor="?attr/mgSelect" android:textSize="13sp" android:fontFamily="sans-serif-medium" android:visibility="gone" />
+                    <ImageButton android:id="@+id/climPower" style="@style/Chip" android:layout_height="48dp" android:contentDescription="@string/cd_power" android:padding="11dp" android:scaleType="fitCenter" android:src="@drawable/ic_power" />
+                    <TextView android:id="@+id/chipAc" style="@style/Chip" android:layout_height="48dp" android:layout_marginLeft="8dp" android:text="@string/chip_ac" />
+                    <TextView android:id="@+id/chipAuto" style="@style/Chip" android:layout_height="48dp" android:layout_marginLeft="8dp" android:text="@string/chip_auto" />
+                    <TextView android:id="@+id/chipEco" style="@style/Chip" android:layout_height="48dp" android:layout_marginLeft="8dp" android:text="ECO" />
+                </LinearLayout>
+
+                <!-- 2e rangée : pare-brise, visage, pieds (combinables), recyclage ; « A » quand la voiture décide -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal">
+
+                    <FrameLayout android:id="@+id/chipScreen" style="@style/Chip" android:layout_height="48dp" android:clickable="true" android:focusable="true" android:contentDescription="@string/cl_airflow">
+                        <ImageView android:layout_width="34dp" android:layout_height="34dp" android:layout_gravity="center" android:duplicateParentState="true" android:scaleType="fitCenter" android:src="@drawable/ic_flow_screen" android:tint="@color/chip_text" />
                     </FrameLayout>
-                    <FrameLayout android:id="@+id/chipFlow" style="@style/Chip" android:layout_marginLeft="8dp" android:clickable="true" android:focusable="true" android:contentDescription="@string/cl_airflow">
-                        <ImageView android:id="@+id/chipFlowIcon" android:layout_width="40dp" android:layout_height="40dp" android:layout_gravity="center" android:duplicateParentState="true" android:scaleType="fitCenter" android:src="@drawable/ic_flow_face" android:tint="@color/chip_text" />
-                        <TextView android:id="@+id/chipFlowAuto" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="top|right" android:layout_marginTop="2dp" android:layout_marginRight="8dp" android:text="A" android:textColor="?attr/mgSelect" android:textSize="13sp" android:fontFamily="sans-serif-medium" android:visibility="gone" />
+                    <FrameLayout android:id="@+id/chipFace" style="@style/Chip" android:layout_height="48dp" android:layout_marginLeft="8dp" android:clickable="true" android:focusable="true" android:contentDescription="@string/cl_face">
+                        <ImageView android:layout_width="34dp" android:layout_height="34dp" android:layout_gravity="center" android:duplicateParentState="true" android:scaleType="fitCenter" android:src="@drawable/ic_flow_face" android:tint="@color/chip_text" />
+                    </FrameLayout>
+                    <FrameLayout android:id="@+id/chipFeet" style="@style/Chip" android:layout_height="48dp" android:layout_marginLeft="8dp" android:clickable="true" android:focusable="true" android:contentDescription="@string/cl_feet">
+                        <ImageView android:layout_width="34dp" android:layout_height="34dp" android:layout_gravity="center" android:duplicateParentState="true" android:scaleType="fitCenter" android:src="@drawable/ic_flow_feet" android:tint="@color/chip_text" />
+                    </FrameLayout>
+                    <FrameLayout android:id="@+id/chipRecirc" style="@style/Chip" android:layout_height="48dp" android:layout_marginLeft="8dp" android:clickable="true" android:focusable="true" android:contentDescription="@string/cl_recirc">
+                        <ImageView android:id="@+id/chipRecircIcon" android:layout_width="34dp" android:layout_height="34dp" android:layout_gravity="center" android:duplicateParentState="true" android:scaleType="fitCenter" android:src="@drawable/ic_air_outside" android:tint="@color/chip_text" />
+                        <TextView android:id="@+id/chipRecircAuto" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_gravity="top|right" android:layout_marginTop="1dp" android:layout_marginRight="8dp" android:text="A" android:textColor="?attr/mgSelect" android:textSize="13sp" android:fontFamily="sans-serif-medium" android:visibility="gone" />
                     </FrameLayout>
                 </LinearLayout>
             </LinearLayout>
@@ -330,9 +347,9 @@
                     <app.mg4dash.ui.SegmentedGauge
                         android:id="@+id/kersGauge"
                         android:layout_width="0dp"
-                        android:layout_height="34dp"
-                        android:paddingTop="11dp"
-                        android:paddingBottom="11dp"
+                        android:layout_height="48dp"
+                        android:paddingTop="18dp"
+                        android:paddingBottom="18dp"
                         android:layout_marginLeft="10dp"
                         android:layout_weight="1" />
 

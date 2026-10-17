@@ -54,12 +54,12 @@ class VehicleActivity : PageActivity() {
         val rRow = kit.row()
         regenGauge = SegmentedGauge(this).apply {
             segments = 4; onColor = kit.color(R.color.accent_energy)
-            setPadding(0, kit.dp(13), 0, kit.dp(13))
+            setPadding(0, kit.dp(19), 0, kit.dp(19))
             onSegmentTap = { app.mg4dash.car.CarBridge.setRegenLevel(it) }
             onLongTap = { app.mg4dash.car.CarBridge.toggleOnePedal() }
         }
         regen = kit.text("—", 22f)
-        rRow.addView(regenGauge, kit.lp(0, kit.dp(44), 1f, r = 16))
+        rRow.addView(regenGauge, kit.lp(0, kit.dp(56), 1f, r = 16))
         rRow.addView(regen)
         drive.addView(rRow, kit.lp(-1, -2, t = 8))
         drive.addView(kit.divider(), kit.lp(-1, 1, t = 18))
@@ -146,7 +146,7 @@ class VehicleActivity : PageActivity() {
         set(R.string.vh_aeb, VehicleState.aebLabel(s.fcwState, s.fcwBrakeMode))
         set(R.string.vh_overspeed, VehicleState.onOff(s.overSpeedSound))
         set(R.string.vh_limit_beep, VehicleState.onOff(s.speedLimitSound))
-        set(R.string.vh_battery, s.batteryPercent?.let { "$it %" } ?: "—")
+        set(R.string.vh_battery, VehicleState.socLabel(s) ?: "—")
         set(R.string.vh_range, s.rangeKm?.let { "$it km" } ?: "—")
         set(R.string.vh_avg_cons, ConsumptionEstimator.average.value?.let { String.format(Locale.getDefault(), "%.1f kWh/100", it) } ?: "—")
         set(R.string.vh_odometer, s.odometerKm?.let { String.format(Locale.getDefault(), "%,d km", it) } ?: "—")

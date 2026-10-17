@@ -25,6 +25,8 @@ data class VehicleState(
     val ecoOn: Boolean? = null,
     // Énergie (CarEvClient, code 4)
     val batteryPercent: Int? = null,
+    /** Niveau de batterie au dixième (BMS_PACK_SOC_DSP), quand la voiture le donne. */
+    val socPrecise: Float? = null,
     val rangeKm: Int? = null,
     val chargeStatus: Int? = null,
     val chargeRemainMin: Int? = null,
@@ -54,6 +56,12 @@ data class VehicleState(
         const val TEMP_MIN = 17.5f   // position LO
         const val TEMP_MAX = 32.5f   // position HI
         const val TEMP_STEP = 1f
+        /** « 78.4 % » si le dixième est disponible et cohérent avec le % entier, sinon « 78 % ». */
+        fun socLabel(s: VehicleState): String? {
+            val p = s.socPrecise?.takeIf { v -> s.batteryPercent == null || kotlin.math.abs(v - s.batteryPercent) < 1.5f }
+            return p?.let { String.format(java.util.Locale.getDefault(), "%.1f %%", it) } ?: s.batteryPercent?.let { "$it %" }
+        }
+
         const val FAN_MIN = 1
         const val FAN_MAX = 11
 

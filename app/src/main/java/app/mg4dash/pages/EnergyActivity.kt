@@ -324,7 +324,7 @@ class EnergyActivity : PageActivity() {
     }
 
     override fun render(s: VehicleState) {
-        soc.text = s.batteryPercent?.let { "$it %" } ?: "—"
+        soc.text = VehicleState.socLabel(s) ?: "—"
         range.text = s.rangeKm?.let { "$it km" } ?: "—"
         status.text = VehicleState.chargeStatusLabel(s.chargeStatus)
         val pct = s.batteryPercent

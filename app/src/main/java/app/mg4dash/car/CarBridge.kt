@@ -210,6 +210,11 @@ object CarBridge {
             odometerKm = g?.let { safe { it.totalMileage } }?.takeIf { it > 0 } ?: s.odometerKm,
             speedKmh = g?.let { safe { it.latestSpeed } } ?: s.speedKmh,
         )
+        // Dixième de % (BMS) : lu à part, sur toutes les voies d'accès
+        if (!BuildConfig.MOCK) {
+            val precise = (CarProps.getFloat(0x2160f404) ?: CarProps.readFloatArea(0x2160f404, 0x1000000))?.takeIf { it in 0.1f..100f }
+            if (precise != _state.value.socPrecise) _state.value = _state.value.copy(socPrecise = precise)
+        }
         if (e == null || v == null || g == null) refreshFromProps()
         if (e == null && Firmware.family != Firmware.Family.A9) _state.value = LegacyCar.readCharging(_state.value)
     }
