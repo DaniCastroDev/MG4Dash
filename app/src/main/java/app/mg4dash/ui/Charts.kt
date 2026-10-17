@@ -95,31 +95,113 @@ class LineChart @JvmOverloads constructor(context: Context, attrs: AttributeSet?
  * Puissance instantanée, zéro décalé à gauche : à gauche la récupération (vert, jusqu'à [maxRegenKw]),
  * à droite la puissance tirée de la batterie (couleur des boutons, jusqu'à [maxDrawKw]).
  */
+/**
+ * Barre de puissance bidirectionnelle : le 0 au centre (décalé selon les plages), la consommation part
+ * vers la droite en dégradé (cyan → bleu → orange), la récupération vers la gauche en vert. Le bout côté
+ * 0 est droit, le bout extérieur arrondi avec une pastille. Un repère garde le pic des 10 dernières
+ * secondes puis redescend doucement ; la valeur s'anime.
+ */
 class PowerBar @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
     var kw: Float = 0f
-        set(v) { field = v; invalidate() }
+        set(v) {
+            field = v
+            val now = System.currentTimeMillis()
+            if (v >= peak || now - peakAt > PEAK_HOLD_MS && v > 0f) { if (v >= peak) { peak = v; peakAt = now } }
+            if (v <= -peakRegen || now - peakRegenAt > PEAK_HOLD_MS && v < 0f) { if (-v >= peakRegen) { peakRegen = -v; peakRegenAt = now } }
+            postInvalidateOnAnimation()
+        }
     var maxRegenKw = 50f
     var maxDrawKw = 100f
 
+    private companion object { const val PEAK_HOLD_MS = 10_000L; const val DECAY_KW_PER_S = 8f }
+
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val text = Paint(Paint.ANTI_ALIAS_FLAG)
     private val rect = RectF()
+    private val path = Path()
     private val d = resources.displayMetrics.density
     private val off = app.mg4dash.ui.Themes.color(context, R.color.gauge_off)
     private val regen = app.mg4dash.ui.Themes.color(context, R.color.accent_energy)
+    private val cold = app.mg4dash.ui.Themes.color(context, R.color.accent_cold)
     private val draw = app.mg4dash.ui.Themes.color(context, R.color.accent_action)
+    private val heat = app.mg4dash.ui.Themes.color(context, R.color.accent_heat)
     private val tick = app.mg4dash.ui.Themes.color(context, R.color.text_sub)
 
+    private var shown = 0f          // valeur affichée (animée vers kw)
+    private var first = true
+    private var lastFrame = 0L
+    private var peak = 0f; private var peakAt = 0L
+    private var peakRegen = 0f; private var peakRegenAt = 0L
+
+    /** Barre pleine d'un côté : bout droit au 0, bout extérieur arrondi. */
+    private fun fill(left: Float, top: Float, right: Float, bottom: Float, roundRight: Boolean) {
+        val r = (bottom - top) / 2f
+        val radii = if (roundRight) floatArrayOf(0f, 0f, r, r, r, r, 0f, 0f) else floatArrayOf(r, r, 0f, 0f, 0f, 0f, r, r)
+        path.reset(); rect.set(left, top, right, bottom); path.addRoundRect(rect, radii, Path.Direction.CW)
+    }
+
     override fun onDraw(canvas: Canvas) {
-        val h = height.toFloat(); val w = width.toFloat(); val r = h / 2f
-        val zero = w * maxRegenKw / (maxRegenKw + maxDrawKw)
-        rect.set(0f, 0f, w, h); paint.color = off; canvas.drawRoundRect(rect, r, r, paint)
-        if (kw > 0.05f) {
-            rect.set(zero, 0f, zero + (w - zero) * (kw / maxDrawKw).coerceAtMost(1f), h); paint.color = draw
-            canvas.drawRoundRect(rect, r, r, paint)
-        } else if (kw < -0.05f) {
-            rect.set(zero - zero * (-kw / maxRegenKw).coerceAtMost(1f), 0f, zero, h); paint.color = regen
-            canvas.drawRoundRect(rect, r, r, paint)
+        val w = width.toFloat(); val h = height.toFloat()
+        val now = System.currentTimeMillis()
+        val dt = if (lastFrame == 0L) 0f else ((now - lastFrame) / 1000f).coerceAtMost(0.1f)
+        lastFrame = now
+        // Animation douce de la valeur, et descente lente des pics après 10 s
+        if (first) { shown = kw; first = false }   // premier affichage : directement la valeur
+        shown += (kw - shown) * (1f - Math.exp(-dt * 10.0).toFloat())
+        if (now - peakAt > PEAK_HOLD_MS) peak = maxOf(kw.coerceAtLeast(0f), peak - DECAY_KW_PER_S * dt)
+        if (now - peakRegenAt > PEAK_HOLD_MS) peakRegen = maxOf((-kw).coerceAtLeast(0f), peakRegen - DECAY_KW_PER_S * dt)
+
+        val labels = h >= 26 * d
+        val barH = (if (labels) h * 0.42f else h * 0.6f).coerceAtMost(14 * d)
+        val top = if (labels) 4 * d else (h - barH) / 2f
+        val bottom = top + barH
+        val pad = barH                       // place pour la pastille aux extrémités
+        val x0 = pad; val x1 = w - pad
+        val zero = x0 + (x1 - x0) * maxRegenKw / (maxRegenKw + maxDrawKw)
+        fun xFor(v: Float) = if (v >= 0f) zero + (x1 - zero) * (v / maxDrawKw).coerceIn(0f, 1f)
+            else zero - (zero - x0) * (-v / maxRegenKw).coerceIn(0f, 1f)
+
+        paint.shader = null
+        paint.color = off
+        rect.set(x0, top, x1, bottom); canvas.drawRoundRect(rect, barH / 2f, barH / 2f, paint)
+
+        val end = xFor(shown)
+        if (shown > 0.05f) {
+            paint.shader = LinearGradient(zero, 0f, x1, 0f, intArrayOf(cold, draw, heat), floatArrayOf(0f, 0.55f, 1f), Shader.TileMode.CLAMP)
+            fill(zero, top, maxOf(end, zero + barH), bottom, roundRight = true); canvas.drawPath(path, paint)
+        } else if (shown < -0.05f) {
+            paint.shader = LinearGradient(zero, 0f, x0, 0f, intArrayOf(0x66000000 or (regen and 0xFFFFFF), regen), null, Shader.TileMode.CLAMP)
+            fill(minOf(end, zero - barH), top, zero, bottom, roundRight = false); canvas.drawPath(path, paint)
         }
-        paint.color = tick; canvas.drawRect(zero - d, -0f, zero + d, h, paint)
+        paint.shader = null
+
+        // Pastille au bout, avec un halo
+        if (kotlin.math.abs(shown) > 0.05f) {
+            val col = if (shown > 0f) (if (end > zero + (x1 - zero) * 0.7f) heat else draw) else regen
+            val cy = (top + bottom) / 2f
+            paint.color = col; paint.alpha = 70; canvas.drawCircle(end, cy, barH * 0.95f, paint)
+            paint.alpha = 255; paint.color = 0xFFFFFFFF.toInt(); canvas.drawCircle(end, cy, barH * 0.42f, paint)
+        }
+
+        // Pics des 10 dernières secondes : petit trait au-dessus de la barre
+        paint.color = tick
+        if (peak > 1f && peak > shown + 1f) { val px = xFor(peak); canvas.drawRect(px - d, top - 3 * d, px + d, bottom + 3 * d, paint) }
+        if (peakRegen > 1f && -peakRegen < shown - 1f) {
+            val px = xFor(-peakRegen); paint.color = regen; canvas.drawRect(px - d, top - 3 * d, px + d, bottom + 3 * d, paint)
+        }
+
+        // Repère du 0 et graduations
+        paint.color = tick
+        canvas.drawRect(zero - d, top - 4 * d, zero + d, bottom + 4 * d, paint)
+        if (labels) {
+            text.color = tick; text.textSize = 12 * resources.displayMetrics.scaledDensity
+            val ty = h - 1 * d
+            text.textAlign = Paint.Align.LEFT; canvas.drawText("−${maxRegenKw.toInt()}", x0, ty, text)
+            text.textAlign = Paint.Align.CENTER; canvas.drawText("0", zero, ty, text)
+            text.textAlign = Paint.Align.RIGHT; canvas.drawText("+${maxDrawKw.toInt()} kW", x1, ty, text)
+        }
+
+        // Tant que la valeur bouge ou qu'un pic redescend, on redessine
+        if (kotlin.math.abs(kw - shown) > 0.05f || peak > kw + 0.1f || peakRegen > -kw + 0.1f) postInvalidateOnAnimation() else lastFrame = 0L
     }
 }

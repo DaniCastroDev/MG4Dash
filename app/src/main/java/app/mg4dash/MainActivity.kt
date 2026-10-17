@@ -689,7 +689,7 @@ class MainActivity : AppCompatActivity() {
         val d = resources.displayMetrics.density
         // Même présentation que l'énergie du trajet : grosse barre, puis les chiffres en grand
         powerBar = app.mg4dash.ui.PowerBar(this)
-        g.addView(powerBar, LinearLayout.LayoutParams(-1, (34 * d).toInt()).apply { marginStart = (8 * d).toInt(); marginEnd = (8 * d).toInt() })
+        g.addView(powerBar, LinearLayout.LayoutParams(-1, (40 * d).toInt()).apply { marginStart = (8 * d).toInt(); marginEnd = (8 * d).toInt() })
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         val left = statColumn(getString(R.string.sw_drawn), "—", 38f)
         powerValue = left.getChildAt(0) as TextView; powerLabel = left.getChildAt(1) as TextView
