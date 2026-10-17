@@ -60,6 +60,7 @@ class EnergyActivity : PageActivity() {
     private lateinit var bar: StackedBar
     private lateinit var legend: LinearLayout
     private lateinit var regen: TextView
+    private lateinit var regenKm: TextView
     private lateinit var chart: LineChart
     private lateinit var chartNote: TextView
 
@@ -173,6 +174,8 @@ class EnergyActivity : PageActivity() {
         c3.addView(legend, kit.lp(-1, -2, t = 8))
         regen = kit.text("", 18f, R.color.accent_energy)
         c3.addView(regen, kit.lp(-1, -2, t = 6))
+        regenKm = kit.text("", 18f, R.color.accent_energy)
+        c3.addView(regenKm, kit.lp(-1, -2, t = 2))
         c3.addView(kit.title(getString(R.string.en_recent)), kit.lp(-1, -2, t = 18))
         chart = LineChart(this)
         c3.addView(chart, kit.lp(-1, 0, 1f, t = 8))
@@ -197,6 +200,7 @@ class EnergyActivity : PageActivity() {
     private data class Props(
         val target: Int?, val current: Int?, val reser: Int?, val st: Pair<Int?, Int?>, val sp: Pair<Int?, Int?>,
         val v2l: Int?, val volt: Float?, val amp: Float?, val cons: FloatArray, val heat: Int? = null,
+        val stopReason: Int? = null, val acVolt: Float? = null, val acAmp: Float? = null, val regenKm: Float? = null,
     )
 
     private fun refreshProps() {
@@ -218,6 +222,9 @@ class EnergyActivity : PageActivity() {
                         f(if (chrg) CarProps.CONS_RGEN_AFT_CHRG else CarProps.CONS_RGEN_AFT_ST, if (chrg) CarProps.OLD_RGEN_AFT_CHRG else CarProps.OLD_RGEN_AFT_ST) ?: -1f,
                     ),
                     CarProps.getInt(CarProps.DRVNG_PTC_HEAT),
+                    CarProps.getInt(CarProps.BMS_CHRG_SP_RSN),
+                    CarProps.getFloat(CarProps.ONBD_CHRG_AC_VOL), CarProps.getFloat(CarProps.ONBD_CHRG_AC_CRNT),
+                    CarProps.getFloat(CarProps.REGEN_RNG_AFT_CHRG),
                 )
             }
             renderProps(p)
@@ -251,10 +258,28 @@ class EnergyActivity : PageActivity() {
             kw?.takeIf { kotlin.math.abs(it) >= 0.1f }?.let { getString(R.string.en_power, String.format(Locale.getDefault(), "%.1f", kotlin.math.abs(it))) },
             s.chargeRemainMin?.takeIf { VehicleState.isCharging(s.chargeStatus) && it in 1..2000 }
                 ?.let { getString(R.string.en_ends_in, it / 60, it % 60) },
+            // Entrée du chargeur embarqué (charge AC) : tension et courant pris sur le secteur
+            p.acVolt?.takeIf { VehicleState.isCharging(s.chargeStatus) && it in 80f..450f }?.let { v ->
+                getString(R.string.en_ac_input, Math.round(v), String.format(Locale.getDefault(), "%.1f", p.acAmp ?: 0f))
+            },
+            // Charge interrompue : motif donné par la batterie (BMS)
+            stopReasonLabel(p.stopReason)?.takeIf { VehicleState.isPlugged(s.chargeStatus) && !VehicleState.isCharging(s.chargeStatus) }
+                ?.let { getString(R.string.en_stop_reason, it) },
         ).joinToString(" · ")
+        regenKm.text = p.regenKm?.takeIf { it > 0.05f && it < 2000f }
+            ?.let { getString(R.string.en_regen_km, String.format(Locale.getDefault(), "%.1f", it)) } ?: ""
         // Compteurs SAIC à zéro sur la voiture : consommation mesurée par MG4Dash (EnergyMonitor)
         val t = if (period == 0) EnergyMonitor.sinceCharge.value else EnergyMonitor.sinceStart.value
         renderConsumption(if (t.outKwh > 0f) floatArrayOf(t.outKwh, t.climKwh, t.accKwh, t.regenKwh) else p.cons)
+    }
+
+    private fun stopReasonLabel(code: Int?): String? = when (code) {
+        1 -> getString(R.string.sr_fault)
+        2 -> getString(R.string.sr_overtemp)
+        3 -> getString(R.string.sr_plug)
+        4 -> getString(R.string.sr_voltage)
+        5 -> getString(R.string.sr_other)
+        else -> null
     }
 
     private fun renderLimit(carLimit: Int? = null) {

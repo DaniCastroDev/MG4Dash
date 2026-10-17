@@ -297,6 +297,41 @@ object CarBridge {
         }
     }
 
+    // ── Régénération : touchée depuis la jauge KERS (accueil, page Véhicule) ──
+
+    /** Niveau de régénération 0..3 ; la conduite à une pédale est d'abord coupée si elle est active. */
+    fun setRegenLevel(level: Int) {
+        if (BuildConfig.MOCK) { _state.value = _state.value.copy(regenLevel = level, onePedal = 0); return }
+        scope.launch {
+            val v = vs
+            try {
+                if (_state.value.onePedal == 1) {
+                    if (v != null) v.setSignalPedalState(0) else CarProps.setInt(0x2140a193, 0, "une pédale")
+                    delay(300)
+                }
+                if (v != null) { v.setRegenerativeLevel(level); Log.i(TAG, "SET régénération = $level") }
+                else CarProps.setInt(0x2140a191, level, "régénération")
+            } catch (e: Exception) { Log.w(TAG, "SET régénération : ${e.message}") }
+            delay(500); refreshEnergy()
+            delay(1500); refreshEnergy()
+        }
+    }
+
+    /** Conduite à une pédale : bascule (appui long sur la jauge KERS). */
+    fun toggleOnePedal() {
+        val target = if (_state.value.onePedal == 1) 0 else 1
+        if (BuildConfig.MOCK) { _state.value = _state.value.copy(onePedal = target); return }
+        scope.launch {
+            try {
+                val v = vs
+                if (v != null) { v.setSignalPedalState(target); Log.i(TAG, "SET une pédale = $target") }
+                else CarProps.setInt(0x2140a193, target, "une pédale")
+            } catch (e: Exception) { Log.w(TAG, "SET une pédale : ${e.message}") }
+            delay(500); refreshEnergy()
+            delay(1500); refreshEnergy()
+        }
+    }
+
     fun startCharge() = evCommand("startCharge") { it.chargeCtrl(1) }
     fun stopCharge() = evCommand("stopCharge") { it.chargeCtrl(2) }
     fun startV2L() = evCommand("startV2L") { it.disChargeCtrl(1) }

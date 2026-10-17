@@ -85,7 +85,7 @@ class EvService(b: IBinder) : RemoteService(b, "com.saicmotor.carapi.ev.ICarEvSe
     fun disChargeCtrl(v: Int) = voidInt(8, v)
 }
 
-/** Réglages véhicule (queryClient 8), lecture seule dans MG4Dash. */
+/** Réglages véhicule (queryClient 8). Seules la régénération et la conduite à une pédale sont modifiées. */
 class VehicleSettingService(b: IBinder) : RemoteService(b, "com.saicmotor.carapi.vs.ICarVehicleSettingService") {
     val fcwState get() = int(20)
     val fcwAutoBrakeMode get() = int(22)
@@ -98,6 +98,11 @@ class VehicleSettingService(b: IBinder) : RemoteService(b, "com.saicmotor.carapi
     val enduranceMode get() = int(166)
     val overSpeedSoundMode get() = int(180)
     val speedLimitSoundMode get() = int(182)
+
+    /** 0 faible, 1 moyen, 2 fort, 3 adaptatif. */
+    fun setRegenerativeLevel(v: Int) = voidInt(159, v)
+    /** Conduite à une pédale : 1 = oui, 0 = non. */
+    fun setSignalPedalState(v: Int) = voidInt(162, v)
 }
 
 /** Informations générales (queryClient 1). */

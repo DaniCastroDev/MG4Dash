@@ -26,6 +26,11 @@ object CarProps {
     const val V2X_SP_SOC = 557904943             // seuil d'arrêt V2L : code 1..7 = 20..80 %
     const val V2X = 557904944                    // décharge V2L en cours : 1
     const val DRVNG_PTC_HEAT = 557904937         // réchauffage batterie : écriture 1 = activer, 2 = désactiver ; lecture 0 = activé, 1 = désactivé (relevé sur la voiture le 2026-10-15)
+    const val BMS_CHRG_SP_RSN = 557904917        // motif d'arrêt de charge : 1 défaut, 2 surchauffe, 3 prise, 4 tension, 5 autre
+    const val SPR_CHRG = 557904916               // « SPR_CHRG » : rôle inconnu, test caché dans les réglages
+    const val ONBD_CHRG_AC_CRNT = 560002108      // chargeur embarqué : courant d'entrée AC (A)
+    const val ONBD_CHRG_AC_VOL = 560002109       // chargeur embarqué : tension d'entrée AC (V)
+    const val REGEN_RNG_AFT_CHRG = 559980964     // autonomie récupérée au freinage depuis la recharge (km)
     const val BMS_PACK_VOL = 560002054           // tension batterie (V, float)
     const val BMS_PACK_CRNT = 560002055          // courant batterie (A, float)
     const val ELEC_CSUMP_PERKM = 560002077       // conso récente (kWh/100 km, float)
@@ -184,6 +189,8 @@ object CarProps {
         mock[RESER_SP_HOUR] = 6; mock[RESER_SP_MIN] = 0; mock[ALTNG_CHRG_CRNT] = 4; mock[V2X_SP_SOC] = 3; mock[V2X] = 0; mock[DRVNG_PTC_HEAT] = 0
         mock[BMS_PACK_VOL] = 352.4f; mock[BMS_PACK_CRNT] = 35.2f; mock[ELEC_CSUMP_PERKM] = 15.6f
         mock[CONS_TOTAL_AFT_CHRG] = 18.4f; mock[CONS_ATC_AFT_CHRG] = 2.1f; mock[CONS_ACCRY_AFT_CHRG] = 0.9f; mock[CONS_RGEN_AFT_CHRG] = 3.2f
+        mock[REGEN_RNG_AFT_CHRG] = 50.9f; mock[BMS_CHRG_SP_RSN] = 0
+        listOf(252, 248, 272, 276).forEachIndexed { i, v -> mock[0x21401553 + i] = v; mock[0x2140155b + i] = 21 + i % 2; mock[0x21401557 + i] = 0 }
         mock[CONS_TOTAL_AFT_ST] = 3.6f; mock[CONS_ATC_AFT_ST] = 0.5f; mock[CONS_ACCRY_AFT_ST] = 0.2f; mock[CONS_RGEN_AFT_ST] = 0.7f
     }
 

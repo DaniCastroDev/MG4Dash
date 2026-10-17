@@ -323,3 +323,17 @@ st_map_vdock|Vertical bar on the left (all screens and Radio Dash): %1$s|Barre v
 st_map_titles|Hide widget titles (all layouts): %1$s|Masquer les titres des widgets (tous les styles) : %1$s|Widget-Titel ausblenden (alle Layouts): %1$s|Ocultar los títulos de los widgets (todos los estilos): %1$s|Nascondi i titoli dei widget (tutti gli stili): %1$s|Widgettitels verbergen (alle stijlen): %1$s
 st_map_vdock_btn|Vertical bar|Barre verticale|Senkrechte Leiste|Barra vertical|Barra verticale|Verticale balk
 st_map_titles_btn|Titles|Titres|Titel|Títulos|Titoli|Titels
+vh_tires|TIRES|PNEUS|REIFEN|NEUMÁTICOS|PNEUMATICI|BANDEN
+vh_tire_fl|Front left|Avant gauche|Vorne links|Delantero izq.|Anteriore sx|Linksvoor
+vh_tire_fr|Front right|Avant droit|Vorne rechts|Delantero der.|Anteriore dx|Rechtsvoor
+vh_tire_rl|Rear left|Arrière gauche|Hinten links|Trasero izq.|Posteriore sx|Linksachter
+vh_tire_rr|Rear right|Arrière droit|Hinten rechts|Trasero der.|Posteriore dx|Rechtsachter
+vh_tire_check|Check|À vérifier|Prüfen|Revisar|Controllare|Controleren
+en_ac_input|AC input %1$d V · %2$s A|Entrée AC %1$d V · %2$s A|AC-Eingang %1$d V · %2$s A|Entrada CA %1$d V · %2$s A|Ingresso CA %1$d V · %2$s A|AC-ingang %1$d V · %2$s A
+en_stop_reason|charge stopped: %1$s|charge arrêtée : %1$s|Laden gestoppt: %1$s|carga detenida: %1$s|ricarica interrotta: %1$s|laden gestopt: %1$s
+sr_fault|fault|défaut|Störung|avería|guasto|storing
+sr_overtemp|over-temperature|surchauffe|Übertemperatur|sobretemperatura|surriscaldamento|oververhitting
+sr_plug|plug not properly connected|prise mal branchée|Stecker nicht richtig verbunden|conector mal conectado|presa non collegata bene|stekker niet goed aangesloten
+sr_voltage|voltage mismatch|tension incompatible|Spannung passt nicht|tensión incompatible|tensione incompatibile|spanning past niet
+sr_other|other cause|autre cause|andere Ursache|otra causa|altra causa|andere oorzaak
+en_regen_km|+ %1$s km of range recovered since the last charge|+ %1$s km d'autonomie récupérés depuis la recharge|+ %1$s km Reichweite seit dem Laden zurückgewonnen|+ %1$s km de autonomía recuperados desde la carga|+ %1$s km di autonomia recuperati dalla ricarica|+ %1$s km bereik teruggewonnen sinds het laden

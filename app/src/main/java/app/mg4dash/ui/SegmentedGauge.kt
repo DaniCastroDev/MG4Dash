@@ -24,6 +24,27 @@ class SegmentedGauge @JvmOverloads constructor(
     var onColor: Int = app.mg4dash.ui.Themes.color(context, R.color.accent_cold)
         set(v) { field = v; invalidate() }
 
+    /** Toucher une case : son index 0..segments-1 (null = jauge non tactile). */
+    var onSegmentTap: ((Int) -> Unit)? = null
+    var onLongTap: (() -> Unit)? = null
+
+    private val gestures = android.view.GestureDetector(context, object : android.view.GestureDetector.SimpleOnGestureListener() {
+        override fun onDown(e: android.view.MotionEvent) = true
+        override fun onSingleTapUp(e: android.view.MotionEvent): Boolean {
+            val w = (width - paddingLeft - paddingRight).coerceAtLeast(1)
+            val i = ((e.x - paddingLeft) / w * segments).toInt().coerceIn(0, segments - 1)
+            onSegmentTap?.invoke(i)
+            return true
+        }
+        override fun onLongPress(e: android.view.MotionEvent) { onLongTap?.invoke() }
+    })
+
+    override fun onTouchEvent(event: android.view.MotionEvent): Boolean {
+        if (onSegmentTap == null) return super.onTouchEvent(event)
+        parent?.requestDisallowInterceptTouchEvent(event.actionMasked == android.view.MotionEvent.ACTION_DOWN)
+        return gestures.onTouchEvent(event)
+    }
+
     private val offColor = app.mg4dash.ui.Themes.color(context, R.color.gauge_off)
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val rect = RectF()

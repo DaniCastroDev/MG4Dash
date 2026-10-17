@@ -229,6 +229,7 @@ class SettingsActivity : AppCompatActivity() {
         // ── Diagnostic : compatibilité, journal, enregistreur ──
         val diag = panel(right, getString(R.string.st_diag))
         text(diag, getString(R.string.st_compat_fw, app.mg4dash.system.Firmware.version, app.mg4dash.system.Firmware.gen.name), 18f, R.color.text_value)
+            .apply { setOnLongClickListener { sprChrgTest(); true } }   // test caché, réservé aux essais
         text(diag, getString(if (app.mg4dash.system.Firmware.tested) R.string.st_compat_tested else R.string.st_compat_beta), 16f, R.color.text_title)
         row(diag,
             button(getString(R.string.st_compat_run)) { Thread { app.mg4dash.car.CarProps.dumpAll() }.start(); Compat.show(this) },
@@ -242,6 +243,43 @@ class SettingsActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         Fullscreen.apply(this)
+    }
+
+    /**
+     * Test caché de la propriété BMS « SPR_CHRG » (rôle inconnu, peut-être une charge rapide) :
+     * lecture, écriture d'une valeur choisie, relecture 2 s plus tard. Tout est noté dans le journal.
+     */
+    private fun sprChrgTest() {
+        val P = app.mg4dash.car.CarProps
+        val view = TextView(this).apply { setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f); setTextColor(color(R.color.text_value)); setPadding(dp(24), dp(12), dp(24), dp(8)) }
+        fun show() {
+            lifecycleScope.launch {
+                val v = withContext(Dispatchers.IO) { P.getInt(P.SPR_CHRG) }
+                val s = app.mg4dash.car.CarBridge.state.value
+                view.text = "SPR_CHRG (0x${Integer.toHexString(P.SPR_CHRG)}) = ${v ?: "illisible"}\n" +
+                    "Charge : ${app.mg4dash.car.VehicleState.chargeStatusLabel(s.chargeStatus)}\n" +
+                    "Motif d'arrêt BMS : ${withContext(Dispatchers.IO) { P.getInt(P.BMS_CHRG_SP_RSN) } ?: "—"}"
+                Log.i("SPR", "lecture SPR_CHRG = $v")
+            }
+        }
+        fun write(value: Int) {
+            lifecycleScope.launch {
+                val ok = withContext(Dispatchers.IO) { P.setInt(P.SPR_CHRG, value, "SPR_CHRG") }
+                view.text = "Écriture $value → ${if (ok) "envoyée" else "refusée"}, relecture…"
+                kotlinx.coroutines.delay(2_000); show()
+            }
+        }
+        show()
+        val d = AlertDialog.Builder(this)
+            .setTitle("Test SPR_CHRG")
+            .setView(view)
+            .setNeutralButton("Relire", null)
+            .setNegativeButton("Écrire 0", null)
+            .setPositiveButton("Écrire 1", null)
+            .show()
+        d.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener { show() }
+        d.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener { write(0) }
+        d.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener { write(1) }
     }
 
     private fun confirmReplace() {

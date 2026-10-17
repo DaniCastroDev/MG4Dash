@@ -330,7 +330,9 @@
                     <app.mg4dash.ui.SegmentedGauge
                         android:id="@+id/kersGauge"
                         android:layout_width="0dp"
-                        android:layout_height="12dp"
+                        android:layout_height="34dp"
+                        android:paddingTop="11dp"
+                        android:paddingBottom="11dp"
                         android:layout_marginLeft="10dp"
                         android:layout_weight="1" />
 

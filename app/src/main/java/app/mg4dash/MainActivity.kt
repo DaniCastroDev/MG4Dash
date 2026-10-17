@@ -76,6 +76,9 @@ class MainActivity : AppCompatActivity() {
         b.batteryGauge.segments = 20
         b.kersGauge.segments = 4
         b.kersGauge.onColor = color(R.color.accent_energy)
+        // Toucher une case = niveau de régénération ; appui long = conduite à une pédale
+        b.kersGauge.onSegmentTap = { CarBridge.setRegenLevel(it) }
+        b.kersGauge.onLongTap = { CarBridge.toggleOnePedal() }
         if (prefs.homeStyle == 2) applyMapLayout()
         // Balayage vertical (issue #6) : carte musique = source suivante / précédente ;
         // widget du bas (style Complet) = page suivante / précédente
