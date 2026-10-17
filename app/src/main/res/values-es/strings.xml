@@ -320,7 +320,7 @@
     <string name="st_soh">Salud de la batería (estimada): %1$d %% en 30 días, %2$d %% desde la primera medición (%3$d mediciones, frente a una batería nueva de %4$d kWh).</string>
     <string name="st_soh_none">Salud de la batería: se mide a partir de la próxima carga (hace falta un 15 %% de descenso), frente a una batería nueva de %1$d kWh. Elija su modelo:</string>
     <string name="sw_batt_temp">Batería %1$d °C</string>
-    <string name="st_map_vdock">Estilo Mapa: barra vertical a la izquierda: %1$s</string>
+    <string name="st_map_vdock">Barra vertical a la izquierda (todas las pantallas y Radio Dash): %1$s</string>
     <string name="st_map_titles">Estilo Mapa: ocultar los títulos: %1$s</string>
     <string name="st_map_vdock_btn">Barra vertical</string>
     <string name="st_map_titles_btn">Títulos</string>

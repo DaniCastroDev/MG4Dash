@@ -166,6 +166,24 @@ class ScreenshotTest {
         shoot(MainActivity::class.java, "home_map_layout_consumption.png")
     }
 
+    @Test fun homeVerticalFull() {
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
+            .putBoolean("vertical_dock", true).apply()
+        shoot(MainActivity::class.java, "home_vertical_full.png")
+    }
+
+    @Test fun homeVerticalSimple() {
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
+            .putBoolean("vertical_dock", true).putInt("home_style", 1).apply()
+        shoot(MainActivity::class.java, "home_vertical_simple.png")
+    }
+
+    @Test fun energyVertical() {
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
+            .putBoolean("vertical_dock", true).apply()
+        shoot(app.mg4dash.pages.EnergyActivity::class.java, "energy_vertical.png")
+    }
+
     @Test fun homeWidgetPower() {
         org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit().putInt("secondary_widget", 1).apply()
         shoot(MainActivity::class.java, "home_widget_power.png")

@@ -20,6 +20,7 @@ abstract class PageActivity : AppCompatActivity() {
     protected lateinit var header: LinearLayout
     protected lateinit var body: LinearLayout
     private var themeSig = 0
+    private var builtVertical = false
 
     /** Mode auto : bascule jour / nuit (feux) pendant que la page est ouverte. */
     private val themeWatch = object : Runnable {
@@ -50,7 +51,8 @@ abstract class PageActivity : AppCompatActivity() {
         }
         header = kit.row()
         // Coin haut-gauche laissé libre : MG y superpose le bouton des antibrouillards.
-        header.addView(android.view.View(this), kit.lp(kit.dp(Kit.FOG_SAFE_DP), 1))
+        // (avec la barre verticale, le bouton se pose sur la barre : pas de place à laisser)
+        header.addView(android.view.View(this), kit.lp(if (Dock.vertical(this)) kit.dp(4) else kit.dp(Kit.FOG_SAFE_DP), 1))
         // Hauteur fixe : l'en-tête garde la même taille sur toutes les pages.
         val title = kit.title(pageTitle).apply { textSize = 20f; gravity = android.view.Gravity.CENTER_VERTICAL }
         header.addView(title, kit.lp(0, kit.dp(52), 1f, l = 8))
@@ -60,7 +62,8 @@ abstract class PageActivity : AppCompatActivity() {
         // Même dock qu'à l'accueil : on passe d'une page à l'autre directement.
         val dock = LinearLayout(this)   // apparence fixée par Dock.build(), comme sur l'accueil
         root.addView(dock, kit.lp(-1, kit.dp(84), t = 12))
-        Dock.build(this, dock, page)
+        Dock.mount(this, root, dock, page)
+        builtVertical = Dock.vertical(this)
         setContentView(root)
         buildBody()
         lifecycleScope.launch {
@@ -70,7 +73,7 @@ abstract class PageActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        if (Themes.signature(this) != themeSig) { recreate(); return }
+        if (Themes.signature(this) != themeSig || Dock.vertical(this) != builtVertical) { recreate(); return }
         CarBridge.setForeground(true)
         body.postDelayed(themeWatch, 5000)
         Fullscreen.apply(this)

@@ -320,7 +320,7 @@
     <string name="st_soh">Batterijgezondheid (geschat): %1$d %% over 30 dagen, %2$d %% sinds de eerste meting (%3$d metingen, vergeleken met een nieuwe %4$d kWh-batterij).</string>
     <string name="st_soh_none">Batterijgezondheid: gemeten vanaf de volgende laadbeurt (15 %% daling nodig), vergeleken met een nieuwe %1$d kWh-batterij. Kies uw model:</string>
     <string name="sw_batt_temp">Batterij %1$d °C</string>
-    <string name="st_map_vdock">Stijl Kaart: verticale balk links: %1$s</string>
+    <string name="st_map_vdock">Verticale balk links (alle schermen en Radio Dash): %1$s</string>
     <string name="st_map_titles">Stijl Kaart: widgettitels verbergen: %1$s</string>
     <string name="st_map_vdock_btn">Verticale balk</string>
     <string name="st_map_titles_btn">Titels</string>

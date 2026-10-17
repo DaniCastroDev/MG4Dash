@@ -231,7 +231,7 @@ class SettingsActivity : AppCompatActivity() {
         }
         showMapOpts()
         row(style,
-            button(getString(R.string.st_map_vdock_btn)) { prefs.verticalDock = !prefs.verticalDock; showMapOpts() },
+            button(getString(R.string.st_map_vdock_btn)) { prefs.verticalDock = !prefs.verticalDock; app.mg4dash.ui.Themes.publish(this); showMapOpts() },
             button(getString(R.string.st_map_titles_btn)) { prefs.hideTitles = !prefs.hideTitles; showMapOpts() },
         )
         val stackState = text(style, "", 18f, R.color.text_value)

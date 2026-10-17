@@ -154,8 +154,30 @@ object Dock {
     private fun pkgIcon(activity: Activity, pkg: String): android.graphics.drawable.Drawable? =
         try { activity.packageManager.getApplicationIcon(pkg) } catch (_: Exception) { null }
 
+    /** Barre verticale à gauche choisie dans les réglages (tous les écrans). */
+    fun vertical(context: android.content.Context): Boolean = Prefs(context).verticalDock
+
     /**
-     * Barre verticale à gauche (style Carte, option ; issue #6) : icônes seules, sous le bouton
+     * Pose le dock d'un écran : en bas (dock horizontal) ou, si l'option est choisie, en barre
+     * verticale à gauche. [root] est la colonne de l'écran, [dock] son dernier enfant.
+     * En vertical, tous les autres enfants passent dans une colonne à droite de la barre.
+     */
+    fun mount(activity: Activity, root: LinearLayout, dock: LinearLayout, current: Page, simple: Boolean = false) {
+        if (!vertical(activity)) { build(activity, dock, current, simple); return }
+        val kit = Kit(activity)
+        val children = (0 until root.childCount).map { root.getChildAt(it) }.filter { it !== dock }
+        root.removeAllViews()
+        root.orientation = LinearLayout.HORIZONTAL
+        val bar = LinearLayout(activity)
+        root.addView(bar, LinearLayout.LayoutParams(kit.dp(64), LinearLayout.LayoutParams.MATCH_PARENT))
+        val content = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
+        children.forEach { content.addView(it) }   // chaque enfant garde ses paramètres (poids, marges)
+        root.addView(content, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f).apply { leftMargin = kit.dp(12) })
+        buildVertical(activity, bar, current)
+    }
+
+    /**
+     * Barre verticale à gauche (option ; issue #6) : icônes seules, sous le bouton
      * antibrouillards de MG qui se superpose en haut à gauche et semble ainsi en faire partie.
      * Ordre : Réglages, Android Auto / CarPlay (en gris), Téléphone, Énergie, Véhicule, Accueil.
      * Réglages : toucher = réglages de la voiture, appui long = réglages du launcher,

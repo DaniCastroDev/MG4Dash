@@ -62,6 +62,7 @@ class MainActivity : AppCompatActivity() {
         if (prefs.homeStyle == 1) {
             // Accueil épuré : même activité HOME, autre contenu
             simpleMode = true
+            builtVertical = Dock.vertical(this)
             val sh = SimpleHome(this)
             simple = sh
             setContentView(sh.root)
@@ -150,26 +151,8 @@ class MainActivity : AppCompatActivity() {
             .filter { it is TextView && it.text?.toString() == getString(R.string.title_position) }
             .forEach { b.mapCard.removeView(it) }   // retiré : applyHomeWidget réaffiche les enfants de la carte
         ((b.mapSpeed.parent as View).layoutParams as android.widget.FrameLayout.LayoutParams).gravity = Gravity.TOP or Gravity.START
-        // Barre verticale à gauche (option) : le bouton antibrouillards se pose sur elle, la météo n'a
-        // plus besoin de lui laisser de place.
-        if (prefs.verticalDock) {
-            val row = left.parent as LinearLayout
-            val root = row.parent as LinearLayout
-            val idx = root.indexOfChild(row)
-            val rowLp = row.layoutParams as LinearLayout.LayoutParams
-            root.removeView(row)
-            val holder = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-            val bar = LinearLayout(this)
-            holder.addView(bar, LinearLayout.LayoutParams((64 * resources.displayMetrics.density).toInt(), -1))
-            holder.addView(row, LinearLayout.LayoutParams(0, -1, 1f).apply { leftMargin = gap })
-            root.addView(holder, idx, LinearLayout.LayoutParams(-1, 0, 1f))
-            rowLp.bottomMargin = 0
-            b.dock.visibility = View.GONE
-            verticalBar = bar
-            ((b.weatherPlace.parent as LinearLayout).getChildAt(0).layoutParams as LinearLayout.LayoutParams).leftMargin = 0
-        }
         val wc = app.mg4dash.ui.WeatherCompact(this) { flipWeather(1) }
-        wc.getChildAt(0).setPadding(if (prefs.verticalDock) 0 else fogSafe, 0, 0, 0)
+        wc.getChildAt(0).setPadding(if (Dock.vertical(this)) 0 else fogSafe, 0, 0, 0)
         b.weatherCard.removeAllViews()
         b.weatherCard.addView(wc, LinearLayout.LayoutParams(-1, -1))
         weatherCompact = wc
@@ -183,7 +166,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private var verticalBar: LinearLayout? = null
+
 
 
     private var lastPlugged: Boolean? = null
@@ -252,7 +235,8 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         CarBridge.setForeground(true)
         // Style d'accueil changé dans les paramètres : on reconstruit l'écran
-        if ((prefs.homeStyle == 1) != simpleMode || (prefs.homeStyle == 2) != mapLayout || app.mg4dash.ui.Themes.signature(this) != themeSig) { recreate(); return }
+        if ((prefs.homeStyle == 1) != simpleMode || (prefs.homeStyle == 2) != mapLayout || Dock.vertical(this) != builtVertical ||
+            app.mg4dash.ui.Themes.signature(this) != themeSig) { recreate(); return }
         if (simpleMode) { simple?.onResume(); Fullscreen.apply(this); return }
         mapCard.onResume()
         if (prefs.homeWidget == 1) renderShortcuts()
@@ -303,9 +287,20 @@ class MainActivity : AppCompatActivity() {
     // ── Dock ─────────────────────────────────────────────────────────────────
 
     private fun buildDock() {
-        Dock.build(this, b.dock, Dock.Page.HOME)
-        verticalBar?.let { Dock.buildVertical(this, it, Dock.Page.HOME) }
+        // Barre verticale (option, tous les écrans) : le bouton antibrouillards se pose sur elle,
+        // les widgets du haut à gauche n'ont plus à lui laisser de place.
+        if (Dock.vertical(this)) {
+            ((b.climateCard.parent as View).parent as View).let { row ->
+                (row.layoutParams as LinearLayout.LayoutParams).bottomMargin = 0
+            }
+            ((b.climateCard.getChildAt(0) as LinearLayout).getChildAt(0).layoutParams as LinearLayout.LayoutParams).leftMargin = 0
+            ((b.weatherPlace.parent as LinearLayout).getChildAt(0).layoutParams as LinearLayout.LayoutParams).leftMargin = 0
+        }
+        Dock.mount(this, b.root as LinearLayout, b.dock, Dock.Page.HOME)
+        builtVertical = Dock.vertical(this)
     }
+
+    private var builtVertical = false
 
 
     // ── Clim ─────────────────────────────────────────────────────────────────

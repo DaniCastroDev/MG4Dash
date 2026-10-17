@@ -86,7 +86,7 @@ class SimpleHome(private val a: AppCompatActivity) {
 
         val dock = LinearLayout(a)
         root.addView(dock, kit.lp(-1, kit.dp(96), t = 12))
-        Dock.build(a, dock, Dock.Page.HOME, simple = true)
+        Dock.mount(a, root, dock, Dock.Page.HOME, simple = true)
     }
 
     fun start() {
@@ -114,7 +114,7 @@ class SimpleHome(private val a: AppCompatActivity) {
         climateCard = kit.panel()
         val head = kit.row()
         // Coin haut-gauche libre pour le bouton des antibrouillards
-        head.addView(title(a.getString(R.string.title_climate)), kit.lp(0, -2, 1f, l = Kit.FOG_SAFE_DP - 20))
+        head.addView(title(a.getString(R.string.title_climate)), kit.lp(0, -2, 1f, l = if (Dock.vertical(a)) 0 else Kit.FOG_SAFE_DP - 20))
         outside = kit.text("", 20f, R.color.text_sub)
         head.addView(outside, kit.lp(-2, -2, r = 12))
         power = kit.roundButton(R.drawable.ic_power, 64) { CarBridge.togglePower() }
