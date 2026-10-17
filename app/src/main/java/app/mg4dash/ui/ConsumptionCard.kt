@@ -31,7 +31,9 @@ class ConsumptionCard(context: Context) : LinearLayout(context) {
     init {
         orientation = VERTICAL
         setPadding((20 * d).toInt(), (16 * d).toInt(), (20 * d).toInt(), (16 * d).toInt())
-        addView(tv(17f, R.color.text_title).apply { text = context.getString(R.string.en_consumption); letterSpacing = 0.12f })
+        // Titre masqué avec l'option « Masquer les titres » (la place reste, pour ne rien décaler)
+        addView(tv(17f, R.color.text_title).apply { text = context.getString(R.string.en_consumption); letterSpacing = 0.12f
+            if (app.mg4dash.system.Prefs(context).hideTitles) visibility = INVISIBLE })
         addView(tv(16f, R.color.text_sub).apply { text = context.getString(R.string.en_since_charge) })
         addView(total)
         addView(bar, LayoutParams(LayoutParams.MATCH_PARENT, (22 * d).toInt()).apply { topMargin = (6 * d).toInt() })

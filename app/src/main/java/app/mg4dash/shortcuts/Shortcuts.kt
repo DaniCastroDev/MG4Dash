@@ -73,7 +73,9 @@ object Shortcuts {
         val prefs = Prefs(activity)
         holder.removeAllViews()
         val head = kit.row()
-        head.addView(kit.title(activity.getString(R.string.title_shortcuts)), kit.lp(0, -2, 1f, l = Kit.FOG_SAFE_DP - 20))
+        head.addView(kit.title(activity.getString(R.string.title_shortcuts)).apply {
+            if (app.mg4dash.system.Prefs(activity).hideTitles) visibility = android.view.View.INVISIBLE   // option « Masquer les titres »
+        }, kit.lp(0, -2, 1f, l = Kit.FOG_SAFE_DP - 20))
         holder.addView(head, kit.lp(-1, kit.dp(48)))
         val grid = kit.column()
         for (r in 0 until rows) {
