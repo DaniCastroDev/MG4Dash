@@ -38,13 +38,13 @@ The map widget also has a **consumption** page and **3 rows of shortcuts** (butt
 
 ### Vertical bar
 ![Vertical bar](docs/screenshots/home_map_layout_vertical.png?v=13)
-Settings › Home layout › *Vertical bar on the left*: the dock becomes an icon bar on the left, with the space at the top for the MG fog light button. Settings (tap: car settings, long press: launcher settings, double tap: Wi-Fi), Android Auto / CarPlay, phone, energy, vehicle and home. It applies at once to every home layout, every page and to Radio Dash.
+Settings › Home layout › *Vertical bar on the left*: the dock becomes an icon bar on the left, with the space at the top for the MG fog light button. Settings (tap: launcher settings, long press: car settings, double tap: Wi-Fi), Android Auto / CarPlay, phone, energy, vehicle and home. It applies at once to every home layout, every page and to Radio Dash.
 
 | | |
 |---|---|
 | ![Vertical bar, full layout](docs/screenshots/home_vertical_full.png?v=13) | ![Vertical bar, energy page](docs/screenshots/energy_vertical.png?v=13) |
 
-*Hide widget titles* (same settings) removes the card titles on every layout for a calmer screen.
+Card titles are left out on every layout for a calmer screen; the media card keeps its source name, which opens the source menu.
 
 ### Turn-by-turn on the map
 ![Navigation banner](docs/screenshots/home_map_layout_nav.png?v=13)
@@ -162,13 +162,13 @@ adb shell rm /data/local/tmp/x.apk
 ```
 
 1. Try it without changing the home screen: `adb shell am start -n app.mg4dash/.MainActivity`
-2. Make it the home screen: long press "Settings" in the dock > "Replace SAIC home". This only disables the SAIC home activity, whose HOME priority of 2 cannot be beaten otherwise.
+2. Make it the home screen: tap "Settings" in the dock > "Replace SAIC home". This only disables the SAIC home activity, whose HOME priority of 2 cannot be beaten otherwise.
 
 The SAIC launcher package (`com.saicmotor.launcher`) is never disabled: its service handles the camera, audio sources and some SystemUI commands.
 
 ## Going back
 
-- Maintenance mode: long press "Settings" in the dock, then "Maintenance mode".
+- Maintenance mode: tap "Settings" in the dock, then "Maintenance mode".
 - If MG4Dash no longer starts after an update ("ClassNotFoundException" or "oat_file ... Check failed" in logcat), stop it, recompile it while it is stopped, then make it the home screen again:
   `adb shell am force-stop app.mg4dash`, `adb shell cmd package compile -m speed -f app.mg4dash`, `adb shell am force-stop app.mg4dash`, then `adb shell cmd package set-home-activity --user 0 app.mg4dash/.MainActivity`.
   Compiling while MG4Dash runs (it relaunches itself right after an install) corrupts its compiled code: always force-stop first.
@@ -177,7 +177,7 @@ The SAIC launcher package (`com.saicmotor.launcher`) is never disabled: its serv
 
 ## Gestures
 
-- Long press "Settings" in the dock (or in the vertical bar): launcher settings; double tap it in the vertical bar: Wi-Fi
+- "Settings" in the dock or the vertical bar: tap for the launcher settings, long press for the car settings; double tap it in the vertical bar: Wi-Fi
 - Long press "Home" in the dock: list of installed apps
 - Long press the clock in the dock: clock or Wi-Fi settings button
 - Long press "Android Auto" in the dock: Android Auto, CarPlay or another app

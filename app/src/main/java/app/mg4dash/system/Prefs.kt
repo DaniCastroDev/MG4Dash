@@ -29,9 +29,8 @@ class Prefs(context: Context) {
         get() = sp.getInt("consumption_period", 0)
         set(v) = sp.edit().putInt("consumption_period", v).apply()
 
-    var hideTitles: Boolean
-        get() = sp.getBoolean("hide_titles", false)
-        set(v) = sp.edit().putBoolean("hide_titles", v).apply()
+    /** Titres des widgets : toujours masqués (moins chargé, l'option a été retirée). */
+    val hideTitles: Boolean get() = true
 
     /** Météo du style Carte : 0 = prévisions par heure, 1 = par jour. */
     var weatherPage: Int

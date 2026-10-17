@@ -73,7 +73,6 @@ class SettingsActivity : AppCompatActivity() {
         row(style, *styleButtons(listOf(R.string.st_style_full, R.string.st_style_simple, R.string.st_style_map), { prefs.homeStyle }) { prefs.homeStyle = it })
         toggle(style, R.string.st_map_vdock, null, { prefs.verticalDock }) { prefs.verticalDock = it; app.mg4dash.ui.Themes.publish(this) }
         toggle(style, R.string.st_fullscreen, null, { prefs.fullscreen }) { prefs.fullscreen = it; Fullscreen.apply(this) }
-        toggle(style, R.string.st_map_titles, null, { prefs.hideTitles }) { prefs.hideTitles = it }
         toggle(style, R.string.st_stack_auto, null, { prefs.stackAuto }) { prefs.stackAuto = it }
 
         // ── Thème : fond et couleur des boutons ──

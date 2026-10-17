@@ -128,7 +128,7 @@ object Dock {
             when (item.label) {
                 R.string.dock_home -> cell.setOnLongClickListener { activity.startActivity(Intent(activity, AppsActivity::class.java)); true }
                 R.string.dock_aa -> cell.setOnLongClickListener { pickAaTarget(activity) { build(activity, dock, current, simple) }; true }
-                R.string.dock_settings -> cell.setOnLongClickListener { activity.startActivity(Intent(activity, SettingsActivity::class.java)); true }
+                R.string.dock_settings -> cell.setOnLongClickListener { Apps.open(activity, Apps.SETTINGS, activity.getString(R.string.dock_settings)); true }
             }
             dock.addView(cell, LinearLayout.LayoutParams(0, -1, 1f).apply { if (index >= 0) leftMargin = kit.dp(6) })
         }
@@ -163,7 +163,7 @@ object Dock {
      * Barre verticale à gauche (option ; issue #6) : icônes seules, sous le bouton
      * antibrouillards de MG qui se superpose en haut à gauche et semble ainsi en faire partie.
      * Ordre : Réglages, Android Auto / CarPlay (en gris), Téléphone, Énergie, Véhicule, Accueil.
-     * Réglages : toucher = réglages de la voiture, appui long = réglages du launcher,
+     * Réglages : toucher = réglages du launcher, appui long = réglages de la voiture,
      * double toucher = Wi-Fi.
      */
     fun buildVertical(activity: Activity, bar: LinearLayout, current: Page) {
@@ -215,7 +215,7 @@ object Dock {
                     val gd = android.view.GestureDetector(activity, object : android.view.GestureDetector.SimpleOnGestureListener() {
                         override fun onSingleTapConfirmed(e: android.view.MotionEvent): Boolean { open(activity, item, current); return true }
                         override fun onDoubleTap(e: android.view.MotionEvent): Boolean { openWifi(activity); return true }
-                        override fun onLongPress(e: android.view.MotionEvent) { activity.startActivity(Intent(activity, SettingsActivity::class.java)) }
+                        override fun onLongPress(e: android.view.MotionEvent) { Apps.open(activity, Apps.SETTINGS, activity.getString(R.string.dock_settings)) }
                         override fun onDown(e: android.view.MotionEvent) = true
                     })
                     cell.setOnTouchListener { v, ev -> v.isPressed = ev.actionMasked == android.view.MotionEvent.ACTION_DOWN; gd.onTouchEvent(ev) }
@@ -271,7 +271,8 @@ object Dock {
                 else Apps.open(activity, Apps.ANDROID_AUTO, activity.getString(R.string.dock_aa))
                 return
             }
-            R.string.dock_settings -> { Apps.open(activity, Apps.SETTINGS, activity.getString(R.string.dock_settings)); return }
+            // Toucher : réglages MG4Dash ; appui long : réglages de la voiture
+            R.string.dock_settings -> { activity.startActivity(Intent(activity, SettingsActivity::class.java)); return }
         }
         val page = item.page ?: return
         if (page == current) return
