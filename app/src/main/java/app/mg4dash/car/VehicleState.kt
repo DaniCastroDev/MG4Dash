@@ -62,6 +62,29 @@ data class VehicleState(
             return p?.let { String.format(java.util.Locale.getDefault(), "%.1f %%", it) } ?: s.batteryPercent?.let { "$it %" }
         }
 
+        /** Direction de l'air (échelle 0–6) en sorties actives : visage, pieds, pare-brise. */
+        fun flowParts(d: Int?): BooleanArray? = when (d) {
+            0 -> booleanArrayOf(true, false, false)
+            1 -> booleanArrayOf(true, true, false)
+            2 -> booleanArrayOf(false, true, false)
+            3 -> booleanArrayOf(false, true, true)
+            4 -> booleanArrayOf(false, false, true)
+            5 -> booleanArrayOf(true, true, true)
+            6 -> booleanArrayOf(true, false, true)
+            else -> null
+        }
+
+        fun flowDirection(p: BooleanArray): Int? = when {
+            p[0] && p[1] && p[2] -> 5
+            p[0] && p[2] -> 6
+            p[0] && p[1] -> 1
+            p[1] && p[2] -> 3
+            p[0] -> 0
+            p[1] -> 2
+            p[2] -> 4
+            else -> null
+        }
+
         const val FAN_MIN = 1
         const val FAN_MAX = 11
 

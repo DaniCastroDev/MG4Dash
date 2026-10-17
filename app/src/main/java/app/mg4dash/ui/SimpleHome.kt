@@ -57,9 +57,6 @@ class SimpleHome(private val a: AppCompatActivity) {
     private lateinit var mediaArtist: TextView
     private lateinit var mediaArt: ImageView
     private lateinit var mediaPlay: ImageButton
-    private lateinit var srcRadio: TextView
-    private lateinit var srcMedia: TextView
-    private lateinit var srcAa: TextView
 
     private lateinit var weatherIcon: ImageView
     private lateinit var weatherTemp: TextView
@@ -114,35 +111,91 @@ class SimpleHome(private val a: AppCompatActivity) {
 
     private fun buildClimate(): LinearLayout {
         climateCard = kit.panel()
+        // Titre seul ; coin haut-gauche libre pour le bouton des antibrouillards (sauf barre verticale)
         val head = kit.row()
-        // Coin haut-gauche libre pour le bouton des antibrouillards
-        head.addView(title(a.getString(R.string.title_climate)).apply { if (hideTitles) visibility = View.INVISIBLE },
-            kit.lp(0, -2, 1f, l = if (Dock.vertical(a)) 0 else Kit.FOG_SAFE_DP - 20))
-        outside = kit.text("", 20f, R.color.text_sub)
-        head.addView(outside, kit.lp(-2, -2, r = 12))
-        power = kit.roundButton(R.drawable.ic_power, 64) { CarBridge.togglePower() }
-        head.addView(power)
-        climateCard.addView(head, kit.lp(-1, -2))
+        head.addView(title(a.getString(R.string.title_climate)), kit.lp(0, -2, 1f, l = if (Dock.vertical(a)) 0 else Kit.FOG_SAFE_DP - 20))
+        climateCard.addView(head, kit.lp(-1, kit.dp(44)))
+        if (hideTitles) head.visibility = if (Dock.vertical(a)) View.GONE else View.INVISIBLE
 
+        // Température, avec la température extérieure en petit dessous
         val tRow = kit.row().apply { gravity = Gravity.CENTER }
-        tRow.addView(holdButton(R.drawable.ic_minus, 92, R.color.accent_cold) { CarBridge.stepTemp(-1) })
-        temp = big("—", 100f, light = true).apply { gravity = Gravity.CENTER }
-        tRow.addView(temp, kit.lp(0, -2, 1f))
-        tRow.addView(holdButton(R.drawable.ic_plus, 92, R.color.accent_heat) { CarBridge.stepTemp(1) })
+        tRow.addView(holdButton(R.drawable.ic_minus, 84, R.color.accent_cold) { CarBridge.stepTemp(-1) })
+        val tBox = kit.column().apply { gravity = Gravity.CENTER }
+        temp = big("—", 84f, light = true).apply { gravity = Gravity.CENTER; includeFontPadding = false }
+        outside = kit.text("", 18f, R.color.text_sub).apply { gravity = Gravity.CENTER }
+        tBox.addView(temp); tBox.addView(outside)
+        tRow.addView(tBox, kit.lp(0, -2, 1f))
+        tRow.addView(holdButton(R.drawable.ic_plus, 84, R.color.accent_heat) { CarBridge.stepTemp(1) })
         climateCard.addView(tRow, kit.lp(-1, 0, 1f))
 
+        // Ventilation : mêmes boutons que la température ; sous 1 = arrêt, appui long − = arrêt, + = maximum
         val fRow = kit.row().apply { gravity = Gravity.CENTER }
-        fRow.addView(kit.roundButton(R.drawable.ic_minus, 72) { CarBridge.stepFan(-1) })
+        fRow.addView(kit.roundButton(R.drawable.ic_minus, 84) {
+            val s = CarBridge.state.value
+            if (s.hvacOn == true && s.autoOn != true && (s.fanSpeed ?: 0) <= VehicleState.FAN_MIN) CarBridge.togglePower() else CarBridge.stepFan(-1)
+        }.apply { setOnLongClickListener { if (CarBridge.state.value.hvacOn == true) CarBridge.togglePower(); true } })
         val fanBox = kit.column().apply { gravity = Gravity.CENTER }
         fanBox.addView(kit.text(a.getString(R.string.cl_fan), 18f, R.color.text_title).apply { gravity = Gravity.CENTER })
         fanValue = big("—", 34f).apply { gravity = Gravity.CENTER }
         fanBox.addView(fanValue)
         fRow.addView(fanBox, kit.lp(0, -2, 1f))
-        fRow.addView(kit.roundButton(R.drawable.ic_plus, 72) { CarBridge.stepFan(1) })
+        fRow.addView(kit.roundButton(R.drawable.ic_plus, 84) { CarBridge.stepFan(1) }.apply {
+            setOnLongClickListener { CarBridge.stepFan(VehicleState.FAN_MAX - (CarBridge.state.value.fanSpeed ?: VehicleState.FAN_MIN)); true }
+        })
         climateCard.addView(fRow, kit.lp(-1, -2, t = 4))
+
+        // Bascules : marche, A/C, AUTO, ECO / pare-brise, visage, pieds, recyclage
+        val r1 = kit.row()
+        power = ImageButton(a).apply {
+            setImageResource(R.drawable.ic_power); setBackgroundResource(R.drawable.bg_chip)
+            scaleType = ImageView.ScaleType.FIT_CENTER; setPadding(kit.dp(12), kit.dp(12), kit.dp(12), kit.dp(12))
+            setOnClickListener { CarBridge.togglePower() }
+        }
+        chipAc = kit.toggleTile(a.getString(R.string.chip_ac)) { CarBridge.toggleAc() }
+        chipAuto = kit.toggleTile(a.getString(R.string.chip_auto)) { CarBridge.toggleAuto() }
+        chipEco = kit.toggleTile("ECO") { CarBridge.toggleEco() }
+        listOf<View>(power, chipAc, chipAuto, chipEco).forEachIndexed { i, v -> r1.addView(v, kit.lp(0, kit.dp(52), 1f, l = if (i > 0) 8 else 0)) }
+        climateCard.addView(r1, kit.lp(-1, -2, t = 10))
+        val r2 = kit.row()
+        chipScreen = iconChip(R.drawable.ic_flow_screen) { toggleFlow(2) }
+        chipFace = iconChip(R.drawable.ic_flow_face) { toggleFlow(0) }
+        chipFeet = iconChip(R.drawable.ic_flow_feet) { toggleFlow(1) }
+        chipRecirc = iconChip(R.drawable.ic_air_outside) { CarBridge.toggleRecirc() }
+        recircAuto = TextView(a).apply {
+            text = "A"; setTextColor(kit.color(R.color.accent_action)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); visibility = View.GONE
+        }
+        chipRecirc.addView(recircAuto, android.widget.FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.END).apply { rightMargin = kit.dp(8) })
+        listOf<View>(chipScreen, chipFace, chipFeet, chipRecirc).forEachIndexed { i, v -> r2.addView(v, kit.lp(0, kit.dp(52), 1f, l = if (i > 0) 8 else 0)) }
+        climateCard.addView(r2, kit.lp(-1, -2, t = 8))
 
         temp.setOnClickListener { a.startActivity(Intent(a, ClimateActivity::class.java)) }
         return climateCard
+    }
+
+    private lateinit var chipAc: TextView
+    private lateinit var chipAuto: TextView
+    private lateinit var chipEco: TextView
+    private lateinit var chipScreen: android.widget.FrameLayout
+    private lateinit var chipFace: android.widget.FrameLayout
+    private lateinit var chipFeet: android.widget.FrameLayout
+    private lateinit var chipRecirc: android.widget.FrameLayout
+    private lateinit var recircAuto: TextView
+
+    /** Bascule à icône (même fond que les autres bascules ; l'icône suit l'état sélectionné). */
+    private fun iconChip(icon: Int, onClick: () -> Unit) = android.widget.FrameLayout(a).apply {
+        setBackgroundResource(R.drawable.bg_chip); isClickable = true; isFocusable = true
+        addView(ImageView(a).apply {
+            setImageResource(icon); isDuplicateParentStateEnabled = true
+            imageTintList = androidx.core.content.ContextCompat.getColorStateList(a, R.color.chip_text)
+        }, android.widget.FrameLayout.LayoutParams(kit.dp(36), kit.dp(36), Gravity.CENTER))
+        setOnClickListener { onClick() }
+    }
+
+    /** Pare-brise, visage et pieds se combinent ; au moins une sortie reste active. */
+    private fun toggleFlow(i: Int) {
+        val parts = VehicleState.flowParts(CarBridge.state.value.fanDirection)?.copyOf() ?: booleanArrayOf(false, false, false)
+        parts[i] = !parts[i]
+        VehicleState.flowDirection(parts)?.let { CarBridge.setFanDirection(it) }
     }
 
     private fun buildBattery(): LinearLayout {
@@ -166,16 +219,11 @@ class SimpleHome(private val a: AppCompatActivity) {
 
     private fun buildMedia(): LinearLayout {
         val p = kit.panel()
-        mediaSource = title(a.getString(R.string.title_media)).apply { if (hideTitles) visibility = View.INVISIBLE }
+        // Source active en haut à gauche (« Radio ▾ ») : un toucher ouvre la liste des sources
+        mediaSource = title(a.getString(R.string.title_media)).apply { SourceMenu.attach(a, this) }
         // Puces de source : elles basculent la source affichée (sans ouvrir l'appli)
         val head = kit.row()
         head.addView(mediaSource, kit.lp(0, -2, 1f))
-        srcRadio = kit.toggleTile(a.getString(R.string.src_radio)) { MediaHub.select("com.saicmotor.radio") }.apply { textSize = 18f }
-        srcMedia = kit.toggleTile(a.getString(R.string.src_media)) { MediaHub.selectUsbBt() }.apply { textSize = 18f }
-        head.addView(srcRadio, kit.lp(kit.dp(110), kit.dp(48)))
-        head.addView(srcMedia, kit.lp(kit.dp(130), kit.dp(48), l = 8))
-        srcAa = kit.toggleTile(a.getString(R.string.src_aa)) { MediaHub.selectAndroidAuto() }.apply { textSize = 18f; visibility = View.GONE }
-        head.addView(srcAa, kit.lp(kit.dp(80), kit.dp(48), l = 8))
         p.addView(head, kit.lp(-1, kit.dp(52)))
 
         val info = kit.row().apply { isClickable = true; isFocusable = true }
@@ -296,7 +344,19 @@ class SimpleHome(private val a: AppCompatActivity) {
         power.setColorFilter(kit.color(if (on) R.color.accent_energy else R.color.text_sub))
         temp.text = if (on || s.driverTemp != null) VehicleState.tempLabel(s.driverTemp) else a.getString(R.string.no_data)
         temp.setTextColor(kit.color(if (on) R.color.text_value else R.color.text_disabled))
-        outside.text = s.outsideTemp?.let { a.getString(R.string.outside_short, Math.round(it)) } ?: ""
+        outside.text = s.outsideTemp?.let { a.getString(R.string.cl_outside, Math.round(it)) } ?: ""
+        power.isSelected = on
+        chipAc.isSelected = s.acOn == true
+        chipAuto.isSelected = s.autoOn == true
+        chipEco.isSelected = s.ecoOn == true
+        val parts = VehicleState.flowParts(s.fanDirection)
+        chipFace.isSelected = parts?.get(0) == true
+        chipFeet.isSelected = parts?.get(1) == true
+        chipScreen.isSelected = parts?.get(2) == true
+        chipRecirc.isSelected = s.recirc == 2
+        (chipRecirc.getChildAt(0) as ImageView).setImageResource(if (s.recirc == 0) R.drawable.ic_air_recirc else R.drawable.ic_air_outside)
+        recircAuto.visibility = if (s.recirc == 2) View.VISIBLE else View.GONE
+        listOf<View>(power, chipAc, chipAuto, chipEco, chipScreen, chipFace, chipFeet, chipRecirc).forEach { it.isEnabled = known }
         val auto = on && s.autoOn == true
         fanValue.text = when { !on -> a.getString(R.string.off); auto -> "AUTO"; else -> s.fanSpeed?.toString() ?: "—" }
         fanValue.setTextColor(kit.color(if (auto) R.color.accent_cold else if (on) R.color.text_value else R.color.text_disabled))
@@ -348,18 +408,14 @@ class SimpleHome(private val a: AppCompatActivity) {
 
     private fun renderMedia(m: MediaHub.NowPlaying) {
         if (!m.available) {
-            mediaSource.text = a.getString(R.string.title_media)
+            mediaSource.text = a.getString(R.string.title_media) + "  ▾"
             mediaTitle.text = a.getString(R.string.no_media)
             mediaArtist.text = ""
         } else {
-            mediaSource.text = m.source.ifEmpty { a.getString(R.string.title_media) }
+            mediaSource.text = m.source.ifEmpty { a.getString(R.string.title_media) } + "  ▾"
             mediaTitle.text = m.title.ifEmpty { m.source }
             mediaArtist.text = listOf(m.artist, m.album).filter { it.isNotBlank() }.joinToString(" · ")
         }
-        srcRadio.isSelected = m.packageName == "com.saicmotor.radio"
-        srcMedia.isSelected = m.packageName == "com.saicmotor.media" || m.packageName == "com.android.bluetooth"
-        srcAa.isSelected = MediaHub.isAndroidAuto(m.packageName)
-        srcAa.visibility = if (m.androidAuto || srcAa.isSelected) View.VISIBLE else View.GONE
         mediaArt.setImageBitmap(m.art)
         mediaPlay.setImageResource(if (m.playing) R.drawable.ic_pause else R.drawable.ic_play)
         mediaPlay.isEnabled = m.available

@@ -343,9 +343,9 @@ class MainActivity : AppCompatActivity() {
         // Direction de l'air : pare-brise, visage et pieds se combinent (au moins une sortie reste active)
         listOf(b.chipFace to 0, b.chipFeet to 1, b.chipScreen to 2).forEach { (chip, i) ->
             chip.setOnClickListener {
-                val parts = flowParts(CarBridge.state.value.fanDirection)?.copyOf() ?: booleanArrayOf(false, false, false)
+                val parts = VehicleState.flowParts(CarBridge.state.value.fanDirection)?.copyOf() ?: booleanArrayOf(false, false, false)
                 parts[i] = !parts[i]
-                flowDirection(parts)?.let { CarBridge.setFanDirection(it) }
+                VehicleState.flowDirection(parts)?.let { CarBridge.setFanDirection(it) }
             }
         }
         b.temp.setOnClickListener { startActivity(Intent(this, ClimateActivity::class.java)) }
@@ -395,7 +395,7 @@ class MainActivity : AppCompatActivity() {
         b.chipRecircAuto.visibility = if (autoRecirc) View.VISIBLE else View.GONE
         // Direction de l'air ; en mode AUTO, c'est la voiture qui la choisit
         b.chipEco.isSelected = s.ecoOn == true
-        val parts = flowParts(s.fanDirection)
+        val parts = VehicleState.flowParts(s.fanDirection)
         b.chipFace.isSelected = parts?.get(0) == true
         b.chipFeet.isSelected = parts?.get(1) == true
         b.chipScreen.isSelected = parts?.get(2) == true
@@ -405,28 +405,6 @@ class MainActivity : AppCompatActivity() {
         b.climateCard.alpha = if (known) 1f else 0.6f
     }
 
-    /** Direction de l'air (échelle 0–6) en sorties actives : visage, pieds, pare-brise. */
-    private fun flowParts(d: Int?): BooleanArray? = when (d) {
-        0 -> booleanArrayOf(true, false, false)
-        1 -> booleanArrayOf(true, true, false)
-        2 -> booleanArrayOf(false, true, false)
-        3 -> booleanArrayOf(false, true, true)
-        4 -> booleanArrayOf(false, false, true)
-        5 -> booleanArrayOf(true, true, true)
-        6 -> booleanArrayOf(true, false, true)
-        else -> null
-    }
-
-    private fun flowDirection(p: BooleanArray): Int? = when {
-        p[0] && p[1] && p[2] -> 5
-        p[0] && p[2] -> 6
-        p[0] && p[1] -> 1
-        p[1] && p[2] -> 3
-        p[0] -> 0
-        p[1] -> 2
-        p[2] -> 4
-        else -> null
-    }
 
     /** Recyclage réellement actif (HVAC_RECIRC_ON), lu toutes les 5 s ; null si la voiture ne le fournit pas. */
     @Volatile private var actualRecirc: Boolean? = null
@@ -493,42 +471,11 @@ class MainActivity : AppCompatActivity() {
         // Les puces basculent la source affichée ; l'appli ne s'ouvre qu'en touchant la pochette / les infos.
         // Source en haut à gauche (« Radio ▾ ») : un toucher ouvre la liste des sources disponibles
         listOf(b.srcRadio, b.srcMedia, b.srcAa).forEach { it.visibility = View.GONE }
-        b.mediaSource.isClickable = true
-        b.mediaSource.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
-        b.mediaSource.setTextColor(color(R.color.text_value))
-        b.mediaSource.setPadding(0, (8 * resources.displayMetrics.density).toInt(), (24 * resources.displayMetrics.density).toInt(), (8 * resources.displayMetrics.density).toInt())
-        b.mediaSource.setOnClickListener { showSourceMenu(it) }
+        app.mg4dash.ui.SourceMenu.attach(this, b.mediaSource)
         b.mediaInfo.setOnClickListener {
             val owner = MediaHub.ownerComponent()
             if (owner != null) Apps.open(this, owner, "Media") else Apps.open(this, Apps.RADIO, "Radio")
         }
-    }
-
-    /** Menu des sources sous le nom de la source : la source active est en couleur. */
-    private fun showSourceMenu(anchor: View) {
-        val d = resources.displayMetrics.density
-        val list = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            setBackgroundResource(R.drawable.bg_panel)
-            setPadding((8 * d).toInt(), (8 * d).toInt(), (8 * d).toInt(), (8 * d).toInt())
-            elevation = 12 * d
-        }
-        val popup = android.widget.PopupWindow(list, (300 * d).toInt(), LinearLayout.LayoutParams.WRAP_CONTENT, true)
-        val cur = MediaHub.currentSource()
-        MediaHub.availableSources().forEach { pkg ->
-            list.addView(TextView(this).apply {
-                text = MediaHub.sourceLabel(pkg)
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 21f)
-                setTextColor(color(if (pkg == cur) R.color.accent_action else R.color.text_value))
-                setPadding((18 * d).toInt(), 0, (18 * d).toInt(), 0)
-                gravity = Gravity.CENTER_VERTICAL
-                setBackgroundResource(R.drawable.bg_chip)
-                isSelected = pkg == cur
-                setOnClickListener { popup.dismiss(); MediaHub.switchTo(pkg) }
-            }, LinearLayout.LayoutParams(-1, (60 * d).toInt()).apply { topMargin = (4 * d).toInt() })
-        }
-        popup.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
-        popup.showAsDropDown(anchor, 0, (4 * d).toInt())
     }
 
     private fun renderMedia(m: MediaHub.NowPlaying) {
