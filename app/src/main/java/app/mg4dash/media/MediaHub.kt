@@ -83,7 +83,7 @@ object MediaHub {
         // Filet de sécurité : relecture régulière du lecteur (titre, pochette, état), au cas où un
         // rappel de la radio se perd (service radio redémarré, session remplacée).
         main.postDelayed(object : Runnable {
-            override fun run() { reevaluate(); main.postDelayed(this, 5_000) }
+            override fun run() { checkStaleBrowsers(); reevaluate(); main.postDelayed(this, 5_000) }
         }, 5_000)
     }
 
@@ -237,7 +237,34 @@ object MediaHub {
         ComponentName("com.allgo.remoteui.mediabrowserservice", "com.allgo.remoteui.mediabrowserservice.RemoteUIMediaBrowserService"),
     )
     private val browserControllers = mutableMapOf<String, MediaController>()
+    private val browsers = mutableMapOf<String, MediaBrowser>()
     private val watched = mutableSetOf<MediaSession.Token>()
+    private val emptySince = mutableMapOf<String, Long>()
+
+    /**
+     * Lien périmé avec un lecteur : la radio (ou le Bluetooth) a recréé sa session, par exemple après
+     * un redémarrage de son service. L'ancien contrôleur ne reçoit plus rien (ni titre ni pochette)
+     * alors que la source affichée reste « Radio ». On se reconnecte à son MediaBrowserService.
+     */
+    private fun reconnectBrowser(pkg: String, why: String) {
+        val component = BROWSERS.firstOrNull { it.packageName == pkg } ?: return
+        Log.i(TAG, "reconnexion au lecteur $pkg ($why)")
+        browserControllers.remove(pkg)
+        emptySince.remove(pkg)
+        browsers.remove(pkg)?.let { try { it.disconnect() } catch (_: Exception) { } }
+        connectBrowser(component)
+    }
+
+    /** Vérification périodique : un contrôleur de navigateur resté sans état ni titre plus de 20 s est relancé. */
+    private fun checkStaleBrowsers() {
+        val now = System.currentTimeMillis()
+        browserControllers.toMap().forEach { (pkg, c) ->
+            val empty = try { c.metadata == null && c.playbackState == null } catch (_: Exception) { true }
+            if (!empty) { emptySince.remove(pkg); return@forEach }
+            val since = emptySince.getOrPut(pkg) { now }
+            if (now - since > 20_000 && (pkg == sourcePkg || pkg == pinnedPkg || pkg == current?.packageName)) reconnectBrowser(pkg, "aucune donnée depuis 20 s")
+        }
+    }
 
     private fun connectBrowser(component: ComponentName) {
         val ctx = appContext ?: return
@@ -258,6 +285,7 @@ object MediaHub {
                 main.postDelayed({ connectBrowser(component) }, 30_000)
             }
         }, null)
+        browsers[component.packageName] = browser
         try { browser.connect() } catch (e: Exception) { Log.w(TAG, "connexion ${component.packageName} : ${e.message}") }
     }
 
@@ -274,10 +302,15 @@ object MediaHub {
             if (watched.add(c.sessionToken)) c.registerCallback(callback, main)
         }
         val playing = candidates.firstOrNull { it.playbackState?.state == PlaybackState.STATE_PLAYING }
-        val pinned = pinnedPkg?.let { browserControllers[it] }
-        val fromSource = sourcePkg?.let { src ->
-            browserControllers[src] ?: candidates.firstOrNull { it.packageName == src }
+        // Un lecteur peut avoir deux contrôleurs (session active, navigateur média) : on préfère celui
+        // qui a un titre, puis celui qui a un état, puis le navigateur.
+        fun bestFor(pkg: String): MediaController? {
+            val all = candidates.filter { it.packageName == pkg }
+            return all.firstOrNull { it.metadata != null } ?: all.firstOrNull { it.playbackState != null }
+                ?: browserControllers[pkg] ?: all.firstOrNull()
         }
+        val pinned = pinnedPkg?.let { bestFor(it) }
+        val fromSource = sourcePkg?.let { bestFor(it) }
         val chosen = pinned
             ?: fromSource
             ?: playing
@@ -310,6 +343,11 @@ object MediaHub {
         override fun onPlaybackStateChanged(state: PlaybackState?) = reevaluate()
         override fun onMetadataChanged(metadata: MediaMetadata?) = publish()
         override fun onSessionDestroyed() {
+            // Le rappel ne dit pas quel lecteur : on relance les navigateurs dont la session a disparu.
+            browserControllers.toMap().forEach { (pkg, c) ->
+                val dead = try { c.playbackState == null && c.metadata == null } catch (_: Exception) { true }
+                if (dead) main.postDelayed({ reconnectBrowser(pkg, "session détruite") }, 1_000)
+            }
             current = null
             watched.clear()
             reevaluate()
