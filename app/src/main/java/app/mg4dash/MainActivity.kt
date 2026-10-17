@@ -361,7 +361,7 @@ class MainActivity : AppCompatActivity() {
         // Recyclage : 0 = recyclé, 1 = extérieur, 2 = auto (la voiture choisit ; état réel lu à part s'il existe)
         val autoRecirc = s.recirc == 2
         val inner = if (autoRecirc) actualRecirc else s.recirc == 0
-        b.chipRecirc.isSelected = false   // l'icône dit l'état ; pas de surlignage qui clignote pendant la bascule (issue #6)
+        b.chipRecirc.isSelected = autoRecirc   // surligné seulement en mode auto ; pas de clignotement pendant la bascule
         b.chipRecircIcon.setImageResource(if (inner == true) R.drawable.ic_air_recirc else R.drawable.ic_air_outside)
         b.chipRecircAuto.visibility = if (autoRecirc) View.VISIBLE else View.GONE
         // Direction de l'air ; en mode AUTO, c'est la voiture qui la choisit
@@ -686,14 +686,11 @@ class MainActivity : AppCompatActivity() {
     /** Puissance batterie (tension × courant) : positive = tirée, négative = récupérée. */
     private suspend fun updatePower() {
         if (builtMode != 1) return
-        var volts: Float? = null; var amps: Float? = null; var battTemp: Float? = null
+        var volts: Float? = null; var amps: Float? = null
         val kw = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             val v = app.mg4dash.car.CarProps.getFloat(app.mg4dash.car.CarProps.BMS_PACK_VOL)
             val i = app.mg4dash.car.CarProps.getFloat(app.mg4dash.car.CarProps.BMS_PACK_CRNT)
             volts = v?.takeIf { it in 100f..900f }; amps = i
-            // Température batterie (BMS, relevée par MG4Control) ; sentinelles et valeurs absurdes écartées
-            battTemp = (app.mg4dash.car.CarProps.readFloatArea(0x2160f43c, 0x1000000) ?: app.mg4dash.car.CarProps.getFloat(0x2160f43c))
-                ?.takeIf { it.isFinite() && it in -40f..80f }
             if (v != null && i != null && v in 100f..900f) v * i / 1000f else null
         }
         val plugged = VehicleState.isCharging(CarBridge.state.value.chargeStatus)
@@ -713,7 +710,6 @@ class MainActivity : AppCompatActivity() {
                     setSpan(android.text.style.ForegroundColorSpan(color(R.color.accent_energy)), 0, txt.length, 0)
                 } else txt)
             }
-            battTemp?.let { parts.add(getString(R.string.sw_batt_temp, Math.round(it))) }
             tv.text = android.text.TextUtils.join("   ·   ", parts)
         }
     }

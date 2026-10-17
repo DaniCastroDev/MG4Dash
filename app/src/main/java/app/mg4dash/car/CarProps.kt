@@ -85,6 +85,26 @@ object CarProps {
 
     val ready: Boolean get() = BuildConfig.MOCK || cpm != null
 
+    /**
+     * Diagnostic : liste toutes les propriétés exposées par la voiture avec leur valeur, dans le
+     * journal (balise « Props »). Sert à trouver des mesures (températures…) sans modifier quoi que ce soit.
+     */
+    fun dumpAll() {
+        val m = cpm ?: return
+        try {
+            @Suppress("UNCHECKED_CAST")
+            val list = m.javaClass.getMethod("getPropertyList").invoke(m) as List<Any>
+            Log.i("Props", "${list.size} propriétés")
+            list.forEach { cfg ->
+                val id = cfg.javaClass.getMethod("getPropertyId").invoke(cfg) as Int
+                val areas = (cfg.javaClass.getMethod("getAreaIds").invoke(cfg) as? IntArray)?.joinToString(",") { "0x" + Integer.toHexString(it) } ?: ""
+                Log.i("Props", "0x${Integer.toHexString(id)} areas=[$areas] = ${readAny(id)}")
+            }
+        } catch (e: Throwable) {
+            Log.w("Props", "liste impossible : ${(e.cause ?: e).message}")
+        }
+    }
+
     fun getInt(id: Int): Int? {
         if (BuildConfig.MOCK) return mock[id]?.toInt()
         val m = cpm ?: return null

@@ -128,21 +128,11 @@ class SettingsActivity : AppCompatActivity() {
 
         // ── Démarrage ──
         val boot = panel(left, getString(R.string.st_startup))
-        val warm = text(boot, "", 18f, R.color.text_value)
-        fun showWarm() {
-            warm.text = getString(R.string.st_warm, getString(if (prefs.warmUpStock) R.string.yes else R.string.no))
-        }
-        showWarm()
-        text(boot, getString(R.string.st_warm_desc), 16f, R.color.text_title)
-        row(boot, button(getString(R.string.st_toggle)) { prefs.warmUpStock = !prefs.warmUpStock; showWarm() })
+        toggle(boot, R.string.st_warm, R.string.st_warm_desc, { prefs.warmUpStock }) { prefs.warmUpStock = it }
 
         // ── Affichage ──
         val display = panel(left, getString(R.string.st_display))
-        val fs = text(display, "", 18f, R.color.text_value)
-        fun showFs() { fs.text = getString(R.string.st_fullscreen, getString(if (prefs.fullscreen) R.string.yes else R.string.no)) }
-        showFs()
-        text(display, getString(R.string.st_fullscreen_desc), 16f, R.color.text_title)
-        row(display, button(getString(R.string.st_toggle)) { prefs.fullscreen = !prefs.fullscreen; showFs(); Fullscreen.apply(this) })
+        toggle(display, R.string.st_fullscreen, R.string.st_fullscreen_desc, { prefs.fullscreen }) { prefs.fullscreen = it; Fullscreen.apply(this) }
 
         // ── Mise à jour depuis GitHub ──
         val upd = panel(right, getString(R.string.st_update))
@@ -194,10 +184,7 @@ class SettingsActivity : AppCompatActivity() {
             }
         })
 
-        val betaState = text(upd, "", 18f, R.color.text_value)
-        fun showBeta() { betaState.text = getString(R.string.st_update_beta, getString(if (prefs.updateBeta) R.string.yes else R.string.no)) }
-        showBeta()
-        row(upd, button(getString(R.string.st_toggle)) { prefs.updateBeta = !prefs.updateBeta; showBeta() })
+        toggle(upd, R.string.st_update_beta, null, { prefs.updateBeta }) { prefs.updateBeta = it }
 
         // ── Thème : fond et couleur des boutons ──
         val theme = panel(right, getString(R.string.st_theme))
@@ -224,35 +211,19 @@ class SettingsActivity : AppCompatActivity() {
         row(style,
             *styleButtons(listOf(R.string.st_style_full, R.string.st_style_simple, R.string.st_style_map), { prefs.homeStyle }) { prefs.homeStyle = it; showStyle() },
         )
-        val mapOpts = text(style, "", 18f, R.color.text_value)
-        fun showMapOpts() {
-            mapOpts.text = getString(R.string.st_map_vdock, getString(if (prefs.verticalDock) R.string.yes else R.string.no)) + "\n" +
-                getString(R.string.st_map_titles, getString(if (prefs.hideTitles) R.string.yes else R.string.no))
-        }
-        showMapOpts()
-        row(style,
-            button(getString(R.string.st_map_vdock_btn)) { prefs.verticalDock = !prefs.verticalDock; app.mg4dash.ui.Themes.publish(this); showMapOpts() },
-            button(getString(R.string.st_map_titles_btn)) { prefs.hideTitles = !prefs.hideTitles; showMapOpts() },
-        )
-        val stackState = text(style, "", 18f, R.color.text_value)
-        fun showStack() { stackState.text = getString(R.string.st_stack_auto, getString(if (prefs.stackAuto) R.string.yes else R.string.no)) }
-        showStack()
-        text(style, getString(R.string.st_stack_desc), 16f, R.color.text_title)
-        row(style, button(getString(R.string.st_toggle)) { prefs.stackAuto = !prefs.stackAuto; showStack() })
+        toggle(style, R.string.st_map_vdock, null, { prefs.verticalDock }) { prefs.verticalDock = it; app.mg4dash.ui.Themes.publish(this) }
+        toggle(style, R.string.st_map_titles, null, { prefs.hideTitles }) { prefs.hideTitles = it }
+        toggle(style, R.string.st_stack_auto, R.string.st_stack_desc, { prefs.stackAuto }) { prefs.stackAuto = it }
 
         // ── Compatibilité (bêta multi-firmware) ──
         val compat = panel(right, getString(R.string.st_compat))
         text(compat, getString(R.string.st_compat_fw, app.mg4dash.system.Firmware.version, app.mg4dash.system.Firmware.gen.name), 18f, R.color.text_value)
         text(compat, getString(if (app.mg4dash.system.Firmware.tested) R.string.st_compat_tested else R.string.st_compat_beta), 16f, R.color.text_title)
-        row(compat, button(getString(R.string.st_compat_run)) { Compat.show(this) })
+        row(compat, button(getString(R.string.st_compat_run)) { Thread { app.mg4dash.car.CarProps.dumpAll() }.start(); Compat.show(this) })
 
         // ── Diagnostic énergie ──
         val diag = panel(right, getString(R.string.st_diag))
-        val logState = text(diag, "", 18f, R.color.text_value)
-        fun showLog() { logState.text = getString(R.string.st_energy_log, getString(if (prefs.energyLog) R.string.yes else R.string.no)) }
-        showLog()
-        text(diag, getString(R.string.st_energy_log_desc), 16f, R.color.text_title)
-        row(diag, button(getString(R.string.st_toggle)) { prefs.energyLog = !prefs.energyLog; showLog() })
+        toggle(diag, R.string.st_energy_log, R.string.st_energy_log_desc, { prefs.energyLog }) { prefs.energyLog = it }
 
         // ── Home Assistant ──
         val ha = panel(right, "HOME ASSISTANT")
@@ -415,6 +386,16 @@ class SettingsActivity : AppCompatActivity() {
             setBackgroundResource(R.drawable.bg_button); minHeight = dp(56); setPadding(dp(20), 0, dp(20), 0)
             setOnClickListener { onClick() }
         }
+
+    /**
+     * Option oui / non : son libellé (le « : %1$s » de la chaîne est retiré), une description
+     * éventuelle, puis deux boutons Non / Oui dont celui qui est actif est surligné.
+     */
+    private fun toggle(parent: LinearLayout, labelRes: Int, descRes: Int?, get: () -> Boolean, set: (Boolean) -> Unit) {
+        text(parent, getString(labelRes, "").trimEnd(' ', ':', '\u00a0', '\u202f'), 18f, R.color.text_value)
+        descRes?.let { text(parent, getString(it), 16f, R.color.text_title) }
+        row(parent, *choiceButtons(listOf(getString(R.string.no), getString(R.string.yes)), { if (get()) 1 else 0 }) { set(it == 1) })
+    }
 
     /** Boutons à choix unique : celui qui est actif est en couleur, et la couleur suit tout de suite le choix. */
     private fun choiceButtons(labels: List<String>, current: () -> Int, onPick: (Int) -> Unit): Array<Button> {

@@ -173,7 +173,7 @@ class ClimateActivity : PageActivity() {
         auto.isSelected = s.autoOn == true
         ac.isSelected = s.acOn == true
         eco.isSelected = s.ecoOn == true
-        recirc.isSelected = s.recirc == 0
+        recirc.isSelected = s.recirc == 2   // surligné en mode auto, comme sur l'accueil
         recirc.text = when (s.recirc) { 0 -> getString(R.string.cl_air_recirc); 1 -> getString(R.string.cl_air_outside); 2 -> getString(R.string.cl_air_auto); else -> getString(R.string.cl_recirc) }
         defFront.isSelected = s.defrostFront == true
         defRear.isSelected = s.defrostRear == true
