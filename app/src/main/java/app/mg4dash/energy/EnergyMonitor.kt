@@ -27,7 +27,8 @@ import kotlinx.coroutines.launch
  *    chauffage / froid, dégivrage) ;
  *  - en roulant : clim et accessoires = valeurs apprises, le reste = conduite.
  * Trois périodes : depuis la dernière recharge, depuis le démarrage (pause de plus de 10 min), et les
- * 1 000 derniers km (100 tranches de 10 km gardées, la plus ancienne remplacée : mémoire bornée).
+ * 12 derniers mois (un total par mois, le plus ancien retiré : mémoire bornée, et l'évolution au fil
+ * des saisons se lit mois par mois).
  */
 object EnergyMonitor {
     private const val TAG = "EnergyMon"
@@ -50,14 +51,26 @@ object EnergyMonitor {
     val sinceCharge: StateFlow<Totals> = _sinceCharge
     private val _sinceStart = MutableStateFlow(Totals())
     val sinceStart: StateFlow<Totals> = _sinceStart
-    private val _lastKm = MutableStateFlow(Totals())
-    /** Les 1 000 derniers km (tranches terminées + tranche en cours). */
-    val lastKm: StateFlow<Totals> = _lastKm
-    private const val SEG_KM = 10
-    private const val SEG_MAX = 100
+    private val _lastYear = MutableStateFlow(Totals())
+    /** Les 12 derniers mois (mois en cours compris). */
+    val lastYear: StateFlow<Totals> = _lastYear
+    private val _months = MutableStateFlow<List<Pair<String, Totals>>>(emptyList())
+    /** Totaux mois par mois (« 2026-10 »), du plus ancien au plus récent : 12 au plus. */
+    val months: StateFlow<List<Pair<String, Totals>>> = _months
+    private const val MONTHS = 12
 
-    /** Période choisie à l'écran : 0 = depuis la recharge, 1 = depuis le démarrage, 2 = 1 000 derniers km. */
-    fun totals(period: Int): Totals = when (period) { 1 -> sinceStart.value; 2 -> lastKm.value; else -> sinceCharge.value }
+    /** Période choisie à l'écran : 0 = depuis la recharge, 1 = depuis le démarrage, 2 = 12 derniers mois. */
+    fun totals(period: Int): Totals = when (period) { 1 -> sinceStart.value; 2 -> lastYear.value; else -> sinceCharge.value }
+
+    /** kWh/100 km de chaque mois assez roulé (au moins 20 km), pour la courbe de l'année. */
+    fun monthlyPer100(): List<Float> = months.value.mapNotNull { (_, t) -> if (t.km >= 20) t.per100 else null }
+
+    private fun monthKey(now: Long = System.currentTimeMillis()) =
+        java.text.SimpleDateFormat("yyyy-MM", java.util.Locale.US).format(java.util.Date(now))
+
+    private fun sum(list: Collection<Totals>) = list.fold(Totals()) { a, t ->
+        Totals(a.outKwh + t.outKwh, a.regenKwh + t.regenKwh, a.climKwh + t.climKwh, a.accKwh + t.accKwh, a.km + t.km)
+    }
 
     /** Puissances apprises (W), pour l'affichage et le journal. */
     @Volatile var accessoriesW = 250f; private set
@@ -71,28 +84,35 @@ object EnergyMonitor {
         if (BuildConfig.MOCK) {
             _sinceCharge.value = Totals(18.4f, 3.2f, 2.1f, 0.9f, 112)
             _sinceStart.value = Totals(3.6f, 0.7f, 0.5f, 0.2f, 21)
-            _lastKm.value = Totals(152.3f, 24.8f, 18.6f, 7.4f, 1000)
+            val demo = listOf(19.8f, 19.1f, 17.6f, 16.0f, 15.1f, 14.4f, 14.2f, 14.6f, 15.3f, 16.4f, 17.9f, 19.2f)
+            _months.value = demo.mapIndexed { i, v -> "2025-%02d".format(i + 1) to Totals(v * 10f, 1.5f, 1.2f, 0.4f, 1000).let { it.copy(outKwh = v * 10f + it.regenKwh) } }
+            _lastYear.value = sum(_months.value.map { it.second })
             return
         }
         fun load(p: String) = Totals(sp.getFloat("${p}_out", 0f), sp.getFloat("${p}_rgn", 0f), sp.getFloat("${p}_clim", 0f), sp.getFloat("${p}_acc", 0f))
         _sinceCharge.value = load("em_c")
         accessoriesW = sp.getFloat("em_base", 250f)
-        // Tranches de 10 km : « out,rgn,clim,acc,km » séparées par « ; »
-        val segs = ArrayDeque<Totals>()
-        sp.getString("em_l_segs", "")!!.split(';').filter { it.isNotBlank() }.forEach { seg ->
-            val f = seg.split(',').mapNotNull { it.toFloatOrNull() }
-            if (f.size == 5) segs.addLast(Totals(f[0], f[1], f[2], f[3], f[4].toInt()))
+        // Mois : « 2026-10=out,rgn,clim,acc,km » séparés par « ; » (12 au plus)
+        val months = java.util.TreeMap<String, Totals>()
+        sp.getString("em_months", "")!!.split(';').filter { it.contains('=') }.forEach { e ->
+            val (k, v) = e.split('=', limit = 2)
+            val f = v.split(',').mapNotNull { it.toFloatOrNull() }
+            if (f.size == 5) months[k] = Totals(f[0], f[1], f[2], f[3], f[4].toInt())
         }
-        var segCur = load("em_l")
-        fun sumSegs(cur: Totals) = segs.fold(cur) { a, t ->
-            Totals(a.outKwh + t.outKwh, a.regenKwh + t.regenKwh, a.climKwh + t.climKwh, a.accKwh + t.accKwh, a.km + t.km)
+        fun publishMonths() {
+            while (months.size > MONTHS) months.remove(months.firstKey())
+            _months.value = months.entries.map { it.key to it.value }
+            _lastYear.value = sum(months.values)
         }
-        _lastKm.value = sumSegs(segCur)
+        fun saveMonths() = sp.edit().putString("em_months",
+            months.entries.joinToString(";") { (k, t) -> "$k=${t.outKwh},${t.regenKwh},${t.climKwh},${t.accKwh},${t.km}" }).apply()
+        publishMonths()
 
         scope.launch {
             var last = System.currentTimeMillis()
             var chargeKm = sp.getInt("em_c_km0", -1)
-            var segKm = sp.getInt("em_l_km0", -1)
+            var monthKm = -1   // compteur au dernier passage
+            var pendingKm = 0  // km parcourus pas encore comptés dans le mois en cours
             var startKm = -1
             var lastSoc = sp.getInt("em_last_soc", -1)
             var saveTick = 0
@@ -107,6 +127,11 @@ object EnergyMonitor {
                 val s = CarBridge.state.value
                 val km = s.odometerKm
                 val soc = s.batteryPercent
+                // Km du mois : lus à chaque passage (même quand la mesure de puissance est sautée)
+                if (km != null) {
+                    if (monthKm >= 0 && km > monthKm) pendingKm += (km - monthKm).coerceAtMost(1000)
+                    monthKm = km
+                }
 
                 // Nouveau démarrage : longue pause (voiture en veille) ou premier passage
                 if (dt > SLEEP_GAP_MS || startKm < 0) {
@@ -177,16 +202,14 @@ object EnergyMonitor {
                 )
                 _sinceCharge.value = add(_sinceCharge.value, km, chargeKm)
                 _sinceStart.value = add(_sinceStart.value, km, startKm)
-                if (segKm < 0 && km != null) { segKm = km; sp.edit().putInt("em_l_km0", segKm).apply() }
-                segCur = add(segCur, km, segKm)
-                if (segCur.km >= SEG_KM && km != null) {
-                    segs.addLast(segCur)
-                    while (segs.size > SEG_MAX) segs.removeFirst()
-                    segCur = Totals(); segKm = km
-                    sp.edit().putInt("em_l_km0", segKm)
-                        .putString("em_l_segs", segs.joinToString(";") { t -> "${t.outKwh},${t.regenKwh},${t.climKwh},${t.accKwh},${t.km}" }).apply()
-                }
-                _lastKm.value = sumSegs(segCur)
+                val mk = monthKey(now)
+                val m = months[mk] ?: Totals()
+                val dKm = pendingKm; pendingKm = 0
+                months[mk] = m.copy(
+                    outKwh = m.outKwh + out / 1000f, regenKwh = m.regenKwh + regen / 1000f,
+                    climKwh = m.climKwh + clim / 1000f, accKwh = m.accKwh + acc / 1000f, km = m.km + dKm,
+                )
+                publishMonths()
 
                 if (++saveTick >= 30) {
                     saveTick = 0
@@ -195,8 +218,8 @@ object EnergyMonitor {
                     learned.forEach { (k, v) -> e.putFloat(k, v) }
                     e.putFloat("em_c_out", c.outKwh).putFloat("em_c_rgn", c.regenKwh)
                         .putFloat("em_c_clim", c.climKwh).putFloat("em_c_acc", c.accKwh)
-                    e.putFloat("em_l_out", segCur.outKwh).putFloat("em_l_rgn", segCur.regenKwh)
-                        .putFloat("em_l_clim", segCur.climKwh).putFloat("em_l_acc", segCur.accKwh).apply()
+                    e.apply()
+                    saveMonths()
                 }
             }
         }

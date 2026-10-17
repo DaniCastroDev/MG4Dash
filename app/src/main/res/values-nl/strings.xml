@@ -349,7 +349,9 @@
     <string name="st_rd_installing">Radio Dash installeren…</string>
     <string name="st_rd_done">Radio Dash is geïnstalleerd. Herstart het scherm (Home ongeveer 20 s ingedrukt houden) om het te gebruiken.</string>
     <string name="en_trip">Huidige rit</string>
-    <string name="en_last_1000">Laatste 1.000 km</string>
+    <string name="en_last_year">Laatste 12 maanden</string>
+    <string name="en_months_note">%1$d maanden, één punt per maand · gemiddelde %2$s (gestippeld)</string>
+    <string name="en_months_wait">De curve vult zich maand na maand (minstens 20 km per maand).</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefoon verbonden · Tik om te openen</string>
     <string name="aa_waiting">Sluit je telefoon aan via USB</string>

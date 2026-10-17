@@ -29,7 +29,7 @@ class ConsumptionCard(context: Context) : LinearLayout(context) {
     private val note = tv(15f, R.color.text_sub)
 
     private val prefs = app.mg4dash.system.Prefs(context)
-    private val periodLabels = listOf(R.string.en_since_charge, R.string.en_trip, R.string.en_last_1000).map { context.getString(it) }
+    private val periodLabels = listOf(R.string.en_since_charge, R.string.en_trip, R.string.en_last_year).map { context.getString(it) }
     private var lastHistory: List<Float> = emptyList()
     private val periodTv: TextView =
         tv(19f, R.color.text_value).apply {
@@ -82,8 +82,16 @@ class ConsumptionCard(context: Context) : LinearLayout(context) {
                 legend.addView(r, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (3 * d).toInt() })
             }
         regen.text = if (t.regenKwh > 0f) context.getString(R.string.en_regen, String.format(Locale.getDefault(), "%.1f", t.regenKwh)) else ""
-        chart.values = history
-        note.text = if (history.size >= 2) context.getString(R.string.en_history_note, history.size,
-            String.format(Locale.getDefault(), "%.1f", history.average())) else ""
+        // 12 derniers mois : une valeur par mois, pour voir l'effet des saisons
+        if (period == 2) {
+            val m = EnergyMonitor.monthlyPer100()
+            chart.values = m
+            note.text = if (m.size >= 2) context.getString(R.string.en_months_note, m.size,
+                String.format(Locale.getDefault(), "%.1f", m.average())) else context.getString(R.string.en_months_wait)
+        } else {
+            chart.values = history
+            note.text = if (history.size >= 2) context.getString(R.string.en_history_note, history.size,
+                String.format(Locale.getDefault(), "%.1f", history.average())) else ""
+        }
     }
 }

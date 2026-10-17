@@ -349,7 +349,9 @@
     <string name="st_rd_installing">Installing Radio Dash…</string>
     <string name="st_rd_done">Radio Dash is installed. Restart the head unit (hold Home about 20 s) to use it.</string>
     <string name="en_trip">Current trip</string>
-    <string name="en_last_1000">Last 1,000 km</string>
+    <string name="en_last_year">Last 12 months</string>
+    <string name="en_months_note">%1$d months, one point per month · average %2$s (dashed)</string>
+    <string name="en_months_wait">The curve fills month by month (at least 20 km per month).</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Phone connected · Tap to open</string>
     <string name="aa_waiting">Connect your phone via USB</string>

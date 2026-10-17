@@ -166,6 +166,12 @@ class ScreenshotTest {
         shoot(MainActivity::class.java, "home_map_layout_consumption.png")
     }
 
+    @Test fun homeMapLayoutConsumptionYear() {
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
+            .putInt("home_style", 2).putInt("home_widget", 2).putInt("consumption_period", 2).apply()
+        shoot(MainActivity::class.java, "home_map_layout_consumption_year.png")
+    }
+
     @Test fun homeVerticalFull() {
         org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
             .putBoolean("vertical_dock", true).apply()

@@ -162,8 +162,8 @@ class EnergyActivity : PageActivity() {
 
         // ── Colonne 3 : consommation ──
         val c3 = kit.panel(getString(R.string.en_consumption))
-        val (pRow, pSet) = kit.segmented(listOf(getString(R.string.en_since_charge), getString(R.string.en_trip), getString(R.string.en_last_1000))) { i ->
-            period = i; prefs.consumptionPeriod = i; setPeriod(i); refreshProps()
+        val (pRow, pSet) = kit.segmented(listOf(getString(R.string.en_since_charge), getString(R.string.en_trip), getString(R.string.en_last_year))) { i ->
+            period = i; prefs.consumptionPeriod = i; setPeriod(i); refreshProps(); renderHistory(ChargeGuard.history.value)
         }
         setPeriod = pSet
         period = prefs.consumptionPeriod.coerceIn(0, 2)
@@ -321,6 +321,13 @@ class EnergyActivity : PageActivity() {
     }
 
     private fun renderHistory(values: List<Float>) {
+        if (period == 2) {
+            val m = EnergyMonitor.monthlyPer100()
+            chart.values = m
+            chartNote.text = if (m.size >= 2) getString(R.string.en_months_note, m.size, String.format(Locale.getDefault(), "%.1f", m.average()))
+                else getString(R.string.en_months_wait)
+            return
+        }
         chart.values = values
         chartNote.text = if (values.size >= 2)
             getString(R.string.en_history_note, values.size, String.format(Locale.getDefault(), "%.1f", values.average())) else ""

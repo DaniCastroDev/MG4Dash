@@ -349,7 +349,9 @@
     <string name="st_rd_installing">Radio Dash wird installiert…</string>
     <string name="st_rd_done">Radio Dash ist installiert. Bildschirm neu starten (Home etwa 20 s halten), um es zu nutzen.</string>
     <string name="en_trip">Aktuelle Fahrt</string>
-    <string name="en_last_1000">Letzte 1.000 km</string>
+    <string name="en_last_year">Letzte 12 Monate</string>
+    <string name="en_months_note">%1$d Monate, ein Punkt pro Monat · Durchschnitt %2$s (gestrichelt)</string>
+    <string name="en_months_wait">Die Kurve füllt sich Monat für Monat (mindestens 20 km pro Monat).</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefon verbunden · Zum Öffnen tippen</string>
     <string name="aa_waiting">Telefon per USB verbinden</string>
