@@ -324,14 +324,14 @@ class MainActivity : AppCompatActivity() {
         b.climPower.setOnClickListener { CarBridge.togglePower() }
         repeatOnHold(b.tempDown) { CarBridge.stepTemp(-1) }
         repeatOnHold(b.tempUp) { CarBridge.stepTemp(1) }
-        // Ventilation : sous la vitesse 1, la clim s'arrête ; appui long − = arrêt, appui long + = maximum
+        // Ventilation : sous la vitesse 1, la clim s'arrête ; appui long − = minimum, appui long + = maximum
         b.fanDown.setOnClickListener {
             val s = CarBridge.state.value
             if (s.hvacOn == true && s.autoOn != true && (s.fanSpeed ?: 0) <= VehicleState.FAN_MIN) CarBridge.togglePower()
             else CarBridge.stepFan(-1)
         }
         b.fanUp.setOnClickListener { CarBridge.stepFan(1) }
-        b.fanDown.setOnLongClickListener { if (CarBridge.state.value.hvacOn == true) CarBridge.togglePower(); true }
+        b.fanDown.setOnLongClickListener { CarBridge.stepFan(VehicleState.FAN_MIN - (CarBridge.state.value.fanSpeed ?: VehicleState.FAN_MIN)); true }
         b.fanUp.setOnLongClickListener {
             val cur = CarBridge.state.value.fanSpeed ?: VehicleState.FAN_MIN
             CarBridge.stepFan(VehicleState.FAN_MAX - cur); true

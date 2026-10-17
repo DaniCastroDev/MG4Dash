@@ -110,7 +110,7 @@
                         android:tint="@color/accent_heat" />
                 </LinearLayout>
 
-                <!-- Ventilation : mêmes boutons que la température ; appui long − = arrêt, + = maximum -->
+                <!-- Ventilation : mêmes boutons que la température ; appui long − = minimum, + = maximum -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="68dp"

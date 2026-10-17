@@ -131,12 +131,12 @@ class SimpleHome(private val a: AppCompatActivity) {
         tRow.addView(holdButton(R.drawable.ic_plus, 84, R.color.accent_heat) { CarBridge.stepTemp(1) })
         climateCard.addView(tRow, kit.lp(-1, 0, 1f))
 
-        // Ventilation : mêmes boutons que la température ; sous 1 = arrêt, appui long − = arrêt, + = maximum
+        // Ventilation : mêmes boutons que la température ; sous 1 = arrêt, appui long − = minimum, + = maximum
         val fRow = kit.row().apply { gravity = Gravity.CENTER }
         fRow.addView(kit.roundButton(R.drawable.ic_minus, 84) {
             val s = CarBridge.state.value
             if (s.hvacOn == true && s.autoOn != true && (s.fanSpeed ?: 0) <= VehicleState.FAN_MIN) CarBridge.togglePower() else CarBridge.stepFan(-1)
-        }.apply { setOnLongClickListener { if (CarBridge.state.value.hvacOn == true) CarBridge.togglePower(); true } })
+        }.apply { setOnLongClickListener { CarBridge.stepFan(VehicleState.FAN_MIN - (CarBridge.state.value.fanSpeed ?: VehicleState.FAN_MIN)); true } })
         val fanBox = kit.column().apply { gravity = Gravity.CENTER }
         fanBox.addView(kit.text(a.getString(R.string.cl_fan), 18f, R.color.text_title).apply { gravity = Gravity.CENTER })
         fanValue = big("—", 34f).apply { gravity = Gravity.CENTER }
