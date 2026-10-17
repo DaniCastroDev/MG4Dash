@@ -105,13 +105,17 @@ class PowerBar @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
     var kw: Float = 0f
         set(v) {
             field = v
+            if (v > maxDrawKw) { maxDrawKw = Math.ceil(v / 50.0).toFloat() * 50f; onScale?.invoke(maxDrawKw) }
+            if (-v > maxRegenKw) { maxRegenKw = Math.ceil(-v / 25.0).toFloat() * 25f }
             val now = System.currentTimeMillis()
             if (v >= peak || now - peakAt > PEAK_HOLD_MS && v > 0f) { if (v >= peak) { peak = v; peakAt = now } }
             if (v <= -peakRegen || now - peakRegenAt > PEAK_HOLD_MS && v < 0f) { if (-v >= peakRegen) { peakRegen = -v; peakRegenAt = now } }
             postInvalidateOnAnimation()
         }
     var maxRegenKw = 50f
-    var maxDrawKw = 100f
+    var maxDrawKw = 140f
+    /** Appelé quand l'échelle s'élargit (puissance mesurée au-delà du maximum prévu). */
+    var onScale: ((Float) -> Unit)? = null
 
     private companion object { const val PEAK_HOLD_MS = 10_000L; const val DECAY_KW_PER_S = 8f }
 

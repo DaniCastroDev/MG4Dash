@@ -688,7 +688,14 @@ class MainActivity : AppCompatActivity() {
         g.orientation = LinearLayout.VERTICAL
         val d = resources.displayMetrics.density
         // Même présentation que l'énergie du trajet : grosse barre, puis les chiffres en grand
-        powerBar = app.mg4dash.ui.PowerBar(this)
+        powerBar = app.mg4dash.ui.PowerBar(this).apply {
+            // Échelle selon le modèle (puissance moteur : 51 kWh 170 ch / 125 kW, 64 kWh 204 ch / 150 kW,
+            // 77 kWh 245 ch / 180 kW), plus une marge pour les pertes ; elle s'élargit d'elle-même si la
+            // voiture tire davantage (XPower 435 ch / 320 kW), par paliers de 50 kW, et s'en souvient.
+            val model = when (prefs.batteryModel) { 77 -> 200f; 64 -> 170f; else -> 140f }
+            maxDrawKw = maxOf(model, prefs.raw.getFloat("power_scale_kw", 0f))
+            onScale = { prefs.raw.edit().putFloat("power_scale_kw", it).apply() }
+        }
         g.addView(powerBar, LinearLayout.LayoutParams(-1, (40 * d).toInt()).apply { marginStart = (8 * d).toInt(); marginEnd = (8 * d).toInt() })
         val row = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         val left = statColumn(getString(R.string.sw_drawn), "—", 38f)
