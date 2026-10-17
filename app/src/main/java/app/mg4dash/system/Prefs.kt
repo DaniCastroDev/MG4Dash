@@ -18,6 +18,21 @@ class Prefs(context: Context) {
         get() = sp.getInt("battery_model", 51)
         set(v) = sp.edit().putInt("battery_model", v).apply()
 
+    /** Style Carte : barre verticale à gauche au lieu du dock du bas (issue #6). */
+    var verticalDock: Boolean
+        get() = sp.getBoolean("vertical_dock", false)
+        set(v) = sp.edit().putBoolean("vertical_dock", v).apply()
+
+    /** Style Carte : sans les titres des widgets (issue #6). */
+    var hideTitles: Boolean
+        get() = sp.getBoolean("hide_titles", false)
+        set(v) = sp.edit().putBoolean("hide_titles", v).apply()
+
+    /** Météo du style Carte : 0 = prévisions par heure, 1 = par jour. */
+    var weatherPage: Int
+        get() = sp.getInt("weather_page", 0)
+        set(v) = sp.edit().putInt("weather_page", v).apply()
+
     /** Capacité ajustée à la main (sinon elle suit la voiture ou l'estimation mesurée). */
     var batteryKwhManual: Boolean
         get() = sp.getBoolean("battery_kwh_manual", sp.contains("battery_kwh"))   // réglée avant cette option : on la garde

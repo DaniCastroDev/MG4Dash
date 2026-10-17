@@ -115,6 +115,44 @@ object MediaHub {
     fun isAndroidAuto(pkg: String?) = pkg == AA_MBS || pkg?.startsWith("com.allgo.app.androidauto") == true
 
     /** Puce USB / BT : bascule entre le Bluetooth et l'USB, en partant de ce qui est affiché. */
+    /**
+     * Balayage vertical sur la carte musique (issue #6) : source suivante (+1) ou précédente (−1)
+     * parmi celles disponibles (radio, Bluetooth connecté, clé USB, Android Auto connecté),
+     * puis bascule de la source de la voiture et lecture.
+     */
+    fun cycleSource(dir: Int) {
+        if (BuildConfig.MOCK) return
+        val ctx = appContext ?: return
+        val order = listOf("com.saicmotor.radio", "com.android.bluetooth", "com.saicmotor.media", AA_MBS)
+        val available = order.filter { pkg ->
+            when (pkg) {
+                "com.android.bluetooth" -> try {
+                    android.bluetooth.BluetoothAdapter.getDefaultAdapter()?.getProfileConnectionState(11) == android.bluetooth.BluetoothProfile.STATE_CONNECTED
+                } catch (_: Exception) { false }
+                "com.saicmotor.media" -> try {
+                    (ctx.getSystemService(Context.STORAGE_SERVICE) as android.os.storage.StorageManager).storageVolumes
+                        .any { it.isRemovable && it.state == android.os.Environment.MEDIA_MOUNTED }
+                } catch (_: Exception) { false }
+                AA_MBS -> androidAutoAvailable()
+                else -> true
+            }
+        }
+        val cur = current?.packageName?.let { if (isAndroidAuto(it)) AA_MBS else it }
+        val i = available.indexOf(cur)
+        val next = available.getOrNull(Math.floorMod((if (i < 0) 0 else i) + dir, available.size)) ?: return
+        Log.i(TAG, "balayage : source $cur → $next (disponibles : $available)")
+        pinnedPkg = next
+        main.post { reevaluate() }
+        if (next == AA_MBS) {
+            browserControllers[AA_MBS]?.let { aaControl(it, AA_PLAY, KeyEvent.KEYCODE_MEDIA_PLAY) }
+            return
+        }
+        activateSource(next)
+        main.postDelayed({
+            browserControllers[next]?.takeIf { !isPlaying(it) }?.transportControls?.play()
+        }, 1500)
+    }
+
     fun selectUsbBt() {
         val bt = "com.android.bluetooth"; val usb = "com.saicmotor.media"
         select(if (current?.packageName == bt) usb else bt)

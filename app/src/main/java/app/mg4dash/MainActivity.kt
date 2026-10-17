@@ -76,11 +76,18 @@ class MainActivity : AppCompatActivity() {
         b.kersGauge.segments = 4
         b.kersGauge.onColor = color(R.color.accent_energy)
         if (prefs.homeStyle == 2) applyMapLayout()
+        // Balayage vertical (issue #6) : carte musique = source suivante / précédente ;
+        // widget du bas (style Complet) = page suivante / précédente
+        app.mg4dash.ui.SwipeBox.wrap(b.mediaCard, vertical = true, horizontal = false) { MediaHub.cycleSource(it) }
+        if (!mapLayout) app.mg4dash.ui.SwipeBox.wrap(b.secondaryCard) { dir ->
+            prefs.secondaryWidget = Math.floorMod(prefs.secondaryWidget.coerceIn(0, 2) + dir, 3)
+            renderSecondary(); lifecycleScope.launch { updatePower() }
+        }
         mapCard = MapCard(this, b.mapHolder)
         navBanner = app.mg4dash.ui.NavBanner(this)
         val nd = resources.displayMetrics.density
         b.mapCard.addView(navBanner, android.widget.FrameLayout.LayoutParams((440 * nd).toInt(), -2, Gravity.TOP or Gravity.START).apply {
-            leftMargin = (12 * nd).toInt(); topMargin = (12 * nd).toInt()
+            leftMargin = (12 * nd).toInt(); topMargin = ((if (mapLayout) 76 else 12) * nd).toInt()
         })
         buildDock()
         setupWeatherClock()
@@ -108,7 +115,7 @@ class MainActivity : AppCompatActivity() {
         fun lp(weight: Float, top: Int) = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, 0, weight).apply { topMargin = top }
         left.addView(b.weatherCard, lp(40f, 0)); left.addView(b.climateCard, lp(60f, gap))
         // Pile : énergie et widget du bas réunis, on passe d'une page à l'autre en balayant
-        val box = StackBox(this) { dir -> showStackPage(Math.floorMod(prefs.stackPage + dir, 4)) }
+        val box = app.mg4dash.ui.SwipeBox(this) { dir -> showStackPage(Math.floorMod(prefs.stackPage + dir, 4)) }
         box.addView(b.energyCard, android.widget.FrameLayout.LayoutParams(-1, -1))
         box.addView(b.secondaryCard, android.widget.FrameLayout.LayoutParams(-1, -1))
         // Points de la pile dans la barre de titre, juste après le titre (le centre est pris par
@@ -136,8 +143,47 @@ class MainActivity : AppCompatActivity() {
         val fogSafe = (64 * resources.displayMetrics.density).toInt()
         ((b.climateCard.getChildAt(0) as LinearLayout).getChildAt(0).layoutParams as LinearLayout.LayoutParams).leftMargin = 0
         ((b.weatherPlace.parent as LinearLayout).getChildAt(0).layoutParams as LinearLayout.LayoutParams).leftMargin = fogSafe
+        // Météo façon widget (issue #6) : remplace le contenu de la carte Météo ; le haut gauche
+        // reste libre pour le bouton antibrouillards ; balayer = prévisions par heure / par jour.
+        // Carte : vitesse / cap / altitude en haut à gauche, à la place du titre « Position » (issue #6)
+        (0 until b.mapCard.childCount).map { b.mapCard.getChildAt(it) }
+            .filter { it is TextView && it.text?.toString() == getString(R.string.title_position) }
+            .forEach { b.mapCard.removeView(it) }   // retiré : applyHomeWidget réaffiche les enfants de la carte
+        ((b.mapSpeed.parent as View).layoutParams as android.widget.FrameLayout.LayoutParams).gravity = Gravity.TOP or Gravity.START
+        // Barre verticale à gauche (option) : le bouton antibrouillards se pose sur elle, la météo n'a
+        // plus besoin de lui laisser de place.
+        if (prefs.verticalDock) {
+            val row = left.parent as LinearLayout
+            val root = row.parent as LinearLayout
+            val idx = root.indexOfChild(row)
+            val rowLp = row.layoutParams as LinearLayout.LayoutParams
+            root.removeView(row)
+            val holder = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+            val bar = LinearLayout(this)
+            holder.addView(bar, LinearLayout.LayoutParams((64 * resources.displayMetrics.density).toInt(), -1))
+            holder.addView(row, LinearLayout.LayoutParams(0, -1, 1f).apply { leftMargin = gap })
+            root.addView(holder, idx, LinearLayout.LayoutParams(-1, 0, 1f))
+            rowLp.bottomMargin = 0
+            b.dock.visibility = View.GONE
+            verticalBar = bar
+            ((b.weatherPlace.parent as LinearLayout).getChildAt(0).layoutParams as LinearLayout.LayoutParams).leftMargin = 0
+        }
+        val wc = app.mg4dash.ui.WeatherCompact(this) { flipWeather(1) }
+        wc.getChildAt(0).setPadding(if (prefs.verticalDock) 0 else fogSafe, 0, 0, 0)
+        b.weatherCard.removeAllViews()
+        b.weatherCard.addView(wc, LinearLayout.LayoutParams(-1, -1))
+        weatherCompact = wc
+        app.mg4dash.ui.SwipeBox.wrap(b.weatherCard) { flipWeather(it) }
         showStackPage(prefs.stackPage)
+        // Sans titres (option) : moins chargé ; les points de la pile et les infos utiles restent
+        if (prefs.hideTitles) {
+            listOf((b.climateCard.getChildAt(0) as LinearLayout).getChildAt(0),
+                (b.energyCard.getChildAt(0) as LinearLayout).getChildAt(0),
+                b.secondaryTitle, b.mediaSource).forEach { it.visibility = View.INVISIBLE }
+        }
     }
+
+    private var verticalBar: LinearLayout? = null
 
 
     private var lastPlugged: Boolean? = null
@@ -164,31 +210,18 @@ class MainActivity : AppCompatActivity() {
         lastPlugged = plugged
     }
 
-    /** Conteneur de la pile : un balayage horizontal change de page, les touchers restent aux cartes. */
-    private class StackBox(context: android.content.Context, val onSwipe: (Int) -> Unit) : android.widget.FrameLayout(context) {
-        private var downX = 0f; private var downY = 0f; private var swiping = false
-        override fun onInterceptTouchEvent(ev: android.view.MotionEvent): Boolean {
-            when (ev.actionMasked) {
-                android.view.MotionEvent.ACTION_DOWN -> { downX = ev.x; downY = ev.y; swiping = false }
-                android.view.MotionEvent.ACTION_MOVE -> {
-                    val dx = ev.x - downX; val dy = ev.y - downY
-                    if (Math.abs(dx) > 60 && Math.abs(dx) > 2 * Math.abs(dy)) swiping = true
-                }
-            }
-            return swiping
-        }
-        override fun onTouchEvent(ev: android.view.MotionEvent): Boolean {
-            if (ev.actionMasked == android.view.MotionEvent.ACTION_UP && swiping) {
-                onSwipe(if (ev.x < downX) 1 else -1); swiping = false
-            }
-            return true
-        }
-    }
-
     /** Heure et date dans l'en-tête de la météo (style Carte, ou quand le dock affiche le Wi-Fi). */
     private var weatherClock: TextView? = null
 
+    private var weatherCompact: app.mg4dash.ui.WeatherCompact? = null
+
+    private fun flipWeather(dir: Int) {
+        prefs.weatherPage = Math.floorMod(prefs.weatherPage + dir, 2)
+        renderWeather(WeatherRepo.weather.value, CarBridge.state.value)
+    }
+
     private fun setupWeatherClock() {
+        if (weatherCompact != null) return   // le style Carte a sa propre horloge dans la météo
         val header = b.weatherPlace.parent as LinearLayout
         weatherClock?.let { header.removeView(it) }
         weatherClock = null
@@ -256,7 +289,7 @@ class MainActivity : AppCompatActivity() {
     // ── Carte ────────────────────────────────────────────────────────────────
 
     private fun renderLocation(loc: Location?, s: VehicleState) {
-        b.mapEmpty.visibility = if (prefs.homeWidget != 1 && (loc == null || !mapCard.available)) View.VISIBLE else View.GONE
+        b.mapEmpty.visibility = if (effectiveWidget() == 0 && (loc == null || !mapCard.available)) View.VISIBLE else View.GONE
         if (!mapCard.available) b.mapEmpty.text = getString(R.string.map_unavailable)
         val speed = s.speedKmh?.takeIf { it >= 0f } ?: loc?.takeIf { it.hasSpeed() }?.speed?.times(3.6f)
         b.mapSpeed.text = speed?.let { "${Math.round(it)} km/h" } ?: "— km/h"
@@ -269,7 +302,10 @@ class MainActivity : AppCompatActivity() {
 
     // ── Dock ─────────────────────────────────────────────────────────────────
 
-    private fun buildDock() = Dock.build(this, b.dock, Dock.Page.HOME)
+    private fun buildDock() {
+        Dock.build(this, b.dock, Dock.Page.HOME)
+        verticalBar?.let { Dock.buildVertical(this, it, Dock.Page.HOME) }
+    }
 
 
     // ── Clim ─────────────────────────────────────────────────────────────────
@@ -330,7 +366,7 @@ class MainActivity : AppCompatActivity() {
         // Recyclage : 0 = recyclé, 1 = extérieur, 2 = auto (la voiture choisit ; état réel lu à part s'il existe)
         val autoRecirc = s.recirc == 2
         val inner = if (autoRecirc) actualRecirc else s.recirc == 0
-        b.chipRecirc.isSelected = s.recirc == 0 || autoRecirc
+        b.chipRecirc.isSelected = false   // l'icône dit l'état ; pas de surlignage qui clignote pendant la bascule (issue #6)
         b.chipRecircIcon.setImageResource(if (inner == true) R.drawable.ic_air_recirc else R.drawable.ic_air_outside)
         b.chipRecircAuto.visibility = if (autoRecirc) View.VISIBLE else View.GONE
         // Direction de l'air ; en mode AUTO, c'est la voiture qui la choisit
@@ -451,6 +487,7 @@ class MainActivity : AppCompatActivity() {
     // ── Météo ────────────────────────────────────────────────────────────────
 
     private fun renderWeather(w: WeatherRepo.Weather?, s: VehicleState) {
+        weatherCompact?.let { it.show(w, s.outsideTemp, prefs.weatherCity, prefs.weatherPage); return }
         if (w == null) {
             b.weatherTemp.text = s.outsideTemp?.let { "${Math.round(it)}°" } ?: "—"
             b.weatherLabel.text = getString(R.string.weather_pending)
@@ -506,8 +543,9 @@ class MainActivity : AppCompatActivity() {
         b.mapZoomOut.setOnClickListener { mapCard.zoom(-1) }
         b.mapCenter.setOnClickListener { mapCard.recenter(LocationRepo.location.value); tintMapCenter() }
         tintMapCenter()
+        // Carte → Consommation → Raccourcis → Carte (issue #6 : la consommation dans le widget carte)
         b.widgetToggle.setOnClickListener {
-            prefs.homeWidget = if (prefs.homeWidget == 1) 0 else 1
+            prefs.homeWidget = when (effectiveWidget()) { 0 -> 2; 2 -> 1; else -> 0 }
             applyHomeWidget()
         }
         applyHomeWidget()
@@ -522,18 +560,39 @@ class MainActivity : AppCompatActivity() {
         b.mapCenter.setColorFilter(color(if (mapCard.headingUp) R.color.accent_energy else R.color.accent_action))
     }
 
+    private var consumptionCard: app.mg4dash.ui.ConsumptionCard? = null
+    private var lastWidgetMode = -1
+
+    /** Sans connexion data, la carte (tuiles en ligne) cède la place à la consommation. */
+    private fun offline(): Boolean {
+        val w = WeatherRepo.weather.value
+        return !app.mg4dash.system.StatusMonitor.hasInternet(this) &&
+            (w == null || System.currentTimeMillis() - w.updatedAt > 3600_000L)
+    }
+
+    /** 0 = carte, 1 = raccourcis, 2 = consommation. */
+    private fun effectiveWidget(): Int = prefs.homeWidget.let { if (it == 0 && offline()) 2 else it }
+
     private fun applyHomeWidget() {
-        val shortcuts = prefs.homeWidget == 1
+        val mode = effectiveWidget()
+        val consumption = mode == 2
+        val cc = consumptionCard ?: app.mg4dash.ui.ConsumptionCard(this).also {
+            consumptionCard = it
+            b.mapCard.addView(it, b.mapCard.indexOfChild(b.widgetToggle), android.widget.FrameLayout.LayoutParams(-1, -1))
+        }
+        cc.visibility = if (consumption) View.VISIBLE else View.GONE
+        if (consumption) cc.show(app.mg4dash.energy.ChargeGuard.history.value)
+        val shortcuts = mode == 1
         // La carte et ses commandes disparaissent derrière les raccourcis (et inversement).
         for (i in 0 until b.mapCard.childCount) {
             val v = b.mapCard.getChildAt(i)
-            if (v === b.widgetToggle || v === navBanner) continue
+            if (v === b.widgetToggle || v === navBanner || v === cc) continue
             if (v === b.shortcutsHolder) v.visibility = if (shortcuts) View.VISIBLE else View.GONE
-            else v.visibility = if (shortcuts) View.INVISIBLE else View.VISIBLE
+            else v.visibility = if (shortcuts || consumption) View.INVISIBLE else View.VISIBLE
         }
-        if (!shortcuts) renderLocation(LocationRepo.location.value, CarBridge.state.value)
-        b.widgetToggle.setImageResource(if (shortcuts) R.drawable.ic_map else R.drawable.ic_apps)
-        navBanner?.show(app.mg4dash.map.NavRepo.nav.value?.takeIf { !shortcuts })
+        if (mode == 0) renderLocation(LocationRepo.location.value, CarBridge.state.value)
+        b.widgetToggle.setImageResource(when (mode) { 0 -> R.drawable.ic_bolt; 2 -> R.drawable.ic_apps; else -> R.drawable.ic_map })
+        navBanner?.show(app.mg4dash.map.NavRepo.nav.value?.takeIf { mode == 0 })
         if (shortcuts) renderShortcuts()
     }
 
@@ -619,14 +678,27 @@ class MainActivity : AppCompatActivity() {
         row.addView(left, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
         row.addView(right, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
         g.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = (12 * d).toInt() })
+        // Détail en petit : tension, courant (vert en récupération), température batterie (issue #6)
+        powerExtra = TextView(this).apply {
+            setTextColor(color(R.color.text_sub)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f); gravity = Gravity.CENTER
+            fontFeatureSettings = "tnum"
+        }
+        g.addView(powerExtra, LinearLayout.LayoutParams(-1, -2).apply { topMargin = (6 * d).toInt() })
     }
+
+    private var powerExtra: TextView? = null
 
     /** Puissance batterie (tension × courant) : positive = tirée, négative = récupérée. */
     private suspend fun updatePower() {
         if (builtMode != 1) return
+        var volts: Float? = null; var amps: Float? = null; var battTemp: Float? = null
         val kw = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
             val v = app.mg4dash.car.CarProps.getFloat(app.mg4dash.car.CarProps.BMS_PACK_VOL)
             val i = app.mg4dash.car.CarProps.getFloat(app.mg4dash.car.CarProps.BMS_PACK_CRNT)
+            volts = v?.takeIf { it in 100f..900f }; amps = i
+            // Température batterie (BMS, relevée par MG4Control) ; sentinelles et valeurs absurdes écartées
+            battTemp = (app.mg4dash.car.CarProps.readFloatArea(0x2160f43c, 0x1000000) ?: app.mg4dash.car.CarProps.getFloat(0x2160f43c))
+                ?.takeIf { it.isFinite() && it in -40f..80f }
             if (v != null && i != null && v in 100f..900f) v * i / 1000f else null
         }
         val plugged = VehicleState.isCharging(CarBridge.state.value.chargeStatus)
@@ -637,6 +709,18 @@ class MainActivity : AppCompatActivity() {
         powerBar?.kw = if (plugged) 0f else kw ?: 0f
         val avg = app.mg4dash.energy.EnergyMonitor.sinceStart.value.per100
         powerAvg?.text = avg?.let { "${kwh(it)} kWh/100" } ?: "—"
+        powerExtra?.let { tv ->
+            val parts = mutableListOf<CharSequence>()
+            volts?.let { parts.add(String.format(Locale.getDefault(), "%.0f V", it)) }
+            amps?.let { a ->
+                val txt = String.format(Locale.getDefault(), "%.1f A", kotlin.math.abs(a))
+                parts.add(if (a < -0.5f) android.text.SpannableString(txt).apply {
+                    setSpan(android.text.style.ForegroundColorSpan(color(R.color.accent_energy)), 0, txt.length, 0)
+                } else txt)
+            }
+            battTemp?.let { parts.add(getString(R.string.sw_batt_temp, Math.round(it))) }
+            tv.text = android.text.TextUtils.join("   ·   ", parts)
+        }
     }
 
     /** Trois contacts favoris, choisis dans le répertoire ; toucher = appeler, appui long = changer. */
@@ -685,13 +769,14 @@ class MainActivity : AppCompatActivity() {
                 launch { WeatherRepo.weather.collect { renderWeather(it, CarBridge.state.value) } }
                 launch { LocationRepo.location.collect { renderLocation(it, CarBridge.state.value) } }
                 // Guidage DiAuto : bandeau sur la carte (pas sur les raccourcis)
-                launch { app.mg4dash.map.NavRepo.nav.collect { n -> navBanner?.show(n?.takeIf { prefs.homeWidget != 1 }) } }
+                launch { app.mg4dash.map.NavRepo.nav.collect { n -> navBanner?.show(n?.takeIf { effectiveWidget() == 0 }) } }
                 launch { while (true) { updatePower(); delay(1_000) } }
                 launch {
                     while (true) {
                         if (app.mg4dash.ui.Themes.signature(this@MainActivity) != themeSig) { app.mg4dash.ui.Themes.publish(this@MainActivity); recreate(); return@launch }
                         renderSecondary()
                         renderWeatherFallbackOnly()
+                        if (effectiveWidget() != lastWidgetMode || effectiveWidget() == 2) { lastWidgetMode = effectiveWidget(); applyHomeWidget() }
                         actualRecirc = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                             app.mg4dash.car.CarProps.readAny(354419976).let { v -> when (v) { "true", "1" -> true; "false", "0" -> false; else -> null } }
                         }

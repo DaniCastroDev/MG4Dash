@@ -154,6 +154,18 @@ class ScreenshotTest {
         shoot(SettingsActivity::class.java, "settings_soh.png")
     }
 
+    @Test fun homeMapLayoutVertical() {
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
+            .putInt("home_style", 2).putBoolean("vertical_dock", true).putBoolean("hide_titles", true).putInt("stack_page", 2).putInt("weather_page", 1).apply()
+        shoot(MainActivity::class.java, "home_map_layout_vertical.png")
+    }
+
+    @Test fun homeMapLayoutConsumption() {
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
+            .putInt("home_style", 2).putInt("home_widget", 2).apply()
+        shoot(MainActivity::class.java, "home_map_layout_consumption.png")
+    }
+
     @Test fun homeWidgetPower() {
         org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit().putInt("secondary_widget", 1).apply()
         shoot(MainActivity::class.java, "home_widget_power.png")

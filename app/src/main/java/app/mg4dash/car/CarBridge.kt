@@ -145,8 +145,27 @@ object CarBridge {
 
     private inline fun <T> safe(block: () -> T): T? = try { block() } catch (_: Exception) { null }
 
+    // Valeur réglée à l'instant : la voiture met un moment à l'appliquer, et la relecture (chaque
+    // seconde) réaffichait l'ancienne valeur entre-temps (« la valeur hésite », issue #6). On garde
+    // l'affichage sur la nouvelle valeur jusqu'à ce que la voiture la confirme, 3 s au plus.
+    @Volatile private var holdTemp: Pair<Float, Long>? = null
+    @Volatile private var holdFan: Pair<Int, Long>? = null
+    private const val HOLD_MS = 3000L
+
+    private fun held(s: VehicleState): VehicleState {
+        val now = System.currentTimeMillis()
+        var r = s
+        holdTemp?.let { (v, until) ->
+            if (now > until || s.driverTemp == v) holdTemp = null else r = r.copy(driverTemp = v)
+        }
+        holdFan?.let { (v, until) ->
+            if (now > until || s.fanSpeed == v) holdFan = null else r = r.copy(fanSpeed = v)
+        }
+        return r
+    }
+
     private fun refreshHvac() {
-        val h = hvac ?: run { if (Firmware.family != Firmware.Family.A9) _state.value = LegacyCar.readHvac(_state.value); return }
+        val h = hvac ?: run { if (Firmware.family != Firmware.Family.A9) _state.value = held(LegacyCar.readHvac(_state.value)); return }
         _state.value = _state.value.copy(
             connected = true,
             hvacOn = safe { h.hvacPowerStatus },
@@ -160,7 +179,7 @@ object CarBridge {
             defrostFront = safe { h.frontDefrostStatus },
             defrostRear = safe { h.rearDefrostStatus },
             ecoOn = safe { h.ecoStatus },
-        )
+        ).let { held(it) }
     }
 
     private fun refreshEnergy() {
@@ -364,6 +383,7 @@ object CarBridge {
         }.let { t -> if (t < 18f) min else if (t > 32f) max else t }
         if (target == cur) return
         _state.value = _state.value.copy(driverTemp = target)   // retour visuel immédiat
+        holdTemp = target to System.currentTimeMillis() + HOLD_MS
         if (useLegacy) legacy("temp=$target") { LegacyCar.temp(Math.round(target)) }
         else command("temp=$target") { it.setDriverTemperature(target) }
     }
@@ -373,6 +393,7 @@ object CarBridge {
         val target = (cur + delta).coerceIn(VehicleState.FAN_MIN, VehicleState.FAN_MAX)
         if (target == cur) return
         _state.value = _state.value.copy(fanSpeed = target)
+        holdFan = target to System.currentTimeMillis() + HOLD_MS
         if (useLegacy) legacy("fan=$target") { LegacyCar.fan(target) }
         else command("fan=$target") { it.setFanSpeed(target) }
     }

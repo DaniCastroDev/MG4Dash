@@ -113,6 +113,8 @@ class MapCard(private val context: Context, holder: ViewGroup) {
         if (location.hasBearing()) marker?.rotation = -location.bearing
         if (!follow && System.currentTimeMillis() - lastTouch > RESUME_FOLLOW_MS) follow = true
         if (follow && headingUp && location.hasBearing() && location.speed > 1f) m.mapOrientation = -location.bearing
+        // Cap en haut : la voiture descend vers le bas du widget pour montrer plus de route devant (issue #6)
+        m.setMapCenterOffset(0, if (headingUp && follow) (m.height * 0.3f).toInt() else 0)
         if (follow) m.controller.animateTo(p, zoomLevel, 800L)
         m.invalidate()
     }

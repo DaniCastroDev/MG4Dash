@@ -42,6 +42,8 @@ object WeatherRepo {
         val hours: List<Hour>,
         val days: List<Day>,
         val updatedAt: Long,
+        val todayMin: Int? = null,
+        val todayMax: Int? = null,
     )
 
     private val _weather = MutableStateFlow<Weather?>(null)
@@ -55,7 +57,7 @@ object WeatherRepo {
                 "Paris", 14, 12, 2, 18, 72,
                 listOf(Hour("14h", 2, 14), Hour("15h", 3, 15), Hour("16h", 61, 13), Hour("17h", 61, 12), Hour("18h", 3, 11)),
                 listOf(Day("Mer", 3, 8, 15), Day("Jeu", 0, 7, 17), Day("Ven", 61, 9, 13)),
-                System.currentTimeMillis(),
+                System.currentTimeMillis(), todayMin = 9, todayMax = 17,
             )
             return
         }
@@ -97,7 +99,7 @@ object WeatherRepo {
         usedFallback = loc == null
         val lat = loc?.first ?: prefs.weatherLat.toDouble()
         val lon = loc?.second ?: prefs.weatherLon.toDouble()
-        val place = if (loc != null) Tr.s(R.string.weather_here) else prefs.weatherCity
+        val place = if (loc != null) (cityName(context, loc.first, loc.second) ?: Tr.s(R.string.weather_here)) else prefs.weatherCity
         val url = String.format(
             Locale.US,
             "https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f" +
@@ -116,6 +118,34 @@ object WeatherRepo {
         _weather.value = parse(JSONObject(body), place)
         Log.i(TAG, "mise à jour : ${_weather.value?.tempC}° à $place")
         return true
+    }
+
+    /**
+     * Nom de la ville approximative (OpenStreetMap Nominatim, géocodage inverse), mis en cache :
+     * nouvelle requête seulement après 5 km ou au changement de langue (issue #6 : afficher la ville
+     * plutôt que « Position actuelle »). Null hors ligne ou en cas d'échec.
+     */
+    private fun cityName(context: Context, lat: Double, lon: Double): String? {
+        val sp = Prefs(context).raw
+        val lang = Locale.getDefault().language
+        val cLat = sp.getFloat("city_lat", 0f).toDouble(); val cLon = sp.getFloat("city_lon", 0f).toDouble()
+        val cached = sp.getString("city_name", null)
+        val dist = FloatArray(1)
+        android.location.Location.distanceBetween(lat, lon, cLat, cLon, dist)
+        if (cached != null && dist[0] < 5000f && sp.getString("city_lang", "") == lang) return cached
+        return try {
+            val url = String.format(Locale.US, "https://nominatim.openstreetmap.org/reverse?format=json&lat=%.4f&lon=%.4f&zoom=10&accept-language=%s", lat, lon, lang)
+            val c = URL(url).openConnection() as HttpURLConnection
+            c.connectTimeout = 8000; c.readTimeout = 8000
+            c.setRequestProperty("User-Agent", "MG4Dash (github.com/Skittle6938/MG4Dash)")
+            val body = try { if (c.responseCode != 200) return cached; c.inputStream.bufferedReader().use { it.readText() } } finally { c.disconnect() }
+            val a = JSONObject(body).optJSONObject("address") ?: return cached
+            val name = listOf("city", "town", "village", "municipality", "county").map { a.optString(it) }.firstOrNull { it.isNotBlank() } ?: return cached
+            sp.edit().putString("city_name", name).putFloat("city_lat", lat.toFloat()).putFloat("city_lon", lon.toFloat()).putString("city_lang", lang).apply()
+            name
+        } catch (e: Exception) {
+            Log.w(TAG, "ville : ${e.message}"); cached
+        }
     }
 
     private fun parse(json: JSONObject, place: String): Weather {
@@ -152,6 +182,8 @@ object WeatherRepo {
             hours = hours,
             days = days,
             updatedAt = System.currentTimeMillis(),
+            todayMin = runCatching { Math.round(daily.getJSONArray("temperature_2m_min").getDouble(0)).toInt() }.getOrNull(),
+            todayMax = runCatching { Math.round(daily.getJSONArray("temperature_2m_max").getDouble(0)).toInt() }.getOrNull(),
         )
     }
 

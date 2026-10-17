@@ -154,6 +154,70 @@ object Dock {
     private fun pkgIcon(activity: Activity, pkg: String): android.graphics.drawable.Drawable? =
         try { activity.packageManager.getApplicationIcon(pkg) } catch (_: Exception) { null }
 
+    /**
+     * Barre verticale à gauche (style Carte, option ; issue #6) : icônes seules, sous le bouton
+     * antibrouillards de MG qui se superpose en haut à gauche et semble ainsi en faire partie.
+     * Ordre : Réglages, Android Auto / CarPlay (en gris), Téléphone, Énergie, Véhicule, Accueil.
+     * Réglages : toucher = réglages de la voiture, appui long = réglages du launcher,
+     * double toucher = Wi-Fi.
+     */
+    fun buildVertical(activity: Activity, bar: LinearLayout, current: Page) {
+        val kit = Kit(activity)
+        fun color(r: Int) = app.mg4dash.ui.Themes.color(activity, r)
+        bar.removeAllViews()
+        bar.orientation = LinearLayout.VERTICAL
+        bar.setBackgroundResource(R.drawable.bg_panel)
+        bar.elevation = kit.dp(6).toFloat()
+        bar.setPadding(kit.dp(4), kit.dp(4), kit.dp(4), kit.dp(6))
+        // Place du bouton antibrouillards (superposé par MG, on ne peut pas le dessiner nous-mêmes)
+        bar.addView(android.view.View(activity), LinearLayout.LayoutParams(-1, kit.dp(62)))
+        val order = listOf(
+            ITEMS.first { it.label == R.string.dock_settings },
+            ITEMS.first { it.label == R.string.dock_aa },
+            ITEMS.first { it.label == R.string.dock_phone },
+            ITEMS.first { it.label == R.string.dock_energy },
+            ITEMS.first { it.label == R.string.dock_vehicle },
+            ITEMS.first { it.label == R.string.dock_home },
+        )
+        order.forEach { item ->
+            val selected = item.page == current
+            val cell = android.widget.FrameLayout(activity).apply {
+                setBackgroundResource(R.drawable.bg_dock_item); isSelected = selected
+                isClickable = true; isFocusable = true
+            }
+            val icon = ImageView(activity)
+            val custom = if (item.label == R.string.dock_aa) customAa(activity) else null
+            val appIcon = custom?.let { Shortcuts.appIcon(activity, it) ?: if (it.packageName == Apps.CARPLAY.packageName) pkgIcon(activity, it.packageName) else null }
+            if (appIcon != null) {
+                // Icône d'appli en niveaux de gris, pour s'accorder aux autres icônes de la barre
+                icon.setImageDrawable(appIcon.mutate().apply {
+                    colorFilter = android.graphics.ColorMatrixColorFilter(android.graphics.ColorMatrix().apply { setSaturation(0f) })
+                })
+            } else {
+                icon.setImageResource(item.icon)
+                icon.setColorFilter(color(if (selected) R.color.accent_action else R.color.text_sub))
+            }
+            cell.addView(icon, android.widget.FrameLayout.LayoutParams(kit.dp(34), kit.dp(34), android.view.Gravity.CENTER))
+            when (item.label) {
+                R.string.dock_settings -> {
+                    // Toucher simple (après le délai du double toucher) / double toucher / appui long
+                    val gd = android.view.GestureDetector(activity, object : android.view.GestureDetector.SimpleOnGestureListener() {
+                        override fun onSingleTapConfirmed(e: android.view.MotionEvent): Boolean { open(activity, item, current); return true }
+                        override fun onDoubleTap(e: android.view.MotionEvent): Boolean { openWifi(activity); return true }
+                        override fun onLongPress(e: android.view.MotionEvent) { activity.startActivity(Intent(activity, SettingsActivity::class.java)) }
+                        override fun onDown(e: android.view.MotionEvent) = true
+                    })
+                    cell.setOnTouchListener { v, ev -> v.isPressed = ev.actionMasked == android.view.MotionEvent.ACTION_DOWN; gd.onTouchEvent(ev) }
+                }
+                else -> {
+                    cell.setOnClickListener { open(activity, item, current) }
+                    if (item.label == R.string.dock_home) cell.setOnLongClickListener { activity.startActivity(Intent(activity, AppsActivity::class.java)); true }
+                }
+            }
+            bar.addView(cell, LinearLayout.LayoutParams(-1, 0, 1f).apply { topMargin = kit.dp(4) })
+        }
+    }
+
     /** Réglages Wi-Fi d'Android, sinon les réglages de la voiture. */
     fun openWifi(activity: Activity) {
         try {

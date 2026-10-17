@@ -224,6 +224,16 @@ class SettingsActivity : AppCompatActivity() {
         row(style,
             *styleButtons(listOf(R.string.st_style_full, R.string.st_style_simple, R.string.st_style_map), { prefs.homeStyle }) { prefs.homeStyle = it; showStyle() },
         )
+        val mapOpts = text(style, "", 18f, R.color.text_value)
+        fun showMapOpts() {
+            mapOpts.text = getString(R.string.st_map_vdock, getString(if (prefs.verticalDock) R.string.yes else R.string.no)) + "\n" +
+                getString(R.string.st_map_titles, getString(if (prefs.hideTitles) R.string.yes else R.string.no))
+        }
+        showMapOpts()
+        row(style,
+            button(getString(R.string.st_map_vdock_btn)) { prefs.verticalDock = !prefs.verticalDock; showMapOpts() },
+            button(getString(R.string.st_map_titles_btn)) { prefs.hideTitles = !prefs.hideTitles; showMapOpts() },
+        )
         val stackState = text(style, "", 18f, R.color.text_value)
         fun showStack() { stackState.text = getString(R.string.st_stack_auto, getString(if (prefs.stackAuto) R.string.yes else R.string.no)) }
         showStack()

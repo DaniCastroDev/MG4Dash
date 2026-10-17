@@ -319,6 +319,11 @@
     <string name="st_cap_est_current">Von MG4Dash auf der aktuellen Ladung gemessen: %1$s kWh (vorläufig).</string>
     <string name="st_soh">Batteriezustand (geschätzt): %1$d %% über 30 Tage, %2$d %% seit der ersten Messung (%3$d Messungen, verglichen mit einer neuen %4$d-kWh-Batterie).</string>
     <string name="st_soh_none">Batteriezustand: gemessen ab dem nächsten Laden (15 %% Abnahme nötig), verglichen mit einer neuen %1$d-kWh-Batterie. Modell wählen:</string>
+    <string name="sw_batt_temp">Batterie %1$d °C</string>
+    <string name="st_map_vdock">Stil Karte: senkrechte Leiste links: %1$s</string>
+    <string name="st_map_titles">Stil Karte: Widget-Titel ausblenden: %1$s</string>
+    <string name="st_map_vdock_btn">Senkrechte Leiste</string>
+    <string name="st_map_titles_btn">Titel</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefon verbunden · Zum Öffnen tippen</string>
     <string name="aa_waiting">Telefon per USB verbinden</string>

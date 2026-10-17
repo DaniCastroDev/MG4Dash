@@ -319,6 +319,11 @@
     <string name="st_cap_est_current">Mesurée par MG4Dash sur la charge en cours : %1$s kWh (provisoire).</string>
     <string name="st_soh">Santé batterie (estimée) : %1$d %% sur 30 jours, %2$d %% depuis la première mesure (%3$d mesures, comparé à une batterie %4$d kWh neuve).</string>
     <string name="st_soh_none">Santé batterie : mesurée à partir de la prochaine recharge (il faut 15 %% de baisse), comparée à une batterie %1$d kWh neuve. Choisissez votre modèle :</string>
+    <string name="sw_batt_temp">Batterie %1$d °C</string>
+    <string name="st_map_vdock">Style Carte : barre verticale à gauche : %1$s</string>
+    <string name="st_map_titles">Style Carte : masquer les titres des widgets : %1$s</string>
+    <string name="st_map_vdock_btn">Barre verticale</string>
+    <string name="st_map_titles_btn">Titres</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Téléphone connecté · Appuyer pour ouvrir</string>
     <string name="aa_waiting">Branchez votre téléphone en USB</string>
