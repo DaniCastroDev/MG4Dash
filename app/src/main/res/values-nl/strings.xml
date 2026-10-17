@@ -192,6 +192,7 @@
     <string name="st_log">LOGBOEK</string>
     <string name="st_refresh">Vernieuwen</string>
     <string name="st_close">Sluiten</string>
+    <string name="st_title">Instellingen · MG4Dash %1$s</string>
     <string name="st_replace_msg">Het SAIC-startscherm wordt uitgeschakeld en MG4Dash wordt het startscherm. De onderhoudsmodus herstelt het op elk moment. Doorgaan?</string>
     <string name="st_replace_btn">Vervangen</string>
     <string name="cancel">Annuleren</string>

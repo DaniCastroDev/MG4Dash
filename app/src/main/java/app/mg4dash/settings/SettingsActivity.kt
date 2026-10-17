@@ -47,34 +47,46 @@ class SettingsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         prefs = Prefs(this)
         app.mg4dash.ui.Themes.apply(this)
-        val root = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setPadding(dp(24), dp(20), dp(24), dp(20))
-        }
+        // Une seule zone qui défile : deux colonnes de catégories, sous un bandeau fixe
+        // (titre, journal, fermer) qui laisse la place au bouton antibrouillards.
+        val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(24), dp(12), dp(24), 0) }
+        val top = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        top.addView(TextView(this).apply {
+            text = getString(R.string.st_title, BuildConfig.VERSION_NAME); setTextColor(color(R.color.text_value))
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 22f); typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+        }, LinearLayout.LayoutParams(0, -2, 1f).apply { leftMargin = dp(app.mg4dash.ui.Kit.FOG_SAFE_DP - 8) })
+        top.addView(button(getString(R.string.st_close), R.color.accent_action) { finish() }, LinearLayout.LayoutParams(dp(200), dp(56)))
+        root.addView(top, LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = dp(12) })
+        val cols = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
         val left = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
         val right = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        root.addView(ScrollView(this).apply { addView(left) }, LinearLayout.LayoutParams(0, -1, 1f).apply { rightMargin = dp(12); topMargin = dp(60) /* zone antibrouillards */ })
-        val rightCol = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        rightCol.addView(right)
-        root.addView(ScrollView(this).apply { addView(rightCol) }, LinearLayout.LayoutParams(0, -1, 1f).apply { leftMargin = dp(12) })
+        cols.addView(left, LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = dp(8) })
+        cols.addView(right, LinearLayout.LayoutParams(0, -2, 1f).apply { leftMargin = dp(8) })
+        root.addView(ScrollView(this).apply { isVerticalScrollBarEnabled = true; addView(cols) }, LinearLayout.LayoutParams(-1, 0, 1f))
         setContentView(root)
 
-        // ── En-tête de la colonne droite : version, journal, fermer ──
-        val head = panel(right, "MG4Dash ${BuildConfig.VERSION_NAME}")
-        row(head,
-            button(getString(R.string.st_log)) { showLogDialog() },
-            button(getString(R.string.st_close), R.color.accent_action) { finish() },
-        )
+        // ════ Colonne gauche : ce qu'on voit à l'écran ════
 
-        // ── Mode Entretien ──
-        val valet = panel(left, getString(R.string.st_home))
-        homeState = text(valet, "", 19f, R.color.text_sub)
-        text(valet, getString(R.string.st_home_desc), 17f, R.color.text_title)
-        row(valet,
-            button(getString(R.string.st_replace), R.color.accent_action) { confirmReplace() },
-            button(getString(R.string.st_valet), R.color.accent_heat) { confirmValet() },
-        )
-        text(valet, getString(R.string.st_adb), 15f, R.color.text_title)
+        // ── Accueil : style et options d'affichage ──
+        val style = panel(left, getString(R.string.st_style))
+        text(style, getString(R.string.st_style_desc), 16f, R.color.text_title)
+        row(style, *styleButtons(listOf(R.string.st_style_full, R.string.st_style_simple, R.string.st_style_map), { prefs.homeStyle }) { prefs.homeStyle = it })
+        toggle(style, R.string.st_map_vdock, null, { prefs.verticalDock }) { prefs.verticalDock = it; app.mg4dash.ui.Themes.publish(this) }
+        toggle(style, R.string.st_fullscreen, null, { prefs.fullscreen }) { prefs.fullscreen = it; Fullscreen.apply(this) }
+        toggle(style, R.string.st_map_titles, null, { prefs.hideTitles }) { prefs.hideTitles = it }
+        toggle(style, R.string.st_stack_auto, null, { prefs.stackAuto }) { prefs.stackAuto = it }
+
+        // ── Thème : fond et couleur des boutons ──
+        val theme = panel(left, getString(R.string.st_theme))
+        text(theme, getString(R.string.st_theme_mode), 18f, R.color.text_value)
+        row(theme, *styleButtons(listOf(R.string.st_mode_auto, R.string.st_mode_dark, R.string.st_mode_light), { prefs.themeMode }) {
+            if (prefs.themeMode != it) { prefs.themeMode = it; onThemeChanged() }
+        })
+        text(theme, getString(R.string.st_theme_bg), 18f, R.color.text_value)
+        swatches(theme, app.mg4dash.ui.Themes.BACKGROUND_SWATCHES, prefs.themeBackground) { prefs.themeBackground = it; onThemeChanged() }
+        text(theme, getString(R.string.st_theme_accent), 18f, R.color.text_value)
+        swatches(theme, app.mg4dash.ui.Themes.ACCENT_SWATCHES, prefs.themeAccent) { prefs.themeAccent = it; onThemeChanged() }
+        text(theme, getString(R.string.st_theme_desc), 16f, R.color.text_title)
 
         // ── Énergie ──
         val energy = panel(left, getString(R.string.title_energy))
@@ -114,25 +126,18 @@ class SettingsActivity : AppCompatActivity() {
         })
         text(energy, getString(R.string.st_capacity_desc), 16f, R.color.text_title)
 
-        // ── Météo ──
-        val weather = panel(left, getString(R.string.title_weather))
-        val city = text(weather, "", 18f, R.color.text_value)
-        fun showCity() { city.text = getString(R.string.st_city, prefs.weatherCity) }
-        showCity()
-        row(weather, button(getString(R.string.st_change_city)) {
-            val idx = (cities.indexOfFirst { it.first == prefs.weatherCity } + 1) % cities.size
-            val c = cities[idx]
-            prefs.weatherCity = c.first; prefs.weatherLat = c.second; prefs.weatherLon = c.third
-            showCity(); WeatherRepo.refreshNow(this)
-        })
+        // ════ Colonne droite : système, connexions, diagnostic ════
 
-        // ── Démarrage ──
-        val boot = panel(left, getString(R.string.st_startup))
-        toggle(boot, R.string.st_warm, R.string.st_warm_desc, { prefs.warmUpStock }) { prefs.warmUpStock = it }
-
-        // ── Affichage ──
-        val display = panel(left, getString(R.string.st_display))
-        toggle(display, R.string.st_fullscreen, R.string.st_fullscreen_desc, { prefs.fullscreen }) { prefs.fullscreen = it; Fullscreen.apply(this) }
+        // ── Écran d'accueil de la voiture et démarrage ──
+        val valet = panel(right, getString(R.string.st_home))
+        homeState = text(valet, "", 19f, R.color.text_sub)
+        text(valet, getString(R.string.st_home_desc), 16f, R.color.text_title)
+        row(valet,
+            button(getString(R.string.st_replace), R.color.accent_action) { confirmReplace() },
+            button(getString(R.string.st_valet), R.color.accent_heat) { confirmValet() },
+        )
+        toggle(valet, R.string.st_warm, R.string.st_warm_desc, { prefs.warmUpStock }) { prefs.warmUpStock = it }
+        text(valet, getString(R.string.st_adb), 14f, R.color.text_title)
 
         // ── Mise à jour depuis GitHub ──
         val upd = panel(right, getString(R.string.st_update))
@@ -186,44 +191,17 @@ class SettingsActivity : AppCompatActivity() {
 
         toggle(upd, R.string.st_update_beta, null, { prefs.updateBeta }) { prefs.updateBeta = it }
 
-        // ── Thème : fond et couleur des boutons ──
-        val theme = panel(right, getString(R.string.st_theme))
-        text(theme, getString(R.string.st_theme_mode), 18f, R.color.text_value)
-        row(theme,
-            button(getString(R.string.st_mode_auto), if (prefs.themeMode == 0) R.color.accent_action else R.color.text_value) { if (prefs.themeMode != 0) { prefs.themeMode = 0; onThemeChanged() } },
-            button(getString(R.string.st_mode_dark), if (prefs.themeMode == 1) R.color.accent_action else R.color.text_value) { if (prefs.themeMode != 1) { prefs.themeMode = 1; onThemeChanged() } },
-            button(getString(R.string.st_mode_light), if (prefs.themeMode == 2) R.color.accent_action else R.color.text_value) { if (prefs.themeMode != 2) { prefs.themeMode = 2; onThemeChanged() } },
-        )
-        text(theme, getString(R.string.st_theme_bg), 18f, R.color.text_value)
-        swatches(theme, app.mg4dash.ui.Themes.BACKGROUND_SWATCHES, prefs.themeBackground) { prefs.themeBackground = it; onThemeChanged() }
-        text(theme, getString(R.string.st_theme_accent), 18f, R.color.text_value)
-        swatches(theme, app.mg4dash.ui.Themes.ACCENT_SWATCHES, prefs.themeAccent) { prefs.themeAccent = it; onThemeChanged() }
-        text(theme, getString(R.string.st_theme_desc), 16f, R.color.text_title)
-
-        // ── Style de l'accueil ──
-        val style = panel(right, getString(R.string.st_style))
-        val styleState = text(style, "", 18f, R.color.text_value)
-        fun showStyle() {
-            styleState.text = getString(R.string.st_style_now, getString(when (prefs.homeStyle) { 1 -> R.string.st_style_simple; 2 -> R.string.st_style_map; else -> R.string.st_style_full }))
-        }
-        showStyle()
-        text(style, getString(R.string.st_style_desc), 16f, R.color.text_title)
-        row(style,
-            *styleButtons(listOf(R.string.st_style_full, R.string.st_style_simple, R.string.st_style_map), { prefs.homeStyle }) { prefs.homeStyle = it; showStyle() },
-        )
-        toggle(style, R.string.st_map_vdock, null, { prefs.verticalDock }) { prefs.verticalDock = it; app.mg4dash.ui.Themes.publish(this) }
-        toggle(style, R.string.st_map_titles, null, { prefs.hideTitles }) { prefs.hideTitles = it }
-        toggle(style, R.string.st_stack_auto, R.string.st_stack_desc, { prefs.stackAuto }) { prefs.stackAuto = it }
-
-        // ── Compatibilité (bêta multi-firmware) ──
-        val compat = panel(right, getString(R.string.st_compat))
-        text(compat, getString(R.string.st_compat_fw, app.mg4dash.system.Firmware.version, app.mg4dash.system.Firmware.gen.name), 18f, R.color.text_value)
-        text(compat, getString(if (app.mg4dash.system.Firmware.tested) R.string.st_compat_tested else R.string.st_compat_beta), 16f, R.color.text_title)
-        row(compat, button(getString(R.string.st_compat_run)) { Thread { app.mg4dash.car.CarProps.dumpAll() }.start(); Compat.show(this) })
-
-        // ── Diagnostic énergie ──
-        val diag = panel(right, getString(R.string.st_diag))
-        toggle(diag, R.string.st_energy_log, R.string.st_energy_log_desc, { prefs.energyLog }) { prefs.energyLog = it }
+        // ── Météo ──
+        val weather = panel(right, getString(R.string.title_weather))
+        val city = text(weather, "", 18f, R.color.text_value)
+        fun showCity() { city.text = getString(R.string.st_city, prefs.weatherCity) }
+        showCity()
+        row(weather, button(getString(R.string.st_change_city)) {
+            val idx = (cities.indexOfFirst { it.first == prefs.weatherCity } + 1) % cities.size
+            val c = cities[idx]
+            prefs.weatherCity = c.first; prefs.weatherLat = c.second; prefs.weatherLon = c.third
+            showCity(); WeatherRepo.refreshNow(this)
+        })
 
         // ── Home Assistant ──
         val ha = panel(right, "HOME ASSISTANT")
@@ -247,6 +225,16 @@ class SettingsActivity : AppCompatActivity() {
                 }
             },
         )
+
+        // ── Diagnostic : compatibilité, journal, enregistreur ──
+        val diag = panel(right, getString(R.string.st_diag))
+        text(diag, getString(R.string.st_compat_fw, app.mg4dash.system.Firmware.version, app.mg4dash.system.Firmware.gen.name), 18f, R.color.text_value)
+        text(diag, getString(if (app.mg4dash.system.Firmware.tested) R.string.st_compat_tested else R.string.st_compat_beta), 16f, R.color.text_title)
+        row(diag,
+            button(getString(R.string.st_compat_run)) { Thread { app.mg4dash.car.CarProps.dumpAll() }.start(); Compat.show(this) },
+            button(getString(R.string.st_log)) { showLogDialog() },
+        )
+        toggle(diag, R.string.st_energy_log, R.string.st_energy_log_desc, { prefs.energyLog }) { prefs.energyLog = it }
 
         refreshHome()
     }
@@ -388,20 +376,36 @@ class SettingsActivity : AppCompatActivity() {
         }
 
     /**
-     * Option oui / non : son libellé (le « : %1$s » de la chaîne est retiré), une description
-     * éventuelle, puis deux boutons Non / Oui dont celui qui est actif est surligné.
+     * Option oui / non sur une ligne : libellé (le « : %1$s » de la chaîne est retiré) et description
+     * éventuelle à gauche, un seul bouton à droite qui affiche OUI ou NON et se surligne quand l'option est active.
      */
     private fun toggle(parent: LinearLayout, labelRes: Int, descRes: Int?, get: () -> Boolean, set: (Boolean) -> Unit) {
-        text(parent, getString(labelRes, "").trimEnd(' ', ':', '\u00a0', '\u202f'), 18f, R.color.text_value)
-        descRes?.let { text(parent, getString(it), 16f, R.color.text_title) }
-        row(parent, *choiceButtons(listOf(getString(R.string.no), getString(R.string.yes)), { if (get()) 1 else 0 }) { set(it == 1) })
+        val line = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        val texts = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        text(texts, getString(labelRes, "").trimEnd(' ', ':', '\u00a0', '\u202f'), 18f, R.color.text_value)
+        descRes?.let { text(texts, getString(it), 15f, R.color.text_title) }
+        line.addView(texts, LinearLayout.LayoutParams(0, -2, 1f).apply { rightMargin = dp(16) })
+        lateinit var btn: Button
+        fun paint() {
+            val on = get()
+            btn.text = getString(if (on) R.string.yes else R.string.no)
+            btn.isSelected = on
+            btn.setTextColor(color(if (on) R.color.accent_action else R.color.text_title))
+        }
+        btn = button("") { set(!get()); paint() }.apply { setBackgroundResource(R.drawable.bg_chip) }
+        paint()
+        line.addView(btn, LinearLayout.LayoutParams(dp(130), dp(56)))
+        parent.addView(line, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
     }
 
     /** Boutons à choix unique : celui qui est actif est en couleur, et la couleur suit tout de suite le choix. */
     private fun choiceButtons(labels: List<String>, current: () -> Int, onPick: (Int) -> Unit): Array<Button> {
         lateinit var buttons: List<Button>
-        fun paint() = buttons.forEachIndexed { i, btn -> btn.setTextColor(color(if (i == current()) R.color.accent_action else R.color.text_value)) }
-        buttons = labels.mapIndexed { i, l -> button(l) { onPick(i); paint() } }
+        fun paint() = buttons.forEachIndexed { i, btn ->
+            btn.isSelected = i == current()
+            btn.setTextColor(color(if (i == current()) R.color.accent_action else R.color.text_value))
+        }
+        buttons = labels.mapIndexed { i, l -> button(l) { onPick(i); paint() }.apply { setBackgroundResource(R.drawable.bg_chip) } }
         paint()
         return buttons.toTypedArray()
     }

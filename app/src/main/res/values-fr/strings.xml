@@ -192,6 +192,7 @@
     <string name="st_log">JOURNAL</string>
     <string name="st_refresh">Actualiser</string>
     <string name="st_close">Fermer</string>
+    <string name="st_title">Réglages · MG4Dash %1$s</string>
     <string name="st_replace_msg">L\'écran d\'accueil SAIC sera désactivé et MG4Dash deviendra l\'accueil. Le mode Entretien le rétablit à tout moment. Continuer ?</string>
     <string name="st_replace_btn">Remplacer</string>
     <string name="cancel">Annuler</string>

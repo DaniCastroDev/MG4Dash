@@ -192,6 +192,7 @@
     <string name="st_log">PROTOKOLL</string>
     <string name="st_refresh">Aktualisieren</string>
     <string name="st_close">Schließen</string>
+    <string name="st_title">Einstellungen · MG4Dash %1$s</string>
     <string name="st_replace_msg">Der SAIC-Startbildschirm wird deaktiviert und MG4Dash wird zum Startbildschirm. Der Wartungsmodus stellt ihn jederzeit wieder her. Fortfahren?</string>
     <string name="st_replace_btn">Ersetzen</string>
     <string name="cancel">Abbrechen</string>

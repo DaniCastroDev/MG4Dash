@@ -192,6 +192,7 @@
     <string name="st_log">REGISTRO</string>
     <string name="st_refresh">Aggiorna</string>
     <string name="st_close">Chiudi</string>
+    <string name="st_title">Impostazioni · MG4Dash %1$s</string>
     <string name="st_replace_msg">La schermata home SAIC verrà disattivata e MG4Dash diventerà la home. La modalità manutenzione la ripristina in qualsiasi momento. Continuare?</string>
     <string name="st_replace_btn">Sostituisci</string>
     <string name="cancel">Annulla</string>

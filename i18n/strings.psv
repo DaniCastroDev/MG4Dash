@@ -190,6 +190,7 @@ no|NO|NON|NEIN|NO|NO|NEE
 st_log|LOG|JOURNAL|PROTOKOLL|REGISTRO|REGISTRO|LOGBOEK
 st_refresh|Refresh|Actualiser|Aktualisieren|Actualizar|Aggiorna|Vernieuwen
 st_close|Close|Fermer|Schließen|Cerrar|Chiudi|Sluiten
+st_title|Settings · MG4Dash %1$s|Réglages · MG4Dash %1$s|Einstellungen · MG4Dash %1$s|Ajustes · MG4Dash %1$s|Impostazioni · MG4Dash %1$s|Instellingen · MG4Dash %1$s
 st_replace_msg|The SAIC home screen will be disabled and MG4Dash will become the home screen. Maintenance mode restores it at any time. Continue?|L'écran d'accueil SAIC sera désactivé et MG4Dash deviendra l'accueil. Le mode Entretien le rétablit à tout moment. Continuer ?|Der SAIC-Startbildschirm wird deaktiviert und MG4Dash wird zum Startbildschirm. Der Wartungsmodus stellt ihn jederzeit wieder her. Fortfahren?|La pantalla de inicio SAIC se desactivará y MG4Dash será la pantalla de inicio. El modo mantenimiento la restaura en cualquier momento. ¿Continuar?|La schermata home SAIC verrà disattivata e MG4Dash diventerà la home. La modalità manutenzione la ripristina in qualsiasi momento. Continuare?|Het SAIC-startscherm wordt uitgeschakeld en MG4Dash wordt het startscherm. De onderhoudsmodus herstelt het op elk moment. Doorgaan?
 st_replace_btn|Replace|Remplacer|Ersetzen|Sustituir|Sostituisci|Vervangen
 cancel|Cancel|Annuler|Abbrechen|Cancelar|Annulla|Annuleren
