@@ -89,7 +89,7 @@ class Prefs(context: Context) {
         get() = sp.getString("dock_aa_target", null)
         set(v) = sp.edit().putString("dock_aa_target", v).apply()
 
-    /** Home Assistant : adresse (ex. http://192.168.1.10:8123) et jeton d'accès longue durée. */
+    /** Home Assistant : adresse (ex. http://homeassistant.local:8123) et jeton d'accès longue durée. */
     var haUrl: String
         get() = sp.getString("ha_url", "") ?: ""
         set(v) = sp.edit().putString("ha_url", v.trim()).apply()
