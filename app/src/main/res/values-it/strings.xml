@@ -42,7 +42,7 @@
     <string name="charging_eta">In carica · %1$d h %2$02d</string>
     <string name="weather_pending">Previsioni in attesa</string>
     <string name="weather_outside_vehicle">Temperatura esterna del veicolo</string>
-    <string name="weather_details">Percepita %1$d° · Vento %2$d km/h · %3$d %%</string>
+    <string name="weather_details">Percepita %1$d° · Vento %2$d %4$s · %3$d %%</string>
     <string name="weather_here">Posizione attuale</string>
     <string name="wx_sunny">Soleggiato</string>
     <string name="wx_mostly_clear">Prevalentemente sereno</string>
@@ -66,7 +66,7 @@
     <string name="cs_8">Ricarica interrotta</string>
     <string name="cs_9">Ricarica programmata</string>
     <string name="cs_10">Ricarica rapida</string>
-    <string name="cs_11">Ricarica ultrarapida</string>
+    <string name="cs_11">Adattatore V2L collegato</string>
     <string name="cs_12">In carica</string>
     <string name="cs_13">V2L: scarica in corso</string>
     <string name="cs_14">V2L: scarica interrotta</string>
@@ -131,7 +131,7 @@
     <string name="en_consumption">CONSUMO</string>
     <string name="en_since_charge">Dalla ricarica</string>
     <string name="en_since_start">Dall\'avvio</string>
-    <string name="en_recent">CONSUMO RECENTE (kWh/100 km)</string>
+    <string name="en_recent">CONSUMO RECENTE (%1$s)</string>
     <string name="en_power">Potenza %1$s kW</string>
     <string name="en_ends_in">termina tra %1$d h %2$02d</string>
     <string name="en_no_limit" formatted="false">Nessun limite: ricarica fino al 100 %.</string>
@@ -147,7 +147,7 @@
     <string name="en_unplugged">CAVO SCOLLEGATO</string>
     <string name="en_stop_charge">FERMA RICARICA</string>
     <string name="en_charge_now">RICARICA ORA</string>
-    <string name="en_history_note">ultimi %1$d km · media %2$s (tratteggiata)</string>
+    <string name="en_history_note">ultimi %1$d %3$s · media %2$s (tratteggiata)</string>
     <string name="vh_saic">Impostazioni SAIC  ›</string>
     <string name="vh_mg4control">Apri MG4 Control  ›</string>
     <string name="vh_driving">GUIDA</string>
@@ -338,7 +338,7 @@
     <string name="sr_plug">presa non collegata bene</string>
     <string name="sr_voltage">tensione incompatibile</string>
     <string name="sr_other">altra causa</string>
-    <string name="en_regen_km">+ %1$s km di autonomia recuperati dalla ricarica</string>
+    <string name="en_regen_km">+ %1$s %2$s di autonomia recuperati dalla ricarica</string>
     <string name="st_rd_state">Radio Dash: %1$s</string>
     <string name="st_rd_none">non installata</string>
     <string name="st_rd_unknown">installata (versione sconosciuta)</string>
@@ -352,6 +352,10 @@
     <string name="en_last_year">Ultimi 12 mesi</string>
     <string name="en_months_note">%1$d mesi, un punto al mese · media %2$s (tratteggiata)</string>
     <string name="en_months_wait">La curva si riempie mese dopo mese (almeno 20 km al mese).</string>
+    <string name="cons_avg_mi">mi/kWh media</string>
+    <string name="st_units">Unità</string>
+    <string name="st_units_car">Come l\'auto</string>
+    <string name="wx_clear">Sereno</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefono connesso · Tocca per aprire</string>
     <string name="aa_waiting">Collega il telefono via USB</string>

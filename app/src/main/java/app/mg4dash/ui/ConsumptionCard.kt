@@ -54,7 +54,7 @@ class ConsumptionCard(context: Context) : LinearLayout(context) {
         addView(bar, LayoutParams(LayoutParams.MATCH_PARENT, (22 * d).toInt()).apply { topMargin = (6 * d).toInt() })
         addView(legend, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (8 * d).toInt() })
         addView(regen)
-        addView(tv(15f, R.color.text_title).apply { text = context.getString(R.string.en_recent); letterSpacing = 0.1f },
+        addView(tv(15f, R.color.text_title).apply { text = context.getString(R.string.en_recent, app.mg4dash.system.Units.consUnit(context)); letterSpacing = 0.1f },
             LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (10 * d).toInt() })
         addView(chart, LayoutParams(LayoutParams.MATCH_PARENT, 0, 1f))
         addView(note)
@@ -84,14 +84,15 @@ class ConsumptionCard(context: Context) : LinearLayout(context) {
         regen.text = if (t.regenKwh > 0f) context.getString(R.string.en_regen, String.format(Locale.getDefault(), "%.1f", t.regenKwh)) else ""
         // 12 derniers mois : une valeur par mois, pour voir l'effet des saisons
         if (period == 2) {
-            val m = EnergyMonitor.monthlyPer100()
+            val m = EnergyMonitor.monthlyPer100().map { app.mg4dash.system.Units.cons(context, it) }
             chart.values = m
             note.text = if (m.size >= 2) context.getString(R.string.en_months_note, m.size,
                 String.format(Locale.getDefault(), "%.1f", m.average())) else context.getString(R.string.en_months_wait)
         } else {
-            chart.values = history
-            note.text = if (history.size >= 2) context.getString(R.string.en_history_note, history.size,
-                String.format(Locale.getDefault(), "%.1f", history.average())) else ""
+            val h = history.map { app.mg4dash.system.Units.cons(context, it) }
+            chart.values = h
+            note.text = if (h.size >= 2) context.getString(R.string.en_history_note, Math.round(app.mg4dash.system.Units.dist(context, h.size.toFloat())),
+                String.format(Locale.getDefault(), "%.1f", h.average()), app.mg4dash.system.Units.distUnit(context)) else ""
         }
     }
 }

@@ -40,7 +40,7 @@ v2l_stop|STOP V2L|ARRÊTER V2L|V2L STOPPEN|DETENER V2L|FERMA V2L|V2L STOPPEN
 charging_eta|Charging · %1$d h %2$02d|En charge · %1$d h %2$02d|Lädt · %1$d h %2$02d|Cargando · %1$d h %2$02d|In carica · %1$d h %2$02d|Laden · %1$d u %2$02d
 weather_pending|Forecast pending|Prévisions en attente|Vorhersage folgt|Previsión pendiente|Previsioni in attesa|Voorspelling volgt
 weather_outside_vehicle|Vehicle outside temperature|Température extérieure du véhicule|Außentemperatur des Fahrzeugs|Temperatura exterior del vehículo|Temperatura esterna del veicolo|Buitentemperatuur van het voertuig
-weather_details|Feels like %1$d° · Wind %2$d km/h · %3$d %%|Ressenti %1$d° · Vent %2$d km/h · %3$d %%|Gefühlt %1$d° · Wind %2$d km/h · %3$d %%|Sensación %1$d° · Viento %2$d km/h · %3$d %%|Percepita %1$d° · Vento %2$d km/h · %3$d %%|Gevoel %1$d° · Wind %2$d km/h · %3$d %%
+weather_details|Feels like %1$d° · Wind %2$d %4$s · %3$d %%|Ressenti %1$d° · Vent %2$d %4$s · %3$d %%|Gefühlt %1$d° · Wind %2$d %4$s · %3$d %%|Sensación %1$d° · Viento %2$d %4$s · %3$d %%|Percepita %1$d° · Vento %2$d %4$s · %3$d %%|Gevoel %1$d° · Wind %2$d %4$s · %3$d %%
 weather_here|Current position|Position actuelle|Aktuelle Position|Posición actual|Posizione attuale|Huidige positie
 wx_sunny|Sunny|Ensoleillé|Sonnig|Soleado|Soleggiato|Zonnig
 wx_mostly_clear|Mostly clear|Plutôt dégagé|Überwiegend klar|Mayormente despejado|Prevalentemente sereno|Overwegend helder
@@ -64,7 +64,7 @@ cs_7|Connected, not charging|Connecté, ne charge pas|Verbunden, lädt nicht|Con
 cs_8|Charging stopped|Charge arrêtée|Laden gestoppt|Carga detenida|Ricarica interrotta|Laden gestopt
 cs_9|Charging scheduled|Charge programmée|Laden geplant|Carga programada|Ricarica programmata|Laden gepland
 cs_10|Fast charging|Charge rapide|Schnellladen|Carga rápida|Ricarica rapida|Snelladen
-cs_11|Ultra-fast charging|Charge ultra-rapide|Ultraschnellladen|Carga ultrarrápida|Ricarica ultrarapida|Ultrasnelladen
+cs_11|V2L adapter connected|V2L : adaptateur branché|V2L-Adapter angeschlossen|Adaptador V2L conectado|Adattatore V2L collegato|V2L-adapter aangesloten
 cs_12|Charging|Charge en cours|Lädt|Cargando|In carica|Laden
 cs_13|V2L: discharging|V2L : décharge en cours|V2L: Entladung läuft|V2L: descargando|V2L: scarica in corso|V2L: ontladen
 cs_14|V2L: discharge stopped|V2L : décharge arrêtée|V2L: Entladung gestoppt|V2L: descarga detenida|V2L: scarica interrotta|V2L: ontladen gestopt
@@ -129,7 +129,7 @@ en_v2l_stopbtn|STOP V2L|ARRÊTER LE V2L|V2L STOPPEN|DETENER V2L|FERMA V2L|V2L ST
 en_consumption|CONSUMPTION|CONSOMMATION|VERBRAUCH|CONSUMO|CONSUMO|VERBRUIK
 en_since_charge|Since last charge|Depuis la recharge|Seit dem Laden|Desde la recarga|Dalla ricarica|Sinds laden
 en_since_start|Since start|Depuis le démarrage|Seit dem Start|Desde el arranque|Dall'avvio|Sinds start
-en_recent|RECENT CONSUMPTION (kWh/100 km)|CONSO RÉCENTE (kWh/100 km)|AKTUELLER VERBRAUCH (kWh/100 km)|CONSUMO RECIENTE (kWh/100 km)|CONSUMO RECENTE (kWh/100 km)|RECENT VERBRUIK (kWh/100 km)
+en_recent|RECENT CONSUMPTION (%1$s)|CONSO RÉCENTE (%1$s)|AKTUELLER VERBRAUCH (%1$s)|CONSUMO RECIENTE (%1$s)|CONSUMO RECENTE (%1$s)|RECENT VERBRUIK (%1$s)
 en_power|Power %1$s kW|Puissance %1$s kW|Leistung %1$s kW|Potencia %1$s kW|Potenza %1$s kW|Vermogen %1$s kW
 en_ends_in|ends in %1$d h %2$02d|fin dans %1$d h %2$02d|fertig in %1$d h %2$02d|termina en %1$d h %2$02d|termina tra %1$d h %2$02d|klaar over %1$d u %2$02d
 en_no_limit|No limit: charges to 100 %%.|Pas de limite : charge jusqu'à 100 %%.|Kein Limit: lädt bis 100 %%.|Sin límite: carga hasta el 100 %%.|Nessun limite: ricarica fino al 100 %%.|Geen limiet: laadt tot 100 %%.
@@ -145,7 +145,7 @@ en_plug_v2l|Plug a V2L adapter into the charging socket|Branchez un adaptateur V
 en_unplugged|CABLE UNPLUGGED|CÂBLE DÉBRANCHÉ|KABEL GETRENNT|CABLE DESCONECTADO|CAVO SCOLLEGATO|KABEL LOS
 en_stop_charge|STOP CHARGING|ARRÊTER LA CHARGE|LADEN STOPPEN|DETENER CARGA|FERMA RICARICA|LADEN STOPPEN
 en_charge_now|CHARGE NOW|CHARGER MAINTENANT|JETZT LADEN|CARGAR AHORA|RICARICA ORA|NU LADEN
-en_history_note|last %1$d km · average %2$s (dashed)|%1$d derniers km · moyenne %2$s (pointillés)|letzte %1$d km · Durchschnitt %2$s (gestrichelt)|últimos %1$d km · media %2$s (discontinua)|ultimi %1$d km · media %2$s (tratteggiata)|laatste %1$d km · gemiddelde %2$s (gestippeld)
+en_history_note|last %1$d %3$s · average %2$s (dashed)|%1$d derniers %3$s · moyenne %2$s (pointillés)|letzte %1$d %3$s · Durchschnitt %2$s (gestrichelt)|últimos %1$d %3$s · media %2$s (discontinua)|ultimi %1$d %3$s · media %2$s (tratteggiata)|laatste %1$d %3$s · gemiddelde %2$s (gestippeld)
 vh_saic|SAIC settings  ›|Réglages SAIC  ›|SAIC-Einstellungen  ›|Ajustes SAIC  ›|Impostazioni SAIC  ›|SAIC-instellingen  ›
 vh_mg4control|Open MG4 Control  ›|Ouvrir MG4 Control  ›|MG4 Control öffnen  ›|Abrir MG4 Control  ›|Apri MG4 Control  ›|MG4 Control openen  ›
 vh_driving|DRIVING|CONDUITE|FAHREN|CONDUCCIÓN|GUIDA|RIJDEN
@@ -336,7 +336,7 @@ sr_overtemp|over-temperature|surchauffe|Übertemperatur|sobretemperatura|surrisc
 sr_plug|plug not properly connected|prise mal branchée|Stecker nicht richtig verbunden|conector mal conectado|presa non collegata bene|stekker niet goed aangesloten
 sr_voltage|voltage mismatch|tension incompatible|Spannung passt nicht|tensión incompatible|tensione incompatibile|spanning past niet
 sr_other|other cause|autre cause|andere Ursache|otra causa|altra causa|andere oorzaak
-en_regen_km|+ %1$s km of range recovered since the last charge|+ %1$s km d'autonomie récupérés depuis la recharge|+ %1$s km Reichweite seit dem Laden zurückgewonnen|+ %1$s km de autonomía recuperados desde la carga|+ %1$s km di autonomia recuperati dalla ricarica|+ %1$s km bereik teruggewonnen sinds het laden
+en_regen_km|+ %1$s %2$s of range recovered since the last charge|+ %1$s %2$s d'autonomie récupérés depuis la recharge|+ %1$s %2$s Reichweite seit dem Laden zurückgewonnen|+ %1$s %2$s de autonomía recuperados desde la carga|+ %1$s %2$s di autonomia recuperati dalla ricarica|+ %1$s %2$s bereik teruggewonnen sinds het laden
 st_rd_state|Radio Dash: %1$s|Radio Dash : %1$s|Radio Dash: %1$s|Radio Dash: %1$s|Radio Dash: %1$s|Radio Dash: %1$s
 st_rd_none|not installed|non installée|nicht installiert|no instalada|non installata|niet geïnstalleerd
 st_rd_unknown|installed (version unknown)|installée (version inconnue)|installiert (Version unbekannt)|instalada (versión desconocida)|installata (versione sconosciuta)|geïnstalleerd (versie onbekend)
@@ -350,3 +350,7 @@ en_trip|Current trip|Trajet en cours|Aktuelle Fahrt|Trayecto actual|Viaggio in c
 en_last_year|Last 12 months|12 derniers mois|Letzte 12 Monate|Últimos 12 meses|Ultimi 12 mesi|Laatste 12 maanden
 en_months_note|%1$d months, one point per month · average %2$s (dashed)|%1$d mois, un point par mois · moyenne %2$s (pointillés)|%1$d Monate, ein Punkt pro Monat · Durchschnitt %2$s (gestrichelt)|%1$d meses, un punto por mes · media %2$s (discontinua)|%1$d mesi, un punto al mese · media %2$s (tratteggiata)|%1$d maanden, één punt per maand · gemiddelde %2$s (gestippeld)
 en_months_wait|The curve fills month by month (at least 20 km per month).|La courbe se remplit mois après mois (au moins 20 km par mois).|Die Kurve füllt sich Monat für Monat (mindestens 20 km pro Monat).|La curva se llena mes a mes (al menos 20 km al mes).|La curva si riempie mese dopo mese (almeno 20 km al mese).|De curve vult zich maand na maand (minstens 20 km per maand).
+cons_avg_mi|mi/kWh avg.|mi/kWh moy.|mi/kWh Ø|mi/kWh med.|mi/kWh media|mi/kWh gem.
+st_units|Units|Unités|Einheiten|Unidades|Unità|Eenheden
+st_units_car|Like the car|Comme la voiture|Wie das Auto|Como el coche|Come l'auto|Zoals de auto
+wx_clear|Clear|Dégagé|Klar|Despejado|Sereno|Helder

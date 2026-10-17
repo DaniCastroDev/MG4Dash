@@ -289,7 +289,7 @@ class MainActivity : AppCompatActivity() {
         b.mapEmpty.visibility = if (effectiveWidget() == 0 && (loc == null || !mapCard.available)) View.VISIBLE else View.GONE
         if (!mapCard.available) b.mapEmpty.text = getString(R.string.map_unavailable)
         val speed = s.speedKmh?.takeIf { it >= 0f } ?: loc?.takeIf { it.hasSpeed() }?.speed?.times(3.6f)
-        b.mapSpeed.text = speed?.let { "${Math.round(it)} km/h" } ?: "— km/h"
+        b.mapSpeed.text = speed?.let { app.mg4dash.system.Units.speedText(this, it) } ?: "— ${app.mg4dash.system.Units.speedUnit(this)}"
         b.mapInfo.text = listOfNotNull(
             loc?.takeIf { it.hasBearing() }?.let { getString(R.string.heading, LocationRepo.cardinal(it.bearing)) },
             loc?.takeIf { it.hasAltitude() }?.let { getString(R.string.altitude, Math.round(it.altitude).toInt()) },
@@ -422,8 +422,9 @@ class MainActivity : AppCompatActivity() {
         }
         b.batteryGauge.onColor = color(battColor)
         b.batteryGauge.value = pct?.let { (it + 4) / 5 } ?: 0
-        b.range.text = s.rangeKm?.let { "$it km" } ?: "— km"
-        b.consumption.text = avg?.let { String.format(Locale.getDefault(), "%.1f", it) } ?: "—"
+        b.range.text = s.rangeKm?.let { app.mg4dash.system.Units.distText(this, it.toFloat()) } ?: "— ${app.mg4dash.system.Units.distUnit(this)}"
+        b.consumption.text = avg?.let { app.mg4dash.system.Units.consText(this, it) } ?: "—"
+        b.consAvgLabel.text = getString(if (app.mg4dash.system.Units.miles(this)) R.string.cons_avg_mi else R.string.cons_avg)
         b.driveMode.text = VehicleState.driveModeLabel(s.driveMode)
         b.kersGauge.value = if (s.onePedal == 1) 4 else VehicleState.regenGauge(s.regenLevel)
         b.kersLabel.text = VehicleState.regenLabel(s.regenLevel, s.onePedal)
@@ -517,7 +518,7 @@ class MainActivity : AppCompatActivity() {
         b.weatherIcon.setColorFilter(color(WeatherRepo.iconColor(w.code)))
         b.weatherTemp.text = "${w.tempC}°"
         b.weatherLabel.text = WeatherRepo.label(w.code)
-        b.weatherDetails.text = getString(R.string.weather_details, w.feelsC, w.windKmh, w.humidity)
+        b.weatherDetails.text = getString(R.string.weather_details, w.feelsC, Math.round(app.mg4dash.system.Units.dist(this, w.windKmh.toFloat())), w.humidity, app.mg4dash.system.Units.speedUnit(this))
         val page = prefs.weatherPage
         fillForecast(b.weatherHours, if (page == 0) w.hours.map { Triple(it.label, it.code, "${it.tempC}°") }
             else w.days.map { Triple(it.label, it.code, "${it.minC}/${it.maxC}°") })
@@ -724,7 +725,7 @@ class MainActivity : AppCompatActivity() {
         powerLabel?.text = getString(when { plugged -> R.string.sw_charging; regen -> R.string.sw_recovering; else -> R.string.sw_drawn })
         powerBar?.kw = if (plugged) 0f else kw ?: 0f
         val avg = app.mg4dash.energy.EnergyMonitor.sinceStart.value.per100
-        powerAvg?.text = avg?.let { "${kwh(it)} kWh/100" } ?: "—"
+        powerAvg?.text = avg?.let { "${app.mg4dash.system.Units.consText(this, it)} ${if (app.mg4dash.system.Units.miles(this)) "mi/kWh" else "kWh/100"}" } ?: "—"
         powerExtra?.let { tv ->
             val parts = mutableListOf<CharSequence>()
             volts?.let { parts.add(String.format(Locale.getDefault(), "%.0f V", it)) }

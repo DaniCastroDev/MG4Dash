@@ -42,7 +42,7 @@
     <string name="charging_eta">En charge · %1$d h %2$02d</string>
     <string name="weather_pending">Prévisions en attente</string>
     <string name="weather_outside_vehicle">Température extérieure du véhicule</string>
-    <string name="weather_details">Ressenti %1$d° · Vent %2$d km/h · %3$d %%</string>
+    <string name="weather_details">Ressenti %1$d° · Vent %2$d %4$s · %3$d %%</string>
     <string name="weather_here">Position actuelle</string>
     <string name="wx_sunny">Ensoleillé</string>
     <string name="wx_mostly_clear">Plutôt dégagé</string>
@@ -66,7 +66,7 @@
     <string name="cs_8">Charge arrêtée</string>
     <string name="cs_9">Charge programmée</string>
     <string name="cs_10">Charge rapide</string>
-    <string name="cs_11">Charge ultra-rapide</string>
+    <string name="cs_11">V2L : adaptateur branché</string>
     <string name="cs_12">Charge en cours</string>
     <string name="cs_13">V2L : décharge en cours</string>
     <string name="cs_14">V2L : décharge arrêtée</string>
@@ -131,7 +131,7 @@
     <string name="en_consumption">CONSOMMATION</string>
     <string name="en_since_charge">Depuis la recharge</string>
     <string name="en_since_start">Depuis le démarrage</string>
-    <string name="en_recent">CONSO RÉCENTE (kWh/100 km)</string>
+    <string name="en_recent">CONSO RÉCENTE (%1$s)</string>
     <string name="en_power">Puissance %1$s kW</string>
     <string name="en_ends_in">fin dans %1$d h %2$02d</string>
     <string name="en_no_limit" formatted="false">Pas de limite : charge jusqu\'à 100 %.</string>
@@ -147,7 +147,7 @@
     <string name="en_unplugged">CÂBLE DÉBRANCHÉ</string>
     <string name="en_stop_charge">ARRÊTER LA CHARGE</string>
     <string name="en_charge_now">CHARGER MAINTENANT</string>
-    <string name="en_history_note">%1$d derniers km · moyenne %2$s (pointillés)</string>
+    <string name="en_history_note">%1$d derniers %3$s · moyenne %2$s (pointillés)</string>
     <string name="vh_saic">Réglages SAIC  ›</string>
     <string name="vh_mg4control">Ouvrir MG4 Control  ›</string>
     <string name="vh_driving">CONDUITE</string>
@@ -338,7 +338,7 @@
     <string name="sr_plug">prise mal branchée</string>
     <string name="sr_voltage">tension incompatible</string>
     <string name="sr_other">autre cause</string>
-    <string name="en_regen_km">+ %1$s km d\'autonomie récupérés depuis la recharge</string>
+    <string name="en_regen_km">+ %1$s %2$s d\'autonomie récupérés depuis la recharge</string>
     <string name="st_rd_state">Radio Dash : %1$s</string>
     <string name="st_rd_none">non installée</string>
     <string name="st_rd_unknown">installée (version inconnue)</string>
@@ -352,6 +352,10 @@
     <string name="en_last_year">12 derniers mois</string>
     <string name="en_months_note">%1$d mois, un point par mois · moyenne %2$s (pointillés)</string>
     <string name="en_months_wait">La courbe se remplit mois après mois (au moins 20 km par mois).</string>
+    <string name="cons_avg_mi">mi/kWh moy.</string>
+    <string name="st_units">Unités</string>
+    <string name="st_units_car">Comme la voiture</string>
+    <string name="wx_clear">Dégagé</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Téléphone connecté · Appuyer pour ouvrir</string>
     <string name="aa_waiting">Branchez votre téléphone en USB</string>

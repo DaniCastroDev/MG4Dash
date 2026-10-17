@@ -42,7 +42,7 @@
     <string name="charging_eta">Laden · %1$d u %2$02d</string>
     <string name="weather_pending">Voorspelling volgt</string>
     <string name="weather_outside_vehicle">Buitentemperatuur van het voertuig</string>
-    <string name="weather_details">Gevoel %1$d° · Wind %2$d km/h · %3$d %%</string>
+    <string name="weather_details">Gevoel %1$d° · Wind %2$d %4$s · %3$d %%</string>
     <string name="weather_here">Huidige positie</string>
     <string name="wx_sunny">Zonnig</string>
     <string name="wx_mostly_clear">Overwegend helder</string>
@@ -66,7 +66,7 @@
     <string name="cs_8">Laden gestopt</string>
     <string name="cs_9">Laden gepland</string>
     <string name="cs_10">Snelladen</string>
-    <string name="cs_11">Ultrasnelladen</string>
+    <string name="cs_11">V2L-adapter aangesloten</string>
     <string name="cs_12">Laden</string>
     <string name="cs_13">V2L: ontladen</string>
     <string name="cs_14">V2L: ontladen gestopt</string>
@@ -131,7 +131,7 @@
     <string name="en_consumption">VERBRUIK</string>
     <string name="en_since_charge">Sinds laden</string>
     <string name="en_since_start">Sinds start</string>
-    <string name="en_recent">RECENT VERBRUIK (kWh/100 km)</string>
+    <string name="en_recent">RECENT VERBRUIK (%1$s)</string>
     <string name="en_power">Vermogen %1$s kW</string>
     <string name="en_ends_in">klaar over %1$d u %2$02d</string>
     <string name="en_no_limit" formatted="false">Geen limiet: laadt tot 100 %.</string>
@@ -147,7 +147,7 @@
     <string name="en_unplugged">KABEL LOS</string>
     <string name="en_stop_charge">LADEN STOPPEN</string>
     <string name="en_charge_now">NU LADEN</string>
-    <string name="en_history_note">laatste %1$d km · gemiddelde %2$s (gestippeld)</string>
+    <string name="en_history_note">laatste %1$d %3$s · gemiddelde %2$s (gestippeld)</string>
     <string name="vh_saic">SAIC-instellingen  ›</string>
     <string name="vh_mg4control">MG4 Control openen  ›</string>
     <string name="vh_driving">RIJDEN</string>
@@ -338,7 +338,7 @@
     <string name="sr_plug">stekker niet goed aangesloten</string>
     <string name="sr_voltage">spanning past niet</string>
     <string name="sr_other">andere oorzaak</string>
-    <string name="en_regen_km">+ %1$s km bereik teruggewonnen sinds het laden</string>
+    <string name="en_regen_km">+ %1$s %2$s bereik teruggewonnen sinds het laden</string>
     <string name="st_rd_state">Radio Dash: %1$s</string>
     <string name="st_rd_none">niet geïnstalleerd</string>
     <string name="st_rd_unknown">geïnstalleerd (versie onbekend)</string>
@@ -352,6 +352,10 @@
     <string name="en_last_year">Laatste 12 maanden</string>
     <string name="en_months_note">%1$d maanden, één punt per maand · gemiddelde %2$s (gestippeld)</string>
     <string name="en_months_wait">De curve vult zich maand na maand (minstens 20 km per maand).</string>
+    <string name="cons_avg_mi">mi/kWh gem.</string>
+    <string name="st_units">Eenheden</string>
+    <string name="st_units_car">Zoals de auto</string>
+    <string name="wx_clear">Helder</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefoon verbonden · Tik om te openen</string>
     <string name="aa_waiting">Sluit je telefoon aan via USB</string>

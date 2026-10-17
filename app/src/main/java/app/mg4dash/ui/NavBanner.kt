@@ -66,7 +66,15 @@ class NavBanner(context: Context) : LinearLayout(context) {
         eta.visibility = if (left.isEmpty()) GONE else VISIBLE
     }
 
-    private fun formatDistance(m: Int): String = when {
+    private fun formatDistance(m: Int): String = if (app.mg4dash.system.Units.miles(context)) {
+        // Miles au-delà de 0,1 mi, sinon yards (usage britannique)
+        val mi = m / 1609.344f
+        when {
+            mi >= 10f -> "${Math.round(mi)} mi"
+            mi >= 0.1f -> String.format(Locale.getDefault(), "%.1f mi", mi)
+            else -> "${(Math.round(m * 1.0936f) / 10) * 10} yd"
+        }
+    } else when {
         m >= 10_000 -> "${Math.round(m / 1000f)} km"
         m >= 1000 -> String.format(Locale.getDefault(), "%.1f km", m / 1000f)
         m >= 100 -> "${(m / 50) * 50} m"

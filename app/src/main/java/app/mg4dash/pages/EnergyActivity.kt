@@ -179,7 +179,7 @@ class EnergyActivity : PageActivity() {
         c3.addView(regen, kit.lp(-1, -2, t = 6))
         regenKm = kit.text("", 18f, R.color.accent_energy)
         c3.addView(regenKm, kit.lp(-1, -2, t = 2))
-        c3.addView(kit.title(getString(R.string.en_recent)), kit.lp(-1, -2, t = 18))
+        c3.addView(kit.title(getString(R.string.en_recent, app.mg4dash.system.Units.consUnit(this))), kit.lp(-1, -2, t = 18))
         chart = LineChart(this)
         c3.addView(chart, kit.lp(-1, 0, 1f, t = 8))
         chartNote = kit.text("", 15f, R.color.text_title)
@@ -270,7 +270,7 @@ class EnergyActivity : PageActivity() {
                 ?.let { getString(R.string.en_stop_reason, it) },
         ).joinToString(" · ")
         regenKm.text = p.regenKm?.takeIf { it > 0.05f && it < 2000f }
-            ?.let { getString(R.string.en_regen_km, String.format(Locale.getDefault(), "%.1f", it)) } ?: ""
+            ?.let { getString(R.string.en_regen_km, String.format(Locale.getDefault(), "%.1f", app.mg4dash.system.Units.dist(this, it)), app.mg4dash.system.Units.distUnit(this)) } ?: ""
         // Compteurs SAIC à zéro sur la voiture : consommation mesurée par MG4Dash (EnergyMonitor)
         val t = EnergyMonitor.totals(period)
         renderConsumption(if (t.outKwh > 0f) floatArrayOf(t.outKwh, t.climKwh, t.accKwh, t.regenKwh) else p.cons)
@@ -322,20 +322,21 @@ class EnergyActivity : PageActivity() {
 
     private fun renderHistory(values: List<Float>) {
         if (period == 2) {
-            val m = EnergyMonitor.monthlyPer100()
+            val m = EnergyMonitor.monthlyPer100().map { app.mg4dash.system.Units.cons(this, it) }
             chart.values = m
             chartNote.text = if (m.size >= 2) getString(R.string.en_months_note, m.size, String.format(Locale.getDefault(), "%.1f", m.average()))
                 else getString(R.string.en_months_wait)
             return
         }
-        chart.values = values
-        chartNote.text = if (values.size >= 2)
-            getString(R.string.en_history_note, values.size, String.format(Locale.getDefault(), "%.1f", values.average())) else ""
+        val v = values.map { app.mg4dash.system.Units.cons(this, it) }
+        chart.values = v
+        chartNote.text = if (v.size >= 2)
+            getString(R.string.en_history_note, Math.round(app.mg4dash.system.Units.dist(this, v.size.toFloat())), String.format(Locale.getDefault(), "%.1f", v.average()), app.mg4dash.system.Units.distUnit(this)) else ""
     }
 
     override fun render(s: VehicleState) {
         soc.text = VehicleState.socLabel(s) ?: "—"
-        range.text = s.rangeKm?.let { "$it km" } ?: "—"
+        range.text = s.rangeKm?.let { app.mg4dash.system.Units.distText(this, it.toFloat()) } ?: "—"
         status.text = VehicleState.chargeStatusLabel(s.chargeStatus)
         val pct = s.batteryPercent
         socGauge.onColor = kit.color(when { pct == null -> R.color.text_disabled; pct <= 15 -> R.color.accent_danger; pct <= 30 -> R.color.accent_heat; else -> R.color.accent_energy })

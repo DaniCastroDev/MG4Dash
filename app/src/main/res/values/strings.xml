@@ -42,7 +42,7 @@
     <string name="charging_eta">Charging · %1$d h %2$02d</string>
     <string name="weather_pending">Forecast pending</string>
     <string name="weather_outside_vehicle">Vehicle outside temperature</string>
-    <string name="weather_details">Feels like %1$d° · Wind %2$d km/h · %3$d %%</string>
+    <string name="weather_details">Feels like %1$d° · Wind %2$d %4$s · %3$d %%</string>
     <string name="weather_here">Current position</string>
     <string name="wx_sunny">Sunny</string>
     <string name="wx_mostly_clear">Mostly clear</string>
@@ -66,7 +66,7 @@
     <string name="cs_8">Charging stopped</string>
     <string name="cs_9">Charging scheduled</string>
     <string name="cs_10">Fast charging</string>
-    <string name="cs_11">Ultra-fast charging</string>
+    <string name="cs_11">V2L adapter connected</string>
     <string name="cs_12">Charging</string>
     <string name="cs_13">V2L: discharging</string>
     <string name="cs_14">V2L: discharge stopped</string>
@@ -131,7 +131,7 @@
     <string name="en_consumption">CONSUMPTION</string>
     <string name="en_since_charge">Since last charge</string>
     <string name="en_since_start">Since start</string>
-    <string name="en_recent">RECENT CONSUMPTION (kWh/100 km)</string>
+    <string name="en_recent">RECENT CONSUMPTION (%1$s)</string>
     <string name="en_power">Power %1$s kW</string>
     <string name="en_ends_in">ends in %1$d h %2$02d</string>
     <string name="en_no_limit" formatted="false">No limit: charges to 100 %.</string>
@@ -147,7 +147,7 @@
     <string name="en_unplugged">CABLE UNPLUGGED</string>
     <string name="en_stop_charge">STOP CHARGING</string>
     <string name="en_charge_now">CHARGE NOW</string>
-    <string name="en_history_note">last %1$d km · average %2$s (dashed)</string>
+    <string name="en_history_note">last %1$d %3$s · average %2$s (dashed)</string>
     <string name="vh_saic">SAIC settings  ›</string>
     <string name="vh_mg4control">Open MG4 Control  ›</string>
     <string name="vh_driving">DRIVING</string>
@@ -338,7 +338,7 @@
     <string name="sr_plug">plug not properly connected</string>
     <string name="sr_voltage">voltage mismatch</string>
     <string name="sr_other">other cause</string>
-    <string name="en_regen_km">+ %1$s km of range recovered since the last charge</string>
+    <string name="en_regen_km">+ %1$s %2$s of range recovered since the last charge</string>
     <string name="st_rd_state">Radio Dash: %1$s</string>
     <string name="st_rd_none">not installed</string>
     <string name="st_rd_unknown">installed (version unknown)</string>
@@ -352,6 +352,10 @@
     <string name="en_last_year">Last 12 months</string>
     <string name="en_months_note">%1$d months, one point per month · average %2$s (dashed)</string>
     <string name="en_months_wait">The curve fills month by month (at least 20 km per month).</string>
+    <string name="cons_avg_mi">mi/kWh avg.</string>
+    <string name="st_units">Units</string>
+    <string name="st_units_car">Like the car</string>
+    <string name="wx_clear">Clear</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Phone connected · Tap to open</string>
     <string name="aa_waiting">Connect your phone via USB</string>

@@ -138,8 +138,8 @@ object WeatherRepo {
         val url = String.format(
             Locale.US,
             "https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f" +
-                "&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m" +
-                "&hourly=temperature_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min" +
+                "&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,is_day" +
+                "&hourly=temperature_2m,weather_code,is_day&daily=weather_code,temperature_2m_max,temperature_2m_min" +
                 "&forecast_days=4&timezone=auto",
             lat, lon,
         )
@@ -190,12 +190,15 @@ object WeatherRepo {
         val hTimes = hourly.getJSONArray("time")
         val hTemps = hourly.getJSONArray("temperature_2m")
         val hCodes = hourly.getJSONArray("weather_code")
+        val hDay = hourly.optJSONArray("is_day")
+        // Ciel dégagé la nuit : lune et « Dégagé » au lieu du soleil (issue #7)
+        fun night(code: Int, isDay: Int) = if (isDay == 0 && code <= 1) NIGHT_CLEAR else code
         var start = 0
         for (i in 0 until hTimes.length()) if (hTimes.getString(i) <= curTime) start = i
         val hours = (1..5).mapNotNull { k ->
             val i = start + k
             if (i >= hTimes.length()) null
-            else Hour(hourLabel(hTimes.getString(i)), hCodes.getInt(i), Math.round(hTemps.getDouble(i)).toInt())
+            else Hour(hourLabel(hTimes.getString(i)), night(hCodes.getInt(i), hDay?.optInt(i, 1) ?: 1), Math.round(hTemps.getDouble(i)).toInt())
         }
         val daily = json.getJSONObject("daily")
         val dTimes = daily.getJSONArray("time")
@@ -211,7 +214,7 @@ object WeatherRepo {
             place = place,
             tempC = Math.round(cur.getDouble("temperature_2m")).toInt(),
             feelsC = Math.round(cur.getDouble("apparent_temperature")).toInt(),
-            code = cur.getInt("weather_code"),
+            code = night(cur.getInt("weather_code"), cur.optInt("is_day", 1)),
             windKmh = Math.round(cur.getDouble("wind_speed_10m")).toInt(),
             humidity = cur.getInt("relative_humidity_2m"),
             hours = hours,
@@ -242,8 +245,12 @@ object WeatherRepo {
             ?.let { it.latitude to it.longitude }
     } catch (_: Exception) { null }
 
+    /** Code interne : ciel dégagé de nuit (codes WMO 0 et 1 quand il fait nuit). */
+    const val NIGHT_CLEAR = 100
+
     /** Codes WMO → libellé français. */
     fun label(code: Int): String = when (code) {
+        NIGHT_CLEAR -> Tr.s(R.string.wx_clear)
         0 -> Tr.s(R.string.wx_sunny)
         1 -> Tr.s(R.string.wx_mostly_clear)
         2 -> Tr.s(R.string.wx_partly)
@@ -258,6 +265,7 @@ object WeatherRepo {
 
     /** Couleur de l'icône : soleil orange, pluie cyan, orage orange, neige et nuages en clair. */
     fun iconColor(code: Int): Int = when (code) {
+        NIGHT_CLEAR -> R.color.text_value
         0, 1 -> R.color.accent_heat
         2, 3, 45, 48 -> R.color.text_value
         71, 73, 75, 77, 85, 86 -> R.color.text_value
@@ -266,6 +274,7 @@ object WeatherRepo {
     }
 
     fun icon(code: Int): Int = when (code) {
+        NIGHT_CLEAR -> R.drawable.ic_moon
         0, 1 -> R.drawable.ic_sun
         2, 3, 45, 48 -> R.drawable.ic_cloud
         71, 73, 75, 77, 85, 86 -> R.drawable.ic_snow

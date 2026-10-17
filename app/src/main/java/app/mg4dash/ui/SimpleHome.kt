@@ -378,7 +378,7 @@ class SimpleHome(private val a: AppCompatActivity) {
         battery.setTextColor(kit.color(R.color.text_value))
         gauge.onColor = kit.color(c)
         gauge.value = pct?.let { (it + 4) / 5 } ?: 0
-        range.text = s.rangeKm?.let { "$it km" } ?: "— km"
+        range.text = s.rangeKm?.let { app.mg4dash.system.Units.distText(a, it.toFloat()) } ?: "— ${app.mg4dash.system.Units.distUnit(a)}"
         val remain = s.chargeRemainMin
         val discharge = VehicleState.isDischargeMode(s.chargeStatus)
         chargeState.text = when {

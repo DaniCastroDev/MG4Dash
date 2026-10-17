@@ -42,7 +42,7 @@
     <string name="charging_eta">Cargando · %1$d h %2$02d</string>
     <string name="weather_pending">Previsión pendiente</string>
     <string name="weather_outside_vehicle">Temperatura exterior del vehículo</string>
-    <string name="weather_details">Sensación %1$d° · Viento %2$d km/h · %3$d %%</string>
+    <string name="weather_details">Sensación %1$d° · Viento %2$d %4$s · %3$d %%</string>
     <string name="weather_here">Posición actual</string>
     <string name="wx_sunny">Soleado</string>
     <string name="wx_mostly_clear">Mayormente despejado</string>
@@ -66,7 +66,7 @@
     <string name="cs_8">Carga detenida</string>
     <string name="cs_9">Carga programada</string>
     <string name="cs_10">Carga rápida</string>
-    <string name="cs_11">Carga ultrarrápida</string>
+    <string name="cs_11">Adaptador V2L conectado</string>
     <string name="cs_12">Cargando</string>
     <string name="cs_13">V2L: descargando</string>
     <string name="cs_14">V2L: descarga detenida</string>
@@ -131,7 +131,7 @@
     <string name="en_consumption">CONSUMO</string>
     <string name="en_since_charge">Desde la recarga</string>
     <string name="en_since_start">Desde el arranque</string>
-    <string name="en_recent">CONSUMO RECIENTE (kWh/100 km)</string>
+    <string name="en_recent">CONSUMO RECIENTE (%1$s)</string>
     <string name="en_power">Potencia %1$s kW</string>
     <string name="en_ends_in">termina en %1$d h %2$02d</string>
     <string name="en_no_limit" formatted="false">Sin límite: carga hasta el 100 %.</string>
@@ -147,7 +147,7 @@
     <string name="en_unplugged">CABLE DESCONECTADO</string>
     <string name="en_stop_charge">DETENER CARGA</string>
     <string name="en_charge_now">CARGAR AHORA</string>
-    <string name="en_history_note">últimos %1$d km · media %2$s (discontinua)</string>
+    <string name="en_history_note">últimos %1$d %3$s · media %2$s (discontinua)</string>
     <string name="vh_saic">Ajustes SAIC  ›</string>
     <string name="vh_mg4control">Abrir MG4 Control  ›</string>
     <string name="vh_driving">CONDUCCIÓN</string>
@@ -338,7 +338,7 @@
     <string name="sr_plug">conector mal conectado</string>
     <string name="sr_voltage">tensión incompatible</string>
     <string name="sr_other">otra causa</string>
-    <string name="en_regen_km">+ %1$s km de autonomía recuperados desde la carga</string>
+    <string name="en_regen_km">+ %1$s %2$s de autonomía recuperados desde la carga</string>
     <string name="st_rd_state">Radio Dash: %1$s</string>
     <string name="st_rd_none">no instalada</string>
     <string name="st_rd_unknown">instalada (versión desconocida)</string>
@@ -352,6 +352,10 @@
     <string name="en_last_year">Últimos 12 meses</string>
     <string name="en_months_note">%1$d meses, un punto por mes · media %2$s (discontinua)</string>
     <string name="en_months_wait">La curva se llena mes a mes (al menos 20 km al mes).</string>
+    <string name="cons_avg_mi">mi/kWh med.</string>
+    <string name="st_units">Unidades</string>
+    <string name="st_units_car">Como el coche</string>
+    <string name="wx_clear">Despejado</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Teléfono conectado · Pulse para abrir</string>
     <string name="aa_waiting">Conecte su teléfono por USB</string>

@@ -29,6 +29,11 @@ class Prefs(context: Context) {
         get() = sp.getInt("consumption_period", 0)
         set(v) = sp.edit().putInt("consumption_period", v).apply()
 
+    /** Unités : 0 = comme la voiture, 1 = km, 2 = miles. */
+    var units: Int
+        get() = sp.getInt("units", 0)
+        set(v) = sp.edit().putInt("units", v).apply()
+
     /** Titres des widgets : toujours masqués (moins chargé, l'option a été retirée). */
     val hideTitles: Boolean get() = true
 
