@@ -25,8 +25,8 @@ object Updater {
     data class Release(val version: String, val url: String, val size: Long, val notes: String)
 
     /** Dernière release publiée (pré-versions comprises si [beta]), ou null s'il n'y en a pas. Réseau : hors du fil principal. */
-    fun latest(beta: Boolean = true): Release? {
-        val c = URL(API).openConnection() as HttpURLConnection
+    fun latest(beta: Boolean = true, api: String = API): Release? {
+        val c = URL(api).openConnection() as HttpURLConnection
         try {
             c.connectTimeout = 8000; c.readTimeout = 15000
             c.setRequestProperty("Accept", "application/vnd.github+json")
@@ -62,9 +62,9 @@ object Updater {
     }
 
     /** Télécharge l'APK ; [progress] reçoit 0..100. Réseau : hors du fil principal. */
-    fun download(context: Context, r: Release, progress: (Int) -> Unit): File {
+    fun download(context: Context, r: Release, fileName: String = "update.apk", progress: (Int) -> Unit): File {
         val dir = context.getExternalFilesDir(null) ?: context.filesDir
-        val out = File(dir, "update.apk")
+        val out = File(dir, fileName)
         var url = URL(r.url)
         var c: HttpURLConnection
         var hops = 0

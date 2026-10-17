@@ -190,6 +190,7 @@ class SettingsActivity : AppCompatActivity() {
         })
 
         toggle(upd, R.string.st_update_beta, null, { prefs.updateBeta }) { prefs.updateBeta = it }
+        radioDashUpdate(upd)
 
         // ── Météo ──
         val weather = panel(right, getString(R.string.title_weather))
@@ -280,6 +281,56 @@ class SettingsActivity : AppCompatActivity() {
         d.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener { show() }
         d.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener { write(0) }
         d.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener { write(1) }
+    }
+
+    /** Radio Dash : seulement sur le firmware et l'appli radio pour lesquels elle est construite. */
+    private fun radioDashUpdate(parent: LinearLayout) {
+        val R2 = app.mg4dash.system.RadioDashUpdater
+        if (!R2.compatible(this)) return
+        val state = text(parent, "", 18f, R.color.text_value).apply { (layoutParams as LinearLayout.LayoutParams).topMargin = dp(14) }
+        fun showState() {
+            state.text = getString(R.string.st_rd_state, when {
+                !R2.installed(this) -> getString(R.string.st_rd_none)
+                else -> R2.installedVersion(this) ?: getString(R.string.st_rd_unknown)
+            })
+        }
+        showState()
+        text(parent, getString(R.string.st_rd_desc), 16f, R.color.text_title)
+        row(parent, button(getString(R.string.st_rd_check), R.color.accent_action) {
+            state.text = getString(R.string.st_update_checking)
+            lifecycleScope.launch {
+                val r = withContext(Dispatchers.IO) { try { R2.latest() } catch (e: Exception) { Log.w("MàJ", "Radio Dash : ${e.message}"); null } }
+                if (r == null) { state.text = getString(R.string.st_update_error); return@launch }
+                val cur = R2.installedVersion(this@SettingsActivity)
+                if (cur != null && !app.mg4dash.system.Updater.isNewer(r.version, cur)) { state.text = getString(R.string.st_rd_uptodate, cur); return@launch }
+                showState()
+                AlertDialog.Builder(this@SettingsActivity)
+                    .setTitle(getString(R.string.st_rd_available, r.version))
+                    .setMessage(plainNotes(r.notes))
+                    .setPositiveButton(R.string.st_update_install) { _, _ ->
+                        lifecycleScope.launch {
+                            try {
+                                val apk = withContext(Dispatchers.IO) {
+                                    R2.download(this@SettingsActivity, r) { pct -> runOnUiThread { state.text = getString(R.string.st_update_downloading, pct) } }
+                                }
+                                state.text = getString(R.string.st_rd_installing)
+                                R2.listener = { ok -> runOnUiThread {
+                                    showState()
+                                    if (!isFinishing) AlertDialog.Builder(this@SettingsActivity)
+                                        .setMessage(if (ok) R.string.st_rd_done else R.string.st_update_error)
+                                        .setPositiveButton(android.R.string.ok, null).show()
+                                } }
+                                withContext(Dispatchers.IO) { R2.install(this@SettingsActivity, apk, r.version) }
+                            } catch (e: Exception) {
+                                Log.w("MàJ", "Radio Dash : ${e.message}")
+                                state.text = getString(R.string.st_update_error)
+                            }
+                        }
+                    }
+                    .setNegativeButton(R.string.cancel, null)
+                    .show()
+            }
+        })
     }
 
     private fun confirmReplace() {

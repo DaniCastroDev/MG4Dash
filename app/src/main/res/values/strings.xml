@@ -339,6 +339,15 @@
     <string name="sr_voltage">voltage mismatch</string>
     <string name="sr_other">other cause</string>
     <string name="en_regen_km">+ %1$s km of range recovered since the last charge</string>
+    <string name="st_rd_state">Radio Dash: %1$s</string>
+    <string name="st_rd_none">not installed</string>
+    <string name="st_rd_unknown">installed (version unknown)</string>
+    <string name="st_rd_desc">Installs the latest Radio Dash release from GitHub (only on this firmware). The new radio applies after restarting the head unit (hold Home about 20 s).</string>
+    <string name="st_rd_check">Update Radio Dash</string>
+    <string name="st_rd_available">Radio Dash %1$s available</string>
+    <string name="st_rd_uptodate">Radio Dash up to date (%1$s)</string>
+    <string name="st_rd_installing">Installing Radio Dash…</string>
+    <string name="st_rd_done">Radio Dash is installed. Restart the head unit (hold Home about 20 s) to use it.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Phone connected · Tap to open</string>
     <string name="aa_waiting">Connect your phone via USB</string>

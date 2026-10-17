@@ -339,6 +339,15 @@
     <string name="sr_voltage">Spannung passt nicht</string>
     <string name="sr_other">andere Ursache</string>
     <string name="en_regen_km">+ %1$s km Reichweite seit dem Laden zurückgewonnen</string>
+    <string name="st_rd_state">Radio Dash: %1$s</string>
+    <string name="st_rd_none">nicht installiert</string>
+    <string name="st_rd_unknown">installiert (Version unbekannt)</string>
+    <string name="st_rd_desc">Installiert die neueste Radio-Dash-Version von GitHub (nur auf dieser Firmware). Das neue Radio gilt nach einem Neustart des Bildschirms (Home etwa 20 s halten).</string>
+    <string name="st_rd_check">Radio Dash aktualisieren</string>
+    <string name="st_rd_available">Radio Dash %1$s verfügbar</string>
+    <string name="st_rd_uptodate">Radio Dash aktuell (%1$s)</string>
+    <string name="st_rd_installing">Radio Dash wird installiert…</string>
+    <string name="st_rd_done">Radio Dash ist installiert. Bildschirm neu starten (Home etwa 20 s halten), um es zu nutzen.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefon verbunden · Zum Öffnen tippen</string>
     <string name="aa_waiting">Telefon per USB verbinden</string>

@@ -339,6 +339,15 @@
     <string name="sr_voltage">spanning past niet</string>
     <string name="sr_other">andere oorzaak</string>
     <string name="en_regen_km">+ %1$s km bereik teruggewonnen sinds het laden</string>
+    <string name="st_rd_state">Radio Dash: %1$s</string>
+    <string name="st_rd_none">niet geïnstalleerd</string>
+    <string name="st_rd_unknown">geïnstalleerd (versie onbekend)</string>
+    <string name="st_rd_desc">Installeert de nieuwste Radio Dash-versie van GitHub (alleen op deze firmware). De nieuwe radio werkt na een herstart van het scherm (Home ongeveer 20 s ingedrukt houden).</string>
+    <string name="st_rd_check">Radio Dash bijwerken</string>
+    <string name="st_rd_available">Radio Dash %1$s beschikbaar</string>
+    <string name="st_rd_uptodate">Radio Dash up-to-date (%1$s)</string>
+    <string name="st_rd_installing">Radio Dash installeren…</string>
+    <string name="st_rd_done">Radio Dash is geïnstalleerd. Herstart het scherm (Home ongeveer 20 s ingedrukt houden) om het te gebruiken.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefoon verbonden · Tik om te openen</string>
     <string name="aa_waiting">Sluit je telefoon aan via USB</string>

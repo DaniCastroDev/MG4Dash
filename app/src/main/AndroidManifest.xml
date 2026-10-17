@@ -97,6 +97,7 @@
 
         <!-- Mise à jour depuis GitHub : résultat de l'installation et relance de l'accueil -->
         <receiver android:name=".system.Updater$Result" android:exported="false" />
+        <receiver android:name=".system.RadioDashUpdater$Result" android:exported="false" />
         <receiver
             android:name=".system.Updater$Relaunch"
             android:exported="true">

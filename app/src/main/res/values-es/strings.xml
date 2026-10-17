@@ -339,6 +339,15 @@
     <string name="sr_voltage">tensión incompatible</string>
     <string name="sr_other">otra causa</string>
     <string name="en_regen_km">+ %1$s km de autonomía recuperados desde la carga</string>
+    <string name="st_rd_state">Radio Dash: %1$s</string>
+    <string name="st_rd_none">no instalada</string>
+    <string name="st_rd_unknown">instalada (versión desconocida)</string>
+    <string name="st_rd_desc">Instala la última versión de Radio Dash desde GitHub (solo en este firmware). La nueva radio se aplica tras reiniciar la pantalla (mantener Home unos 20 s).</string>
+    <string name="st_rd_check">Actualizar Radio Dash</string>
+    <string name="st_rd_available">Radio Dash %1$s disponible</string>
+    <string name="st_rd_uptodate">Radio Dash actualizada (%1$s)</string>
+    <string name="st_rd_installing">Instalando Radio Dash…</string>
+    <string name="st_rd_done">Radio Dash está instalada. Reinicia la pantalla (mantén Home unos 20 s) para usarla.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Teléfono conectado · Pulse para abrir</string>
     <string name="aa_waiting">Conecte su teléfono por USB</string>
