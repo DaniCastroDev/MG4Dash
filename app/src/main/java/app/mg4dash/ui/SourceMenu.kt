@@ -16,7 +16,7 @@ object SourceMenu {
         val list = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundResource(R.drawable.bg_panel)
-            setPadding((8 * d).toInt(), (8 * d).toInt(), (8 * d).toInt(), (8 * d).toInt())
+            setPadding((8 * d).toInt(), (6 * d).toInt(), (8 * d).toInt(), (16 * d).toInt())   // marge basse : le contour de la dernière ligne surlignée n'est plus coupé
             elevation = 12 * d
         }
         // Fenêtre non focalisable : sinon elle prend le focus et la voiture réaffiche sa barre latérale et
@@ -48,7 +48,7 @@ object SourceMenu {
         val list = LinearLayout(activity).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundResource(R.drawable.bg_panel)
-            setPadding((8 * d).toInt(), (8 * d).toInt(), (8 * d).toInt(), (8 * d).toInt())
+            setPadding((8 * d).toInt(), (6 * d).toInt(), (8 * d).toInt(), (16 * d).toInt())   // marge basse : le contour de la dernière ligne surlignée n'est plus coupé
             elevation = 12 * d
         }
         val popup = android.widget.PopupWindow(list, (340 * d).toInt(), LinearLayout.LayoutParams.WRAP_CONTENT, false).apply {
