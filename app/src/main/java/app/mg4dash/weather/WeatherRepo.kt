@@ -29,6 +29,8 @@ object WeatherRepo {
     private const val TAG = "Météo"
     private const val REFRESH_MS = 30 * 60 * 1000L
     private const val RETRY_MS = 2 * 60 * 1000L
+    /** Échecs successifs : nouvel essai de plus en plus espacé, jusqu'à RETRY_MS. */
+    private val FAIL_DELAYS = longArrayOf(15_000L, 30_000L, 60_000L, RETRY_MS)
 
     data class Hour(val label: String, val code: Int, val tempC: Int)
     data class Day(val label: String, val code: Int, val minC: Int, val maxC: Int)
@@ -61,15 +63,46 @@ object WeatherRepo {
             )
             return
         }
+        watchNetwork(app)
         scope.launch {
             delay(5_000)   // laisser le réseau T-box monter après le démarrage
+            var fails = 0
             while (true) {
                 val ok = try { refresh(app) } catch (e: Exception) {
                     Log.w(TAG, "échec : ${e.javaClass.simpleName} ${e.message}"); false
                 }
-                delay(if (ok) REFRESH_MS else RETRY_MS)
+                lastFailed = !ok
+                // Échec (pas de réseau) : on réessaie vite. Réussi mais sans position ou sans nom de
+                // ville : on réessaie aussi, plus calmement, au lieu d'attendre 30 min.
+                val wait = when {
+                    !ok -> FAIL_DELAYS[minOf(fails++, FAIL_DELAYS.size - 1)]
+                    usedFallback || missingCity -> { fails = 0; RETRY_MS }
+                    else -> { fails = 0; REFRESH_MS }
+                }
+                if (!ok || usedFallback || missingCity) Log.i(TAG, "nouvel essai dans ${wait / 1000} s (réseau ${if (ok) "ok" else "absent"}, position ${if (usedFallback) "absente" else "ok"}, ville ${if (missingCity) "absente" else "ok"})")
+                // Le retour du réseau (ou une position) réveille la boucle sans attendre la fin du délai
+                kotlinx.coroutines.withTimeoutOrNull(wait) { wake.receive() }
             }
         }
+    }
+
+    @Volatile private var lastFailed = false
+    @Volatile private var missingCity = false
+    private val wake = kotlinx.coroutines.channels.Channel<Unit>(kotlinx.coroutines.channels.Channel.CONFLATED)
+
+    /** Dès que la voiture retrouve internet, une météo manquante ou incomplète est redemandée. */
+    private fun watchNetwork(context: Context) {
+        try {
+            val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+            cm.registerDefaultNetworkCallback(object : android.net.ConnectivityManager.NetworkCallback() {
+                override fun onAvailable(network: android.net.Network) {
+                    if (lastFailed || usedFallback || missingCity || _weather.value == null) {
+                        Log.i(TAG, "réseau disponible : nouvel essai")
+                        wake.trySend(Unit)
+                    }
+                }
+            })
+        } catch (e: Exception) { Log.w(TAG, "suivi du réseau impossible : ${e.message}") }
     }
 
     @Volatile private var usedFallback = false
@@ -79,7 +112,7 @@ object WeatherRepo {
      * ville de repli jusqu'au rafraîchissement suivant. Dès qu'une position arrive, on la redemande.
      */
     fun onLocation(context: Context) {
-        if (usedFallback) { usedFallback = false; refreshNow(context) }
+        if (usedFallback) { usedFallback = false; wake.trySend(Unit) }
     }
 
     fun refreshNow(context: Context) {
@@ -99,7 +132,9 @@ object WeatherRepo {
         usedFallback = loc == null
         val lat = loc?.first ?: prefs.weatherLat.toDouble()
         val lon = loc?.second ?: prefs.weatherLon.toDouble()
-        val place = if (loc != null) (cityName(context, loc.first, loc.second) ?: Tr.s(R.string.weather_here)) else prefs.weatherCity
+        val name = loc?.let { cityName(context, it.first, it.second) }
+        missingCity = loc != null && name == null
+        val place = if (loc != null) (name ?: Tr.s(R.string.weather_here)) else prefs.weatherCity
         val url = String.format(
             Locale.US,
             "https://api.open-meteo.com/v1/forecast?latitude=%.4f&longitude=%.4f" +

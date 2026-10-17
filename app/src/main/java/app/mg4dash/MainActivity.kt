@@ -80,6 +80,16 @@ class MainActivity : AppCompatActivity() {
         // Balayage vertical (issue #6) : carte musique = source suivante / précédente ;
         // widget du bas (style Complet) = page suivante / précédente
         app.mg4dash.ui.SwipeBox.wrap(b.mediaCard, vertical = true, horizontal = false) { MediaHub.cycleSource(it) }
+        if (!mapLayout) {
+            // Météo (style Complet) : balayer ou toucher les points = prévisions par heure / par jour
+            weatherDots = TextView(this).apply {
+                setTextColor(color(R.color.text_title)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f); letterSpacing = 0.3f
+                gravity = Gravity.CENTER; isClickable = true; setOnClickListener { flipWeather(1) }
+            }
+            (b.weatherHours.parent as LinearLayout).addView(weatherDots, LinearLayout.LayoutParams(-2, -2).apply { gravity = Gravity.CENTER_HORIZONTAL })
+            app.mg4dash.ui.SwipeBox.wrap(b.weatherCard) { flipWeather(it) }
+            if (prefs.hideTitles) hideFullTitles()
+        }
         if (!mapLayout) app.mg4dash.ui.SwipeBox.wrap(b.secondaryCard) { dir ->
             prefs.secondaryWidget = Math.floorMod(prefs.secondaryWidget.coerceIn(0, 2) + dir, 3)
             renderSecondary(); lifecycleScope.launch { updatePower() }
@@ -197,6 +207,21 @@ class MainActivity : AppCompatActivity() {
     private var weatherClock: TextView? = null
 
     private var weatherCompact: app.mg4dash.ui.WeatherCompact? = null
+    private var weatherDots: TextView? = null
+
+    /**
+     * Style Complet sans titres (option) : on masque les titres des cartes (la place reste, pour ne pas
+     * décaler les widgets) ; les infos utiles de l'en-tête (ville, points, boutons) restent visibles.
+     */
+    private fun hideFullTitles() {
+        listOf((b.climateCard.getChildAt(0) as LinearLayout).getChildAt(0),
+            (b.energyCard.getChildAt(0) as LinearLayout).getChildAt(0),
+            (b.weatherPlace.parent as LinearLayout).getChildAt(0),
+            b.secondaryTitle, b.mediaSource).forEach { it.visibility = View.INVISIBLE }
+        (0 until b.mapCard.childCount).map { b.mapCard.getChildAt(it) }
+            .filter { it is TextView && it.text?.toString() == getString(R.string.title_position) }
+            .forEach { b.mapCard.removeView(it) }
+    }
 
     private fun flipWeather(dir: Int) {
         prefs.weatherPage = Math.floorMod(prefs.weatherPage + dir, 2)
@@ -489,6 +514,7 @@ class MainActivity : AppCompatActivity() {
             b.weatherDetails.text = if (s.outsideTemp != null) getString(R.string.weather_outside_vehicle) else ""
             b.weatherPlace.text = ""
             b.weatherHours.removeAllViews()
+            weatherDots?.visibility = View.GONE
             return
         }
         b.weatherPlace.text = w.place
@@ -497,7 +523,10 @@ class MainActivity : AppCompatActivity() {
         b.weatherTemp.text = "${w.tempC}°"
         b.weatherLabel.text = WeatherRepo.label(w.code)
         b.weatherDetails.text = getString(R.string.weather_details, w.feelsC, w.windKmh, w.humidity)
-        fillForecast(b.weatherHours, w.hours.map { Triple(it.label, it.code, "${it.tempC}°") })
+        val page = prefs.weatherPage
+        fillForecast(b.weatherHours, if (page == 0) w.hours.map { Triple(it.label, it.code, "${it.tempC}°") }
+            else w.days.map { Triple(it.label, it.code, "${it.minC}/${it.maxC}°") })
+        weatherDots?.apply { visibility = View.VISIBLE; text = (0..1).joinToString(" ") { if (it == page) "●" else "○" } }
     }
 
     private fun fillForecast(row: LinearLayout, items: List<Triple<String, Int, String>>) {

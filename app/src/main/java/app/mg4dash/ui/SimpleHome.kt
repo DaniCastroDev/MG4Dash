@@ -108,13 +108,16 @@ class SimpleHome(private val a: AppCompatActivity) {
     private fun big(text: String, sp: Float, light: Boolean = false, color: Int = R.color.text_value): TextView =
         kit.text(text, sp, color, light)
 
+    private val hideTitles get() = app.mg4dash.system.Prefs(a).hideTitles
+
     private fun title(text: String) = kit.title(text).apply { setTextSize(TypedValue.COMPLEX_UNIT_SP, 22f) }
 
     private fun buildClimate(): LinearLayout {
         climateCard = kit.panel()
         val head = kit.row()
         // Coin haut-gauche libre pour le bouton des antibrouillards
-        head.addView(title(a.getString(R.string.title_climate)), kit.lp(0, -2, 1f, l = if (Dock.vertical(a)) 0 else Kit.FOG_SAFE_DP - 20))
+        head.addView(title(a.getString(R.string.title_climate)).apply { if (hideTitles) visibility = View.INVISIBLE },
+            kit.lp(0, -2, 1f, l = if (Dock.vertical(a)) 0 else Kit.FOG_SAFE_DP - 20))
         outside = kit.text("", 20f, R.color.text_sub)
         head.addView(outside, kit.lp(-2, -2, r = 12))
         power = kit.roundButton(R.drawable.ic_power, 64) { CarBridge.togglePower() }
@@ -145,7 +148,7 @@ class SimpleHome(private val a: AppCompatActivity) {
     private fun buildBattery(): LinearLayout {
         val p = kit.panel()
         val head = kit.row()
-        head.addView(title(a.getString(R.string.title_battery)), kit.lp(0, -2, 1f))
+        head.addView(title(a.getString(R.string.title_battery)).apply { if (hideTitles) visibility = View.INVISIBLE }, kit.lp(0, -2, 1f))
         p.addView(head, kit.lp(-1, kit.dp(64)))
         battery = big("— %", 116f, light = true).apply { gravity = Gravity.CENTER }
         p.addView(battery, kit.lp(-1, 0, 1f))
@@ -163,7 +166,7 @@ class SimpleHome(private val a: AppCompatActivity) {
 
     private fun buildMedia(): LinearLayout {
         val p = kit.panel()
-        mediaSource = title(a.getString(R.string.title_media))
+        mediaSource = title(a.getString(R.string.title_media)).apply { if (hideTitles) visibility = View.INVISIBLE }
         // Puces de source : elles basculent la source affichée (sans ouvrir l'appli)
         val head = kit.row()
         head.addView(mediaSource, kit.lp(0, -2, 1f))

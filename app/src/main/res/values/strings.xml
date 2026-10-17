@@ -322,7 +322,7 @@
     <string name="st_soh_none">Battery health: measured from the next charge (a 15 %% drop is needed), compared with a new %1$d kWh battery. Choose your model:</string>
     <string name="sw_batt_temp">Battery %1$d °C</string>
     <string name="st_map_vdock">Vertical bar on the left (all screens and Radio Dash): %1$s</string>
-    <string name="st_map_titles">Map layout: hide widget titles: %1$s</string>
+    <string name="st_map_titles">Hide widget titles (all layouts): %1$s</string>
     <string name="st_map_vdock_btn">Vertical bar</string>
     <string name="st_map_titles_btn">Titles</string>
     <string name="aa_title">ANDROID AUTO</string>

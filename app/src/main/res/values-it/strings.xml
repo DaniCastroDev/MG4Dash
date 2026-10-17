@@ -322,7 +322,7 @@
     <string name="st_soh_none">Salute batteria: misurata dalla prossima ricarica (serve un calo del 15 %%), rispetto a una batteria nuova da %1$d kWh. Scegli il modello:</string>
     <string name="sw_batt_temp">Batteria %1$d °C</string>
     <string name="st_map_vdock">Barra verticale a sinistra (tutte le schermate e Radio Dash): %1$s</string>
-    <string name="st_map_titles">Stile Mappa: nascondi i titoli: %1$s</string>
+    <string name="st_map_titles">Nascondi i titoli dei widget (tutti gli stili): %1$s</string>
     <string name="st_map_vdock_btn">Barra verticale</string>
     <string name="st_map_titles_btn">Titoli</string>
     <string name="aa_title">ANDROID AUTO</string>

@@ -322,7 +322,7 @@
     <string name="st_soh_none">Santé batterie : mesurée à partir de la prochaine recharge (il faut 15 %% de baisse), comparée à une batterie %1$d kWh neuve. Choisissez votre modèle :</string>
     <string name="sw_batt_temp">Batterie %1$d °C</string>
     <string name="st_map_vdock">Barre verticale à gauche (tous les écrans et Radio Dash) : %1$s</string>
-    <string name="st_map_titles">Style Carte : masquer les titres des widgets : %1$s</string>
+    <string name="st_map_titles">Masquer les titres des widgets (tous les styles) : %1$s</string>
     <string name="st_map_vdock_btn">Barre verticale</string>
     <string name="st_map_titles_btn">Titres</string>
     <string name="aa_title">ANDROID AUTO</string>
