@@ -253,6 +253,7 @@ object MediaHub {
         ComponentName("com.saicmotor.media", "com.saicmotor.media.mbs.Usb1MediaBrowserService"),
         ComponentName("com.allgo.remoteui.mediabrowserservice", "com.allgo.remoteui.mediabrowserservice.RemoteUIMediaBrowserService"),
     )
+    private const val RADIO = "com.saicmotor.radio"
     private val browserControllers = mutableMapOf<String, MediaController>()
     private val browsers = mutableMapOf<String, MediaBrowser>()
     private val watched = mutableSetOf<MediaSession.Token>()
@@ -275,7 +276,9 @@ object MediaHub {
     /** Vérification périodique : un contrôleur de navigateur resté sans état ni titre plus de 20 s est relancé. */
     private fun checkStaleBrowsers() {
         val now = System.currentTimeMillis()
-        browserControllers.toMap().forEach { (pkg, c) ->
+        // Radio seulement : se déconnecter du lecteur Bluetooth de la voiture pouvait arrêter la musique
+        // (issue #10, coupure à la première notification du téléphone).
+        browserControllers.toMap().filterKeys { it == RADIO }.forEach { (pkg, c) ->
             val empty = try { c.metadata == null && c.playbackState == null } catch (_: Exception) { true }
             if (!empty) { emptySince.remove(pkg); return@forEach }
             val since = emptySince.getOrPut(pkg) { now }
@@ -361,7 +364,7 @@ object MediaHub {
         override fun onMetadataChanged(metadata: MediaMetadata?) = publish()
         override fun onSessionDestroyed() {
             // Le rappel ne dit pas quel lecteur : on relance les navigateurs dont la session a disparu.
-            browserControllers.toMap().forEach { (pkg, c) ->
+            browserControllers.toMap().filterKeys { it == RADIO }.forEach { (pkg, c) ->
                 val dead = try { c.playbackState == null && c.metadata == null } catch (_: Exception) { true }
                 if (dead) main.postDelayed({ reconnectBrowser(pkg, "session détruite") }, 1_000)
             }
