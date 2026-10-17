@@ -42,6 +42,35 @@ object SourceMenu {
         popup.showAsDropDown(anchor, 0, (4 * d).toInt())
     }
 
+    /** Menu de choix générique sous [anchor] ; [current] est en couleur. */
+    fun choose(activity: Activity, anchor: View, labels: List<String>, current: Int, onPick: (Int) -> Unit) {
+        val d = activity.resources.displayMetrics.density
+        val list = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundResource(R.drawable.bg_panel)
+            setPadding((8 * d).toInt(), (8 * d).toInt(), (8 * d).toInt(), (8 * d).toInt())
+            elevation = 12 * d
+        }
+        val popup = android.widget.PopupWindow(list, (340 * d).toInt(), LinearLayout.LayoutParams.WRAP_CONTENT, false).apply {
+            isOutsideTouchable = true
+            setOnDismissListener { Fullscreen.apply(activity) }
+        }
+        labels.forEachIndexed { i, label ->
+            list.addView(TextView(activity).apply {
+                text = label
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 21f)
+                setTextColor(Themes.color(activity, if (i == current) R.color.accent_action else R.color.text_value))
+                setPadding((18 * d).toInt(), 0, (18 * d).toInt(), 0)
+                gravity = Gravity.CENTER_VERTICAL
+                setBackgroundResource(R.drawable.bg_chip)
+                isSelected = i == current
+                setOnClickListener { popup.dismiss(); onPick(i) }
+            }, LinearLayout.LayoutParams(-1, (60 * d).toInt()).apply { topMargin = (4 * d).toInt() })
+        }
+        popup.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+        popup.showAsDropDown(anchor, 0, (4 * d).toInt())
+    }
+
     /** Prépare un titre de carte comme sélecteur de source. */
     fun attach(activity: Activity, title: TextView) {
         val d = activity.resources.displayMetrics.density

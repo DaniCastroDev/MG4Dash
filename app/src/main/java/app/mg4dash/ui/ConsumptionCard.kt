@@ -28,13 +28,28 @@ class ConsumptionCard(context: Context) : LinearLayout(context) {
     private val chart = LineChart(context)
     private val note = tv(15f, R.color.text_sub)
 
+    private val prefs = app.mg4dash.system.Prefs(context)
+    private val periodLabels = listOf(R.string.en_since_charge, R.string.en_trip, R.string.en_last_1000).map { context.getString(it) }
+    private var lastHistory: List<Float> = emptyList()
+    private val periodTv: TextView =
+        tv(19f, R.color.text_value).apply {
+            setPadding(0, (6 * d).toInt(), (24 * d).toInt(), (6 * d).toInt())
+            isClickable = true
+            setOnClickListener { v ->
+                (context as? android.app.Activity)?.let { a ->
+                    SourceMenu.choose(a, v, periodLabels, prefs.consumptionPeriod) { prefs.consumptionPeriod = it; show(lastHistory) }
+                }
+            }
+        }
+
     init {
         orientation = VERTICAL
         setPadding((20 * d).toInt(), (16 * d).toInt(), (20 * d).toInt(), (16 * d).toInt())
         // Titre masqué avec l'option « Masquer les titres » (la place reste, pour ne rien décaler)
         addView(tv(17f, R.color.text_title).apply { text = context.getString(R.string.en_consumption); letterSpacing = 0.12f
             if (app.mg4dash.system.Prefs(context).hideTitles) visibility = INVISIBLE })
-        addView(tv(16f, R.color.text_sub).apply { text = context.getString(R.string.en_since_charge) })
+        // Période (« Depuis la recharge ▾ ») : un toucher ouvre le choix, comme le choix de la source radio
+        addView(periodTv, LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT))
         addView(total)
         addView(bar, LayoutParams(LayoutParams.MATCH_PARENT, (22 * d).toInt()).apply { topMargin = (6 * d).toInt() })
         addView(legend, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT).apply { topMargin = (8 * d).toInt() })
@@ -46,7 +61,10 @@ class ConsumptionCard(context: Context) : LinearLayout(context) {
     }
 
     fun show(history: List<Float>) {
-        val t = EnergyMonitor.sinceCharge.value
+        lastHistory = history
+        val period = prefs.consumptionPeriod.coerceIn(0, 2)
+        periodTv.text = periodLabels[period] + "  ▾"
+        val t = EnergyMonitor.totals(period)
         val ok = t.outKwh > 0f
         total.text = if (ok) String.format(Locale.getDefault(), "%.1f kWh", t.outKwh) else "—"
         val green = c(R.color.accent_energy); val cyan = c(R.color.accent_cold); val orange = c(R.color.accent_heat)

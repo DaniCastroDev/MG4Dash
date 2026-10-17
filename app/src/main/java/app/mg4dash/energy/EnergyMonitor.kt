@@ -26,7 +26,8 @@ import kotlinx.coroutines.launch
  *  - à l'arrêt, clim allumée : P − accessoires = clim → appris par réglage (ventilation,
  *    chauffage / froid, dégivrage) ;
  *  - en roulant : clim et accessoires = valeurs apprises, le reste = conduite.
- * Deux périodes : depuis la dernière recharge, depuis le démarrage (pause de plus de 10 min).
+ * Trois périodes : depuis la dernière recharge, depuis le démarrage (pause de plus de 10 min), et les
+ * 1 000 derniers km (100 tranches de 10 km gardées, la plus ancienne remplacée : mémoire bornée).
  */
 object EnergyMonitor {
     private const val TAG = "EnergyMon"
@@ -49,6 +50,14 @@ object EnergyMonitor {
     val sinceCharge: StateFlow<Totals> = _sinceCharge
     private val _sinceStart = MutableStateFlow(Totals())
     val sinceStart: StateFlow<Totals> = _sinceStart
+    private val _lastKm = MutableStateFlow(Totals())
+    /** Les 1 000 derniers km (tranches terminées + tranche en cours). */
+    val lastKm: StateFlow<Totals> = _lastKm
+    private const val SEG_KM = 10
+    private const val SEG_MAX = 100
+
+    /** Période choisie à l'écran : 0 = depuis la recharge, 1 = depuis le démarrage, 2 = 1 000 derniers km. */
+    fun totals(period: Int): Totals = when (period) { 1 -> sinceStart.value; 2 -> lastKm.value; else -> sinceCharge.value }
 
     /** Puissances apprises (W), pour l'affichage et le journal. */
     @Volatile var accessoriesW = 250f; private set
@@ -62,15 +71,28 @@ object EnergyMonitor {
         if (BuildConfig.MOCK) {
             _sinceCharge.value = Totals(18.4f, 3.2f, 2.1f, 0.9f, 112)
             _sinceStart.value = Totals(3.6f, 0.7f, 0.5f, 0.2f, 21)
+            _lastKm.value = Totals(152.3f, 24.8f, 18.6f, 7.4f, 1000)
             return
         }
         fun load(p: String) = Totals(sp.getFloat("${p}_out", 0f), sp.getFloat("${p}_rgn", 0f), sp.getFloat("${p}_clim", 0f), sp.getFloat("${p}_acc", 0f))
         _sinceCharge.value = load("em_c")
         accessoriesW = sp.getFloat("em_base", 250f)
+        // Tranches de 10 km : « out,rgn,clim,acc,km » séparées par « ; »
+        val segs = ArrayDeque<Totals>()
+        sp.getString("em_l_segs", "")!!.split(';').filter { it.isNotBlank() }.forEach { seg ->
+            val f = seg.split(',').mapNotNull { it.toFloatOrNull() }
+            if (f.size == 5) segs.addLast(Totals(f[0], f[1], f[2], f[3], f[4].toInt()))
+        }
+        var segCur = load("em_l")
+        fun sumSegs(cur: Totals) = segs.fold(cur) { a, t ->
+            Totals(a.outKwh + t.outKwh, a.regenKwh + t.regenKwh, a.climKwh + t.climKwh, a.accKwh + t.accKwh, a.km + t.km)
+        }
+        _lastKm.value = sumSegs(segCur)
 
         scope.launch {
             var last = System.currentTimeMillis()
             var chargeKm = sp.getInt("em_c_km0", -1)
+            var segKm = sp.getInt("em_l_km0", -1)
             var startKm = -1
             var lastSoc = sp.getInt("em_last_soc", -1)
             var saveTick = 0
@@ -155,6 +177,16 @@ object EnergyMonitor {
                 )
                 _sinceCharge.value = add(_sinceCharge.value, km, chargeKm)
                 _sinceStart.value = add(_sinceStart.value, km, startKm)
+                if (segKm < 0 && km != null) { segKm = km; sp.edit().putInt("em_l_km0", segKm).apply() }
+                segCur = add(segCur, km, segKm)
+                if (segCur.km >= SEG_KM && km != null) {
+                    segs.addLast(segCur)
+                    while (segs.size > SEG_MAX) segs.removeFirst()
+                    segCur = Totals(); segKm = km
+                    sp.edit().putInt("em_l_km0", segKm)
+                        .putString("em_l_segs", segs.joinToString(";") { t -> "${t.outKwh},${t.regenKwh},${t.climKwh},${t.accKwh},${t.km}" }).apply()
+                }
+                _lastKm.value = sumSegs(segCur)
 
                 if (++saveTick >= 30) {
                     saveTick = 0
@@ -162,7 +194,9 @@ object EnergyMonitor {
                     val e = sp.edit()
                     learned.forEach { (k, v) -> e.putFloat(k, v) }
                     e.putFloat("em_c_out", c.outKwh).putFloat("em_c_rgn", c.regenKwh)
-                        .putFloat("em_c_clim", c.climKwh).putFloat("em_c_acc", c.accKwh).apply()
+                        .putFloat("em_c_clim", c.climKwh).putFloat("em_c_acc", c.accKwh)
+                    e.putFloat("em_l_out", segCur.outKwh).putFloat("em_l_rgn", segCur.regenKwh)
+                        .putFloat("em_l_clim", segCur.climKwh).putFloat("em_l_acc", segCur.accKwh).apply()
                 }
             }
         }

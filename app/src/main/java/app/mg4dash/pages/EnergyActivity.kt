@@ -64,7 +64,7 @@ class EnergyActivity : PageActivity() {
     private lateinit var chart: LineChart
     private lateinit var chartNote: TextView
 
-    private var period = 0          // 0 = depuis la recharge, 1 = depuis le démarrage
+    private var period = 0          // 0 = depuis la recharge, 1 = trajet en cours, 2 = 1 000 derniers km
     private var reser: Int? = null
     private var stH = 22; private var stM = 0; private var spH = 6; private var spM = 0
 
@@ -162,9 +162,12 @@ class EnergyActivity : PageActivity() {
 
         // ── Colonne 3 : consommation ──
         val c3 = kit.panel(getString(R.string.en_consumption))
-        val (pRow, pSet) = kit.segmented(listOf(getString(R.string.en_since_charge), getString(R.string.en_since_start))) { i -> period = i; setPeriod(i); refreshProps() }
+        val (pRow, pSet) = kit.segmented(listOf(getString(R.string.en_since_charge), getString(R.string.en_trip), getString(R.string.en_last_1000))) { i ->
+            period = i; prefs.consumptionPeriod = i; setPeriod(i); refreshProps()
+        }
         setPeriod = pSet
-        pSet(0)
+        period = prefs.consumptionPeriod.coerceIn(0, 2)
+        pSet(period)
         c3.addView(pRow, kit.lp(-1, -2, t = 10))
         consTotal = kit.text("—", 44f, light = true)
         c3.addView(consTotal, kit.lp(-1, -2, t = 14))
@@ -269,7 +272,7 @@ class EnergyActivity : PageActivity() {
         regenKm.text = p.regenKm?.takeIf { it > 0.05f && it < 2000f }
             ?.let { getString(R.string.en_regen_km, String.format(Locale.getDefault(), "%.1f", it)) } ?: ""
         // Compteurs SAIC à zéro sur la voiture : consommation mesurée par MG4Dash (EnergyMonitor)
-        val t = if (period == 0) EnergyMonitor.sinceCharge.value else EnergyMonitor.sinceStart.value
+        val t = EnergyMonitor.totals(period)
         renderConsumption(if (t.outKwh > 0f) floatArrayOf(t.outKwh, t.climKwh, t.accKwh, t.regenKwh) else p.cons)
     }
 

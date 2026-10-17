@@ -348,6 +348,8 @@
     <string name="st_rd_uptodate">Radio Dash à jour (%1$s)</string>
     <string name="st_rd_installing">Installation de Radio Dash…</string>
     <string name="st_rd_done">Radio Dash est installée. Redémarre l\'écran central (appui long sur Home environ 20 s) pour l\'utiliser.</string>
+    <string name="en_trip">Trajet en cours</string>
+    <string name="en_last_1000">1 000 derniers km</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Téléphone connecté · Appuyer pour ouvrir</string>
     <string name="aa_waiting">Branchez votre téléphone en USB</string>

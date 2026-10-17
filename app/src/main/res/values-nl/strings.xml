@@ -348,6 +348,8 @@
     <string name="st_rd_uptodate">Radio Dash up-to-date (%1$s)</string>
     <string name="st_rd_installing">Radio Dash installeren…</string>
     <string name="st_rd_done">Radio Dash is geïnstalleerd. Herstart het scherm (Home ongeveer 20 s ingedrukt houden) om het te gebruiken.</string>
+    <string name="en_trip">Huidige rit</string>
+    <string name="en_last_1000">Laatste 1.000 km</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefoon verbonden · Tik om te openen</string>
     <string name="aa_waiting">Sluit je telefoon aan via USB</string>

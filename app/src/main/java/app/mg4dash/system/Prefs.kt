@@ -24,6 +24,11 @@ class Prefs(context: Context) {
         set(v) = sp.edit().putBoolean("vertical_dock", v).apply()
 
     /** Style Carte : sans les titres des widgets (issue #6). */
+    /** Période du widget consommation : 0 = depuis la recharge, 1 = trajet en cours, 2 = 1 000 derniers km. */
+    var consumptionPeriod: Int
+        get() = sp.getInt("consumption_period", 0)
+        set(v) = sp.edit().putInt("consumption_period", v).apply()
+
     var hideTitles: Boolean
         get() = sp.getBoolean("hide_titles", false)
         set(v) = sp.edit().putBoolean("hide_titles", v).apply()
