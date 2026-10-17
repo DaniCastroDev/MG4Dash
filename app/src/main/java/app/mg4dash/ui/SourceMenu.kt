@@ -39,6 +39,10 @@ object SourceMenu {
             }, LinearLayout.LayoutParams(-1, (60 * d).toInt()).apply { topMargin = (4 * d).toInt() })
         }
         popup.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+        // Hauteur mesurée explicitement : en ouverture vers le bas (carte musique en haut de l'écran),
+        // la hauteur « wrap_content » coupait le bas de la dernière ligne.
+        list.measure(View.MeasureSpec.makeMeasureSpec(popup.width, View.MeasureSpec.EXACTLY), View.MeasureSpec.UNSPECIFIED)
+        popup.height = list.measuredHeight + (6 * d).toInt()
         popup.showAsDropDown(anchor, 0, (4 * d).toInt())
     }
 
@@ -68,6 +72,10 @@ object SourceMenu {
             }, LinearLayout.LayoutParams(-1, (60 * d).toInt()).apply { topMargin = (4 * d).toInt() })
         }
         popup.setBackgroundDrawable(android.graphics.drawable.ColorDrawable(android.graphics.Color.TRANSPARENT))
+        // Hauteur mesurée explicitement : en ouverture vers le bas (carte musique en haut de l'écran),
+        // la hauteur « wrap_content » coupait le bas de la dernière ligne.
+        list.measure(View.MeasureSpec.makeMeasureSpec(popup.width, View.MeasureSpec.EXACTLY), View.MeasureSpec.UNSPECIFIED)
+        popup.height = list.measuredHeight + (6 * d).toInt()
         popup.showAsDropDown(anchor, 0, (4 * d).toInt())
     }
 
