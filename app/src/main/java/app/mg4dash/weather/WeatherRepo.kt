@@ -256,6 +256,15 @@ object WeatherRepo {
         else -> "—"
     }
 
+    /** Couleur de l'icône : soleil orange, pluie cyan, orage orange, neige et nuages en clair. */
+    fun iconColor(code: Int): Int = when (code) {
+        0, 1 -> R.color.accent_heat
+        2, 3, 45, 48 -> R.color.text_value
+        71, 73, 75, 77, 85, 86 -> R.color.text_value
+        95, 96, 99 -> R.color.accent_heat
+        else -> if (code >= 51) R.color.accent_cold else R.color.text_value
+    }
+
     fun icon(code: Int): Int = when (code) {
         0, 1 -> R.drawable.ic_sun
         2, 3, 45, 48 -> R.drawable.ic_cloud

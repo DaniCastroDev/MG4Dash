@@ -434,7 +434,7 @@ class SimpleHome(private val a: AppCompatActivity) {
             return
         }
         weatherIcon.setImageResource(WeatherRepo.icon(w.code))
-        weatherIcon.setColorFilter(kit.color(if (w.code <= 1) R.color.accent_heat else R.color.text_value))
+        weatherIcon.setColorFilter(kit.color(WeatherRepo.iconColor(w.code)))
         weatherTemp.text = "${w.tempC}°"
         weatherLabel.text = WeatherRepo.label(w.code)
         weatherPlace.text = w.place

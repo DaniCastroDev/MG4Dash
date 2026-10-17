@@ -83,7 +83,7 @@ class WeatherCompact(context: Context, private val onPage: () -> Unit) : LinearL
             return
         }
         icon.setImageResource(WeatherRepo.icon(w.code))
-        icon.setColorFilter(c(if (w.code <= 1) R.color.accent_heat else R.color.text_value))
+        icon.setColorFilter(c(WeatherRepo.iconColor(w.code)))
         temp.text = "${w.tempC}°"
         sub.text = listOfNotNull(
             if (w.todayMin != null && w.todayMax != null) "${w.todayMin}~${w.todayMax}°" else null,
@@ -97,7 +97,7 @@ class WeatherCompact(context: Context, private val onPage: () -> Unit) : LinearL
         items.forEach { (label, code, value) ->
             val cell = LinearLayout(context).apply { orientation = VERTICAL; gravity = Gravity.CENTER }
             cell.addView(tv(16f, R.color.text_title).apply { text = label; gravity = Gravity.CENTER })
-            cell.addView(ImageView(context).apply { setImageResource(WeatherRepo.icon(code)); setColorFilter(c(R.color.text_sub)) },
+            cell.addView(ImageView(context).apply { setImageResource(WeatherRepo.icon(code)); setColorFilter(c(WeatherRepo.iconColor(code))) },
                 LayoutParams((26 * d).toInt(), (26 * d).toInt()).apply { topMargin = (2 * d).toInt(); bottomMargin = (2 * d).toInt() })
             cell.addView(tv(19f, R.color.text_value).apply { text = value; gravity = Gravity.CENTER })
             forecast.addView(cell, LayoutParams(0, LayoutParams.WRAP_CONTENT, 1f))

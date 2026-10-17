@@ -514,7 +514,7 @@ class MainActivity : AppCompatActivity() {
         }
         b.weatherPlace.text = w.place
         b.weatherIcon.setImageResource(WeatherRepo.icon(w.code))
-        b.weatherIcon.setColorFilter(color(if (w.code <= 1) R.color.accent_heat else R.color.text_value))
+        b.weatherIcon.setColorFilter(color(WeatherRepo.iconColor(w.code)))
         b.weatherTemp.text = "${w.tempC}°"
         b.weatherLabel.text = WeatherRepo.label(w.code)
         b.weatherDetails.text = getString(R.string.weather_details, w.feelsC, w.windKmh, w.humidity)
@@ -536,7 +536,7 @@ class MainActivity : AppCompatActivity() {
                 text = label; setTextColor(color(R.color.text_title)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f); gravity = Gravity.CENTER
             })
             cell.addView(ImageView(this).apply {
-                setImageResource(WeatherRepo.icon(code)); setColorFilter(color(R.color.text_sub))
+                setImageResource(WeatherRepo.icon(code)); setColorFilter(color(WeatherRepo.iconColor(code)))
             }, LinearLayout.LayoutParams(dp(30), dp(30)).apply { topMargin = dp(2); bottomMargin = dp(2) })
             cell.addView(TextView(this).apply {
                 text = value; setTextColor(color(R.color.text_value)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 23f); gravity = Gravity.CENTER
