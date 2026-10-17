@@ -114,15 +114,15 @@ class SimpleHome(private val a: AppCompatActivity) {
         // Titre seul ; coin haut-gauche libre pour le bouton des antibrouillards (sauf barre verticale)
         val head = kit.row()
         head.addView(title(a.getString(R.string.title_climate)), kit.lp(0, -2, 1f, l = if (Dock.vertical(a)) 0 else Kit.FOG_SAFE_DP - 20))
-        climateCard.addView(head, kit.lp(-1, kit.dp(44)))
+        climateCard.addView(head, kit.lp(-1, kit.dp(34)))
         if (hideTitles) head.visibility = if (Dock.vertical(a)) View.GONE else View.INVISIBLE
 
         // Température, avec la température extérieure en petit dessous
         val tRow = kit.row().apply { gravity = Gravity.CENTER }
         tRow.addView(holdButton(R.drawable.ic_minus, 84, R.color.accent_cold) { CarBridge.stepTemp(-1) })
         val tBox = kit.column().apply { gravity = Gravity.CENTER }
-        temp = big("—", 84f, light = true).apply { gravity = Gravity.CENTER; includeFontPadding = false }
-        outside = kit.text("", 18f, R.color.text_sub).apply { gravity = Gravity.CENTER }
+        temp = big("—", 90f, light = true).apply { gravity = Gravity.CENTER; includeFontPadding = false }
+        outside = kit.text("", 22f, R.color.text_sub).apply { gravity = Gravity.CENTER; includeFontPadding = false }
         tBox.addView(temp); tBox.addView(outside)
         tRow.addView(tBox, kit.lp(0, -2, 1f))
         tRow.addView(holdButton(R.drawable.ic_plus, 84, R.color.accent_heat) { CarBridge.stepTemp(1) })
@@ -154,7 +154,7 @@ class SimpleHome(private val a: AppCompatActivity) {
         chipAc = kit.toggleTile(a.getString(R.string.chip_ac)) { CarBridge.toggleAc() }
         chipAuto = kit.toggleTile(a.getString(R.string.chip_auto)) { CarBridge.toggleAuto() }
         chipEco = kit.toggleTile("ECO") { CarBridge.toggleEco() }
-        listOf<View>(power, chipAc, chipAuto, chipEco).forEachIndexed { i, v -> r1.addView(v, kit.lp(0, kit.dp(52), 1f, l = if (i > 0) 8 else 0)) }
+        listOf<View>(power, chipAc, chipAuto, chipEco).forEachIndexed { i, v -> r1.addView(v, kit.lp(0, kit.dp(48), 1f, l = if (i > 0) 8 else 0)) }
         climateCard.addView(r1, kit.lp(-1, -2, t = 10))
         val r2 = kit.row()
         chipScreen = iconChip(R.drawable.ic_flow_screen) { toggleFlow(2) }
@@ -165,7 +165,7 @@ class SimpleHome(private val a: AppCompatActivity) {
             text = "A"; setTextColor(kit.color(R.color.accent_action)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); visibility = View.GONE
         }
         chipRecirc.addView(recircAuto, android.widget.FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.END).apply { rightMargin = kit.dp(8) })
-        listOf<View>(chipScreen, chipFace, chipFeet, chipRecirc).forEachIndexed { i, v -> r2.addView(v, kit.lp(0, kit.dp(52), 1f, l = if (i > 0) 8 else 0)) }
+        listOf<View>(chipScreen, chipFace, chipFeet, chipRecirc).forEachIndexed { i, v -> r2.addView(v, kit.lp(0, kit.dp(48), 1f, l = if (i > 0) 8 else 0)) }
         climateCard.addView(r2, kit.lp(-1, -2, t = 8))
 
         temp.setOnClickListener { a.startActivity(Intent(a, ClimateActivity::class.java)) }

@@ -86,7 +86,7 @@
                             android:layout_height="wrap_content"
                             android:gravity="center"
                             android:includeFontPadding="false"
-                            android:textSize="58sp"
+                            android:textSize="60sp"
                             tools:text="21.5°" />
 
                         <TextView
@@ -94,7 +94,8 @@
                             style="@style/Sub"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textSize="16sp"
+                            android:includeFontPadding="false"
+                            android:textSize="17sp"
                             tools:text="Ext. 13°" />
                     </LinearLayout>
 
