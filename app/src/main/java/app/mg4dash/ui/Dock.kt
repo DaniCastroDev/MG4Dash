@@ -127,24 +127,7 @@ object Dock {
             })
             when (item.label) {
                 R.string.dock_home -> cell.setOnLongClickListener { activity.startActivity(Intent(activity, AppsActivity::class.java)); true }
-                R.string.dock_aa -> cell.setOnLongClickListener {
-                    // Comme le launcher d'origine : Android Auto ou CarPlay, ou n'importe quelle appli
-                    val choices = arrayOf(activity.getString(R.string.dock_aa_stock), activity.getString(R.string.dock_cp_stock), activity.getString(R.string.dock_other_app))
-                    android.app.AlertDialog.Builder(activity)
-                        .setTitle(R.string.dock_aa_pick)
-                        .setItems(choices) { _, w ->
-                            when (w) {
-                                0 -> { Prefs(activity).dockAaTarget = null; build(activity, dock, current, simple) }
-                                1 -> { Prefs(activity).dockAaTarget = Apps.CARPLAY.flattenToString(); build(activity, dock, current, simple) }
-                                else -> Shortcuts.pickApp(activity, activity.getString(R.string.dock_aa_pick)) { cn ->
-                                    if (cn != null) { Prefs(activity).dockAaTarget = cn.flattenToString(); build(activity, dock, current, simple) }
-                                }
-                            }
-                        }
-                        .setNegativeButton(R.string.cancel, null)
-                        .show()
-                    true
-                }
+                R.string.dock_aa -> cell.setOnLongClickListener { pickAaTarget(activity) { build(activity, dock, current, simple) }; true }
                 R.string.dock_settings -> cell.setOnLongClickListener { activity.startActivity(Intent(activity, SettingsActivity::class.java)); true }
             }
             dock.addView(cell, LinearLayout.LayoutParams(0, -1, 1f).apply { if (index >= 0) leftMargin = kit.dp(6) })
@@ -240,6 +223,8 @@ object Dock {
                 else -> {
                     cell.setOnClickListener { open(activity, item, current) }
                     if (item.label == R.string.dock_home) cell.setOnLongClickListener { activity.startActivity(Intent(activity, AppsActivity::class.java)); true }
+                    // Appui long : Android Auto, CarPlay ou une autre appli, comme dans la barre du bas
+                    if (item.label == R.string.dock_aa) cell.setOnLongClickListener { pickAaTarget(activity) { buildVertical(activity, bar, current) }; true }
                 }
             }
             bar.addView(cell, LinearLayout.LayoutParams(-1, 0, 1f).apply { topMargin = kit.dp(4) })
@@ -253,6 +238,25 @@ object Dock {
         } catch (_: Exception) {
             Apps.open(activity, Apps.SETTINGS, activity.getString(R.string.dock_settings))
         }
+    }
+
+    /** Comme le launcher d'origine : le bouton ouvre Android Auto, CarPlay ou n'importe quelle appli. */
+    private fun pickAaTarget(activity: Activity, onDone: () -> Unit) {
+        val choices = arrayOf(activity.getString(R.string.dock_aa_stock), activity.getString(R.string.dock_cp_stock), activity.getString(R.string.dock_other_app))
+        android.app.AlertDialog.Builder(activity)
+            .setTitle(R.string.dock_aa_pick)
+            .setItems(choices) { _, w ->
+                when (w) {
+                    0 -> { Prefs(activity).dockAaTarget = null; onDone() }
+                    1 -> { Prefs(activity).dockAaTarget = Apps.CARPLAY.flattenToString(); onDone() }
+                    else -> Shortcuts.pickApp(activity, activity.getString(R.string.dock_aa_pick)) { cn ->
+                        if (cn != null) { Prefs(activity).dockAaTarget = cn.flattenToString(); onDone() }
+                    }
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .setOnDismissListener { Fullscreen.apply(activity) }
+            .show()
     }
 
     private fun customAa(activity: Activity): android.content.ComponentName? =
