@@ -19,7 +19,12 @@ object SourceMenu {
             setPadding((8 * d).toInt(), (8 * d).toInt(), (8 * d).toInt(), (8 * d).toInt())
             elevation = 12 * d
         }
-        val popup = android.widget.PopupWindow(list, (300 * d).toInt(), LinearLayout.LayoutParams.WRAP_CONTENT, true)
+        // Fenêtre non focalisable : sinon elle prend le focus et la voiture réaffiche sa barre latérale et
+        // son bandeau (plein écran perdu). Un toucher à côté la ferme quand même.
+        val popup = android.widget.PopupWindow(list, (300 * d).toInt(), LinearLayout.LayoutParams.WRAP_CONTENT, false).apply {
+            isOutsideTouchable = true
+            setOnDismissListener { Fullscreen.apply(activity) }
+        }
         val cur = MediaHub.currentSource()
         MediaHub.availableSources().forEach { pkg ->
             list.addView(TextView(activity).apply {
