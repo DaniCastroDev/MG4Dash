@@ -61,6 +61,7 @@ object CarBridge {
         // Firmware A9 (SWI69/131/132) : service caradapter. Ancien SDK (SWI68/165/133) : gestionnaires
         // SAIC du launcher d'origine. Firmware inconnu : on tente les deux.
         if (Firmware.family != Firmware.Family.LEGACY) bind()
+        HvacOverlay.connect(context)
         if (Firmware.family != Firmware.Family.A9) LegacyCar.init(context)
         Log.i(TAG, "firmware ${Firmware.version} (${Firmware.gen}, famille ${Firmware.family})")
         scope.launch { pollLoop() }
@@ -182,7 +183,24 @@ object CarBridge {
     @Volatile private var holdWheel: Pair<Boolean, Long>? = null
     private const val HOLD_HEAT_MS = 8000L
 
+    // Mise en marche de la clim (par n'importe quelle commande) : la SystemUI ouvre son panneau plein écran
+    // juste après ; on le referme si l'option est active. Repli quand le rappel du SDK (LegacyCar) manque.
+    @Volatile private var lastHvacOn: Boolean? = null
+
+    private fun watchHvacPower() {
+        val on = _state.value.hvacOn ?: return
+        val was = lastHvacOn
+        lastHvacOn = on
+        if (was != false || !on || HvacOverlay.eventDriven) return
+        HvacOverlay.suppress("relecture")
+    }
+
     private fun refreshHvac() {
+        refreshHvacState()
+        watchHvacPower()
+    }
+
+    private fun refreshHvacState() {
         val h = hvac ?: run { if (Firmware.family != Firmware.Family.A9) _state.value = held(LegacyCar.readHvac(_state.value)); return }
         _state.value = _state.value.copy(
             connected = true,

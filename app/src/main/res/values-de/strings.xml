@@ -379,4 +379,6 @@
     <string name="cable_lock">KABEL VERRIEGELN</string>
     <string name="dm_refused_moving">Zum Ändern des Fahrmodus anhalten</string>
     <string name="dm_refused_speed">Geschwindigkeit nicht lesbar: Fahrmodus unverändert</string>
+    <string name="st_hide_hvac">Klima-Panel des Systems ausblenden</string>
+    <string name="st_hide_hvac_desc">Das Auto öffnet bei jedem Einschalten der Klimaanlage sein Vollbild-Klima-Panel. MG4Dash schließt es sofort.</string>
 </resources>

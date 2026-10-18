@@ -379,4 +379,6 @@
     <string name="cable_lock">BLOQUEAR CABLE</string>
     <string name="dm_refused_moving">Detén el coche para cambiar el modo de conducción</string>
     <string name="dm_refused_speed">Velocidad ilegible: modo de conducción sin cambiar</string>
+    <string name="st_hide_hvac">Ocultar el panel de clima del sistema</string>
+    <string name="st_hide_hvac_desc">El coche abre su panel de clima a pantalla completa cada vez que se enciende el aire. MG4Dash lo cierra al momento.</string>
 </resources>

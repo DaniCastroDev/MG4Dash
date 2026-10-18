@@ -379,4 +379,6 @@
     <string name="cable_lock">BLOCCA CAVO</string>
     <string name="dm_refused_moving">Ferma l\'auto per cambiare modalità di guida</string>
     <string name="dm_refused_speed">Velocità illeggibile: modalità di guida invariata</string>
+    <string name="st_hide_hvac">Nascondi il pannello clima di sistema</string>
+    <string name="st_hide_hvac_desc">L\'auto apre il pannello clima a schermo intero ogni volta che si accende il clima. MG4Dash lo chiude subito.</string>
 </resources>

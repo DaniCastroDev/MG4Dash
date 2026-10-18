@@ -144,6 +144,7 @@ class SettingsActivity : AppCompatActivity() {
             button(getString(R.string.st_valet), R.color.accent_heat) { confirmValet() },
         )
         toggle(valet, R.string.st_warm, R.string.st_warm_desc, { prefs.warmUpStock }) { prefs.warmUpStock = it }
+        toggle(valet, R.string.st_hide_hvac, R.string.st_hide_hvac_desc, { prefs.hideStockHvac }) { prefs.hideStockHvac = it }
         text(valet, getString(R.string.st_adb), 14f, R.color.text_title)
 
         // ── Mise à jour depuis GitHub ──

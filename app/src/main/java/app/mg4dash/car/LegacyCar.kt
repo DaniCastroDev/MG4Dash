@@ -55,10 +55,47 @@ object LegacyCar {
         val initM = cls.methods.firstOrNull { it.name == "init" && it.parameterCount == 2 && Context::class.java.isAssignableFrom(it.parameterTypes[0]) }
         if (initM != null) {
             val lt = initM.parameterTypes[1]
-            val listener = serviceListener(lt, "AirConditionManager") { ac = it ?: singleton() }
+            val listener = serviceListener(lt, "AirConditionManager") { ac = it ?: singleton(); watchPower() }
             try { initM.invoke(null, ctx, listener) } catch (e: Exception) { Log.w(TAG, "AirConditionManager.init : ${e.message}") }
         }
         if (ac == null) ac = singleton()
+        watchPower()
+    }
+
+    // ── Mise en marche de la clim, en direct ──
+    // Même rappel que la SystemUI (AirConditionController) : signal 4001 avec HvacPowerStatus = 1. On
+    // referme son panneau plein écran dans la même fraction de seconde, au lieu d'attendre la relecture.
+    private const val SIGNAL_HVAC_POWER = 4001
+    @Volatile private var powerCallback: Any? = null
+
+    private fun watchPower() {
+        val a = ac ?: return
+        if (powerCallback != null) return
+        val reg = a.javaClass.methods.firstOrNull { it.name == "registerAirConditionCallback" && it.parameterCount == 1 } ?: return
+        val type = reg.parameterTypes[0].takeIf { it.isInterface } ?: return
+        val cb = try {
+            java.lang.reflect.Proxy.newProxyInstance(type.classLoader, arrayOf(type)) { proxy, m, args ->
+                when (m.name) {
+                    "onAirConditionChangeEvent" -> { onHvacEvent(args?.getOrNull(0)); null }
+                    "hashCode" -> System.identityHashCode(proxy)
+                    "equals" -> proxy === args?.getOrNull(0)
+                    "toString" -> "MG4DashAirConditionCallback"
+                    else -> null
+                }
+            }
+        } catch (_: Exception) { return }
+        try {
+            reg.invoke(a, cb)
+            powerCallback = cb
+            HvacOverlay.eventDriven = true
+            Log.i(TAG, "rappel clim enregistré")
+        } catch (e: Exception) { Log.w(TAG, "registerAirConditionCallback : ${(e.cause ?: e).message}") }
+    }
+
+    private fun onHvacEvent(bean: Any?) {
+        bean ?: return
+        fun get(name: String) = try { bean.javaClass.getMethod(name).invoke(bean) as? Int } catch (_: Exception) { null }
+        if (get("getMarkedSignalId") == SIGNAL_HVAC_POWER && get("getHvacPowerStatus") == 1) HvacOverlay.suppress("rappel")
     }
 
     private fun int(name: String): Int? {

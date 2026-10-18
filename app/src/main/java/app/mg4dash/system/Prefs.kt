@@ -81,6 +81,11 @@ class Prefs(context: Context) {
         get() = sp.getBoolean("warmup_stock", true)
         set(v) = sp.edit().putBoolean("warmup_stock", v).apply()
 
+    /** Cache le panneau clim plein écran de la SystemUI qui s'ouvre à chaque mise en marche de la clim. */
+    var hideStockHvac: Boolean
+        get() = sp.getBoolean("hide_stock_hvac", true)
+        set(v) = sp.edit().putBoolean("hide_stock_hvac", v).apply()
+
     /** Mode Entretien : le launcher SAIC reste l'accueil, MG4Dash ne reprend pas la main. */
     var valetMode: Boolean
         get() = sp.getBoolean("valet_mode", false)

@@ -379,4 +379,6 @@
     <string name="cable_lock">KABEL VERGRENDELEN</string>
     <string name="dm_refused_moving">Stop de auto om de rijmodus te wijzigen</string>
     <string name="dm_refused_speed">Snelheid onleesbaar: rijmodus niet gewijzigd</string>
+    <string name="st_hide_hvac">Klimaatpaneel van het systeem verbergen</string>
+    <string name="st_hide_hvac_desc">De auto opent zijn klimaatpaneel op volledig scherm telkens als de klimaatregeling aangaat. MG4Dash sluit het meteen.</string>
 </resources>

@@ -379,4 +379,6 @@
     <string name="cable_lock">VERROUILLER CÂBLE</string>
     <string name="dm_refused_moving">Arrêtez la voiture pour changer de mode de conduite</string>
     <string name="dm_refused_speed">Vitesse illisible : mode de conduite inchangé</string>
+    <string name="st_hide_hvac">Masquer le panneau clim du système</string>
+    <string name="st_hide_hvac_desc">La voiture ouvre son panneau clim plein écran à chaque mise en marche de la clim. MG4Dash le referme aussitôt.</string>
 </resources>
