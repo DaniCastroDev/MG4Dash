@@ -363,10 +363,6 @@
     <string name="st_map_theme_app">Come l\'app</string>
     <string name="st_use_location">Usa la mia posizione</string>
     <string name="st_no_location">Posizione non ancora disponibile</string>
-    <string name="esc_off_title">Disattivare l\'ESC?</string>
-    <string name="esc_off_msg">Disattivare il controllo di stabilità può far perdere stabilità al veicolo. Tieni premuto di nuovo il pulsante Veicolo per riattivarlo.</string>
-    <string name="esc_off_confirm">Disattiva</string>
-    <string name="esc_on_done">ESC riattivato</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefono connesso · Tocca per aprire</string>
     <string name="aa_waiting">Collega il telefono via USB</string>

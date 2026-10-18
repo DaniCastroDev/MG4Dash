@@ -30,6 +30,7 @@ class LauncherApp : Application() {
         }
         app.mg4dash.system.HomeSwitcher.init(this)
         CarBridge.start(this)
+        app.mg4dash.phone.PhoneBookAuto.start(this)
         app.mg4dash.car.CarProps.start(this)
         app.mg4dash.energy.ChargeGuard.start(this)
         app.mg4dash.energy.EnergyMonitor.start(this)

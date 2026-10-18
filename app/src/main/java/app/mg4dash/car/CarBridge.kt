@@ -121,7 +121,11 @@ object CarBridge {
         if (hvac?.alive != true) hvac = query(CODE_HVAC)?.let { HvacService(it) }
         if (ev?.alive != true) ev = query(CODE_EV)?.let { EvService(it) }
         if (vs?.alive != true) vs = query(CODE_VS)?.let { VehicleSettingService(it) }
-        if (general?.alive != true) general = query(CODE_GENERAL)?.let { GeneralService(it) }
+        if (general?.alive != true) {
+            general = query(CODE_GENERAL)?.let { GeneralService(it) }
+            // Au démarrage, écran rallumé : si MG4Dash l'avait éteint puis a été relancé, rien d'autre ne le rallume
+            if (general != null && !displayChecked) { displayChecked = true; setDisplay(true) }
+        }
     }
 
     private suspend fun pollLoop() {
@@ -310,6 +314,8 @@ object CarBridge {
 
     // ── Écran éteint et ESC (gestes de la barre verticale, issue #12) ──
 
+    @Volatile private var displayChecked = false
+
     /** Allume ou éteint l'écran central par le service véhicule ; false si le service ne répond pas. */
     fun setDisplay(on: Boolean): Boolean {
         if (BuildConfig.MOCK) return true
@@ -319,13 +325,14 @@ object CarBridge {
     }
 
     /**
-     * ESC actif ? Même règle que les réglages véhicule SAIC : état TCS 0 ou 1 = contrôle actif.
+     * ESC actif ? 1 = actif, 0 = coupé (VEHICLE_ESP, relevé sur la voiture le 2026-10-18).
      * null si la voiture ne le dit pas.
      */
     fun escActive(): Boolean? {
         if (BuildConfig.MOCK) return mockEsc
-        val sts = CarProps.readIntArea(TCS_OPNG_STS, 0x1000000) ?: CarProps.getInt(TCS_OPNG_STS) ?: return null
-        return sts == 0 || sts == 1
+        // Relevé sur la voiture : l'état suit VEHICLE_ESP lui-même (1 = actif, 0 = coupé), comme TCS_OPNG_MD
+        val v = CarProps.readIntArea(VEHICLE_ESP, 0x1000000) ?: CarProps.readIntArea(TCS_OPNG_MD, 0x1000000) ?: return null
+        return v != 0
     }
     private var mockEsc = true
 
@@ -336,7 +343,7 @@ object CarBridge {
         Log.i(TAG, "ESC : commande envoyée → $ok, état avant : ${escActive()}")
     }
     private const val VEHICLE_ESP = 289421317       // 0x11403805 : commande ESC (setDrivingEpsMode du menu MG)
-    private const val TCS_OPNG_STS = 289421344      // 0x11403820 : état du contrôle de traction / stabilité
+    private const val TCS_OPNG_MD = 289421343       // 0x1140381f : 1 = ESC actif, 0 = coupé (repli)
 
     // ── Régénération : touchée depuis la jauge KERS (accueil, page Véhicule) ──
 

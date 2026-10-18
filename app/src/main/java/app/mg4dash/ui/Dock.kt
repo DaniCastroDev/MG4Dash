@@ -225,41 +225,32 @@ object Dock {
                     val gd = android.view.GestureDetector(activity, object : android.view.GestureDetector.SimpleOnGestureListener() {
                         override fun onSingleTapConfirmed(e: android.view.MotionEvent): Boolean { open(activity, item, current); return true }
                         override fun onDoubleTap(e: android.view.MotionEvent): Boolean {
-                            // Même commande que le launcher d'origine ; la voiture gère elle-même le réveil
-                            app.mg4dash.car.CarBridge.setDisplay(false); return true
+                            // Même commande que le launcher d'origine ; un toucher sur l'écran noir le rallume
+                            activity.startActivity(Intent(activity, ScreenOffActivity::class.java)); return true
                         }
                         override fun onDown(e: android.view.MotionEvent) = true
                     })
                     cell.setOnTouchListener { v, ev -> v.isPressed = ev.actionMasked == android.view.MotionEvent.ACTION_DOWN; gd.onTouchEvent(ev) }
                 }
                 R.string.dock_vehicle -> {
-                    // Appui long : ESC désactivé / réactivé (confirmation pour désactiver) ; icône rouge si coupé
+                    // Appui long : ESC coupé / réactivé ; icône rouge tant qu'il est coupé
                     fun tint() {
                         val escOff = app.mg4dash.car.CarBridge.escActive() == false
                         icon.setColorFilter(color(when { escOff -> R.color.accent_danger; selected -> R.color.accent_action; else -> R.color.text_sub }))
                     }
                     tint()
                     cell.setOnClickListener { open(activity, item, current) }
+                    // Pas de confirmation : la voiture sonne et affiche elle-même l'ESC coupé
                     cell.setOnLongClickListener {
-                        val active = app.mg4dash.car.CarBridge.escActive() != false
-                        if (active) {
-                            android.app.AlertDialog.Builder(activity)
-                                .setTitle(R.string.esc_off_title)
-                                .setMessage(R.string.esc_off_msg)
-                                .setPositiveButton(R.string.esc_off_confirm) { _, _ ->
-                                    app.mg4dash.car.CarBridge.toggleEsc()
-                                    cell.postDelayed({ tint() }, 1500)
-                                }
-                                .setNegativeButton(R.string.cancel, null)
-                                .setOnDismissListener { Fullscreen.apply(activity) }
-                                .show()
-                        } else {
-                            app.mg4dash.car.CarBridge.toggleEsc()
-                            android.widget.Toast.makeText(activity, R.string.esc_on_done, android.widget.Toast.LENGTH_SHORT).show()
-                            cell.postDelayed({ tint() }, 1500)
-                        }
+                        app.mg4dash.car.CarBridge.toggleEsc()
+                        cell.postDelayed({ tint() }, 800)
                         true
                     }
+                    // État relu régulièrement : l'ESC peut aussi changer depuis le menu MG
+                    val refresh = object : Runnable {
+                        override fun run() { if (cell.isAttachedToWindow) { tint(); cell.postDelayed(this, 3000) } }
+                    }
+                    cell.postDelayed(refresh, 3000)
                 }
                 else -> {
                     cell.setOnClickListener { open(activity, item, current) }

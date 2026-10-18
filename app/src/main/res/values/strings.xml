@@ -363,10 +363,6 @@
     <string name="st_map_theme_app">Like the app</string>
     <string name="st_use_location">Use my position</string>
     <string name="st_no_location">Position not available yet</string>
-    <string name="esc_off_title">Turn off ESC?</string>
-    <string name="esc_off_msg">Turning off the stability control can make the car lose stability. Long press the Vehicle button again to turn it back on.</string>
-    <string name="esc_off_confirm">Turn off</string>
-    <string name="esc_on_done">ESC turned back on</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Phone connected · Tap to open</string>
     <string name="aa_waiting">Connect your phone via USB</string>
