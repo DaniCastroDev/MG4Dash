@@ -221,11 +221,12 @@ object Dock {
                     cell.setOnTouchListener { v, ev -> v.isPressed = ev.actionMasked == android.view.MotionEvent.ACTION_DOWN; gd.onTouchEvent(ev) }
                 }
                 R.string.dock_energy -> {
-                    // Double toucher : écran éteint (un toucher le rallume) ; toucher : page Énergie
+                    // Double toucher : écran éteint ; toucher : page Énergie
                     val gd = android.view.GestureDetector(activity, object : android.view.GestureDetector.SimpleOnGestureListener() {
                         override fun onSingleTapConfirmed(e: android.view.MotionEvent): Boolean { open(activity, item, current); return true }
                         override fun onDoubleTap(e: android.view.MotionEvent): Boolean {
-                            activity.startActivity(Intent(activity, ScreenOffActivity::class.java)); return true
+                            // Même commande que le launcher d'origine ; la voiture gère elle-même le réveil
+                            app.mg4dash.car.CarBridge.setDisplay(false); return true
                         }
                         override fun onDown(e: android.view.MotionEvent) = true
                     })
