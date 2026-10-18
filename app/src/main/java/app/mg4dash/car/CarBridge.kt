@@ -316,6 +316,13 @@ object CarBridge {
 
     @Volatile private var displayChecked = false
 
+    /** Équipement chauffant déclaré par la voiture (A9) : sièges, volant ; null si inconnu. */
+    fun heatingConfig(): Pair<Int?, Int?> {
+        val b = try { adapter?.queryClient(2) } catch (_: Exception) { null } ?: return null to null
+        val c = ConfigService(b)
+        return (try { c.seatHeatingConfig } catch (_: Exception) { null }) to (try { c.steeringWheelHeatConfig } catch (_: Exception) { null })
+    }
+
     /** Allume ou éteint l'écran central par le service véhicule ; false si le service ne répond pas. */
     fun setDisplay(on: Boolean): Boolean {
         if (BuildConfig.MOCK) return true

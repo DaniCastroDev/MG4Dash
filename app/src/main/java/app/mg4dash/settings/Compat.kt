@@ -50,9 +50,49 @@ object Compat {
             appendLine("CarPropertyManager: ${if (CarProps.ready) "ok" else "absent"}; SOC=${f(0x2160f404)} range=${i(0x2140f41c)} V=${f(0x2160f406)} A=${f(0x2160f407)} driveMode=${i(0x2140a17c)} regen=${i(0x2140a191)} charge=${i(0x2140f409)}")
             appendLine("Battery capacity: car=${app.mg4dash.energy.BatteryCapacity.fromCar() ?: "—"} measured=${app.mg4dash.energy.BatteryCapacity.estimate(a)?.let { "${"%.1f".format(java.util.Locale.US, it.first)} (${it.second} samples)" } ?: "—"}")
             appendLine("Shown: battery=${s.batteryPercent ?: "—"} range=${s.rangeKm ?: "—"} chargeStatus=${s.chargeStatus ?: "—"} chargeControl=${CarBridge.chargeControl}")
-            append("Climate: on=${s.hvacOn ?: "—"} temp=${s.driverTemp ?: "—"} fan=${s.fanSpeed ?: "—"} ac=${s.acOn ?: "—"} auto=${s.autoOn ?: "—"} recirc=${s.recirc ?: "—"} outside=${s.outsideTemp ?: "—"}")
+            appendLine("Climate: on=${s.hvacOn ?: "—"} temp=${s.driverTemp ?: "—"} fan=${s.fanSpeed ?: "—"} ac=${s.acOn ?: "—"} auto=${s.autoOn ?: "—"} recirc=${s.recirc ?: "—"} outside=${s.outsideTemp ?: "—"}")
+            // Équipements et commandes à adapter selon le firmware (valeurs brutes de la voiture)
+            fun hv(id: Int) = CarProps.readIntArea(id, 0x75)?.toString() ?: "—"
+            val (seatCfg, wheelCfg) = CarBridge.heatingConfig()
+            appendLine("Heating: config seat=${seatCfg ?: "—"} wheel=${wheelCfg ?: "—"}; props seatL=${hv(0x15402513)} seatR=${hv(0x15402514)} wheel=${hv(0x1540253a)}")
+            appendLine("Controls: esp=${i(0x11403805)} tcs=${i(0x1140381f)} chrgCtrl=${i(0x2140f412)} lockCtrl=${i(0x2140f413)} doorCtrl=${i(0x2140f455)} plugAC=${i(0x2140f43e)} plugDC=${i(0x2140f43f)} onePedal=${i(0x2140a193)} las=${i(0x2140a10c)}")
+            appendLine("Old SDK: " + sdkClasses(a))
+            appendLine("Media: " + listOf("com.saicmotor.service.media", "com.saicmotor.service.radio", "com.saicmotor.media", "com.saicmotor.radio",
+                "com.saicmotor.hmi.media", "com.saicmotor.hmi.radio").joinToString(" ") { "${it.removePrefix("com.saicmotor.")}=${pkg(it)}" })
+            append("Apps: " + saicApps(a))
         }
     }
+
+    /** Classes de l'ancien SDK trouvées, et dans quel paquet (sert à piloter charge, ESC, aides). */
+    private fun sdkClasses(a: Activity): String {
+        val classes = listOf("VehicleSettingManager", "VehicleControlManager", "VehicleChargingManager", "VehicleConditionManager",
+            "VehiclePropertyManager", "AirConditionManager")
+        // Paquets candidats seulement (charger chaque appli coûte du temps)
+        val pkgs = saicPackages(a).filter { p -> listOf("launcher", "vehicle", "setting", ".ev", "charg", "service", "adapter").any { p.contains(it) } }
+        return classes.joinToString(" ") { c ->
+            val where = pkgs.firstOrNull { p ->
+                try {
+                    a.createPackageContext(p, android.content.Context.CONTEXT_INCLUDE_CODE or android.content.Context.CONTEXT_IGNORE_SECURITY)
+                        .classLoader.loadClass("com.saicmotor.sdk.vehiclesettings.manager.$c"); true
+                } catch (_: Throwable) { false }
+            }
+            "$c=${where?.removePrefix("com.saicmotor.") ?: "—"}"
+        }
+    }
+
+    private fun saicPackages(a: Activity): List<String> = try {
+        a.packageManager.getInstalledPackages(0).map { it.packageName }.filter { it.startsWith("com.saicmotor.") }.sorted()
+    } catch (_: Exception) { emptyList() }
+
+    /** Applis SAIC lançables (nom de paquet seulement) : pour ouvrir l'appli Énergie, Réglages… */
+    private fun saicApps(a: Activity): String = try {
+        val pm = a.packageManager
+        pm.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER), 0)
+            .map { it.activityInfo.packageName + "/" + it.activityInfo.name.substringAfterLast('.') }
+            .filter { it.startsWith("com.saicmotor.") }
+            .map { it.removePrefix("com.saicmotor.") }
+            .distinct().sorted().joinToString(" ")
+    } catch (_: Exception) { "—" }
 
     fun issueUrl(report: String): String {
         val title = "Compatibility: ${Firmware.version.substringBefore('-').ifBlank { Firmware.gen.name }}"
@@ -72,7 +112,9 @@ object Compat {
     /** Rapport + QR code ; « Ouvrir » tente aussi le navigateur de la voiture, s'il y en a un. */
     fun show(a: Activity) {
         val text = report(a)
-        val url = issueUrl(text)
+        val url = issueUrl(text).let { u ->
+            if (u.length <= 2800) u else issueUrl(text.lines().filterNot { it.startsWith("Apps:") }.joinToString("\n"))
+        }
         val d = a.resources.displayMetrics.density
         val box = LinearLayout(a).apply { orientation = LinearLayout.HORIZONTAL; setPadding((24 * d).toInt(), (8 * d).toInt(), (24 * d).toInt(), 0) }
         box.addView(ScrollView(a).apply {

@@ -105,6 +105,12 @@ class VehicleSettingService(b: IBinder) : RemoteService(b, "com.saicmotor.carapi
     fun setSignalPedalState(v: Int) = voidInt(162, v)
 }
 
+/** Configuration du véhicule (queryClient 2) : équipements présents (codes relevés dans l'appli clim SAIC). */
+class ConfigService(b: IBinder) : RemoteService(b, "com.saicmotor.carapi.config.ICarConfigService") {
+    val seatHeatingConfig get() = int(23)
+    val steeringWheelHeatConfig get() = int(52)
+}
+
 /** Informations générales (queryClient 1). */
 class GeneralService(b: IBinder) : RemoteService(b, "com.saicmotor.carapi.general.ICarGeneralService") {
     /** Rétroéclairage de l'écran central : false = éteint (commande « écran éteint » du launcher d'origine). */
