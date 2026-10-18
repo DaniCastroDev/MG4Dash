@@ -83,6 +83,8 @@ class EvService(b: IBinder) : RemoteService(b, "com.saicmotor.carapi.ev.ICarEvSe
     /** 1 = démarrer, 2 = arrêter (comme le bouton du launcher d'origine). */
     fun chargeCtrl(v: Int) = voidInt(5, v)
     fun disChargeCtrl(v: Int) = voidInt(8, v)
+    /** Verrou du pistolet de charge : 1 = verrouiller, 2 = déverrouiller (bouton du launcher d'origine). */
+    fun elecClckCtrl(v: Int) = voidInt(16, v)
 }
 
 /** Réglages véhicule (queryClient 8). Seules la régénération et la conduite à une pédale sont modifiées. */

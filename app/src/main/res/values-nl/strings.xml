@@ -364,6 +364,11 @@
     <string name="st_use_location">Mijn positie gebruiken</string>
     <string name="st_no_location">Positie nog niet beschikbaar</string>
     <string name="st_heated">Stoel- en stuurverwarming</string>
+    <string name="doors_locked">Deuren vergrendeld</string>
+    <string name="doors_unlocked">Deuren ontgrendeld</string>
+    <string name="doors_unknown">Vergrendeling niet beschikbaar</string>
+    <string name="en_gun_unlock">KABEL ONTGRENDELEN</string>
+    <string name="en_gun_lock">KABEL VERGRENDELEN</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefoon verbonden · Tik om te openen</string>
     <string name="aa_waiting">Sluit je telefoon aan via USB</string>

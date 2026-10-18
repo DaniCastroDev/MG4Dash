@@ -45,6 +45,7 @@ class EnergyActivity : PageActivity() {
     private lateinit var setCurrent: (Int?) -> Unit
     private lateinit var enforce: TextView
     private lateinit var heating: TextView
+    private lateinit var gunLock: TextView
     // Programmation
     private lateinit var schedule: TextView
     private lateinit var finish: TextView
@@ -83,6 +84,11 @@ class EnergyActivity : PageActivity() {
             heating.postDelayed({ refreshProps() }, 1500)
         }.apply { textSize = 18f; setPadding(kit.dp(20), 0, kit.dp(20), 0) }
         header.addView(heating, header.childCount - 1, kit.lp(-2, kit.dp(52), r = 12))   // avant le lien SAIC
+        // Pistolet de charge : verrouiller / déverrouiller (bouton du launcher d'origine), câble branché seulement
+        gunLock = kit.toggleTile(getString(R.string.en_gun_unlock)) {
+            CarBridge.toggleChargeLock(); gunLock.postDelayed({ refreshProps() }, 1500)
+        }.apply { textSize = 18f; setPadding(kit.dp(20), 0, kit.dp(20), 0); visibility = android.view.View.GONE }
+        header.addView(gunLock, header.childCount - 1, kit.lp(-2, kit.dp(52), r = 12))
 
         // ── Colonne 1 : recharge ──
         val c1 = kit.panel(getString(R.string.en_charging))
@@ -237,6 +243,9 @@ class EnergyActivity : PageActivity() {
     private fun renderProps(p: Props) {
         reser = p.reser
         heating.isSelected = p.heat == 0
+        val locked = CarBridge.chargeLockLocked()
+        gunLock.visibility = if (locked != null && VehicleState.isPlugged(CarBridge.state.value.chargeStatus)) android.view.View.VISIBLE else android.view.View.GONE
+        gunLock.text = getString(if (locked == false) R.string.en_gun_lock else R.string.en_gun_unlock)
         heating.isEnabled = p.heat != null
         val carLimit = CarProps.targetSocPercent(p.target)
         renderLimit(carLimit)

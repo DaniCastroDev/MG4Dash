@@ -67,7 +67,37 @@ object CarBridge {
     }
 
     /** Démarrage / arrêt de la charge et du V2L disponibles (service EV de la voie A9). */
-    val chargeControl: Boolean get() = BuildConfig.MOCK || ev != null || LegacyCar.chargingReady
+    val chargeControl: Boolean get() = BuildConfig.MOCK || ev != null || LegacyCar.chargingReady ||
+        CarProps.readIntArea(CHRG_CTRL, 0x1000000) != null   // secours : propriété CHRG_CTRL (testée sur SWI69)
+
+    private const val CHRG_CTRL = 0x2140f412          // 1 = démarrer, 2 = arrêter la charge (testé le 2026-10-18)
+    private const val ELEC_CLCK_CTRL = 0x2140f413     // pistolet : 1 = verrouillé, 2 = libre
+    private const val VEHICLE_LOCK = 289421312        // 0x11403800 : portes ; écriture 1 = verrouiller, 2 = déverrouiller
+
+    /** Pistolet de charge verrouillé ? null si la voiture ne le dit pas. */
+    fun chargeLockLocked(): Boolean? = CarProps.readIntArea(ELEC_CLCK_CTRL, 0x1000000)?.let { if (it == 1) true else if (it == 2 || it == 0) false else null }
+
+    /** Verrouille / déverrouille le pistolet : service EV (A9), sinon la propriété directement. */
+    fun toggleChargeLock() {
+        val target = if (chargeLockLocked() == true) 2 else 1
+        if (BuildConfig.MOCK) return
+        scope.launch {
+            val e = ev
+            if (e != null) try { e.elecClckCtrl(target); Log.i(TAG, "pistolet ← $target (service EV)") } catch (ex: Exception) { Log.w(TAG, "pistolet : ${ex.message}") }
+            else CarProps.setIntArea(ELEC_CLCK_CTRL, 0x1000000, target, "pistolet")
+        }
+    }
+
+    /** Portes verrouillées ? (SystemUI d'origine : 0 = ouvertes, 1 à 4 = verrouillées). */
+    fun doorsLocked(): Boolean? = CarProps.readIntArea(VEHICLE_LOCK, 0x1000000)?.let { it in 1..4 }
+
+    /** Verrouille ou déverrouille les portes, comme la tuile du panneau rapide d'origine. Rend l'action faite. */
+    fun toggleDoors(): Boolean? {
+        val locked = doorsLocked() ?: return null
+        if (BuildConfig.MOCK) return !locked
+        CarProps.setIntArea(VEHICLE_LOCK, 0x1000000, if (locked) 2 else 1, if (locked) "portes : déverrouiller" else "portes : verrouiller")
+        return !locked
+    }
 
     /** Services qui répondent, pour l'écran Compatibilité. */
     fun probe(): List<Pair<String, String>> = listOf(
@@ -361,6 +391,10 @@ object CarBridge {
                         else -> LegacyCar.dischargeCtrl(2)
                     }
                     Log.i(TAG, "EV $label (ancien SDK) → $ok")
+                    delay(1500); refreshEnergy(); delay(3000); refreshEnergy()
+                } else if (label == "startCharge" || label == "stopCharge") {
+                    // Secours sans service EV ni SDK : la propriété CHRG_CTRL (même effet, testé sur SWI69)
+                    CarProps.setIntArea(CHRG_CTRL, 0x1000000, if (label == "startCharge") 1 else 2, label)
                     delay(1500); refreshEnergy(); delay(3000); refreshEnergy()
                 } else Log.w(TAG, "$label ignoré : service EV non connecté")
                 return@launch

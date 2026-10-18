@@ -364,6 +364,11 @@
     <string name="st_use_location">Usa la mia posizione</string>
     <string name="st_no_location">Posizione non ancora disponibile</string>
     <string name="st_heated">Sedili e volante riscaldati</string>
+    <string name="doors_locked">Porte bloccate</string>
+    <string name="doors_unlocked">Porte sbloccate</string>
+    <string name="doors_unknown">Blocco non disponibile</string>
+    <string name="en_gun_unlock">SBLOCCA CAVO</string>
+    <string name="en_gun_lock">BLOCCA CAVO</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefono connesso · Tocca per aprire</string>
     <string name="aa_waiting">Collega il telefono via USB</string>

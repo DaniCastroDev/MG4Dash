@@ -239,13 +239,24 @@ object Dock {
                         icon.setColorFilter(color(when { escOff -> R.color.accent_danger; selected -> R.color.accent_action; else -> R.color.text_sub }))
                     }
                     tint()
-                    cell.setOnClickListener { open(activity, item, current) }
-                    // Pas de confirmation : la voiture sonne et affiche elle-même l'ESC coupé
-                    cell.setOnLongClickListener {
-                        app.mg4dash.car.CarBridge.toggleEsc()
-                        cell.postDelayed({ tint() }, 800)
-                        true
-                    }
+                    // Toucher : page Véhicule ; double toucher : portes verrouillées / déverrouillées (utile depuis
+                    // l'arrière, issue #12) ; appui long : ESC (pas de confirmation, la voiture le signale elle-même)
+                    val gd = android.view.GestureDetector(activity, object : android.view.GestureDetector.SimpleOnGestureListener() {
+                        override fun onSingleTapConfirmed(e: android.view.MotionEvent): Boolean { open(activity, item, current); return true }
+                        override fun onDoubleTap(e: android.view.MotionEvent): Boolean {
+                            val nowLocked = app.mg4dash.car.CarBridge.toggleDoors()
+                            android.widget.Toast.makeText(activity, when (nowLocked) {
+                                true -> R.string.doors_locked; false -> R.string.doors_unlocked; null -> R.string.doors_unknown
+                            }, android.widget.Toast.LENGTH_SHORT).show()
+                            return true
+                        }
+                        override fun onLongPress(e: android.view.MotionEvent) {
+                            app.mg4dash.car.CarBridge.toggleEsc()
+                            cell.postDelayed({ tint() }, 800)
+                        }
+                        override fun onDown(e: android.view.MotionEvent) = true
+                    })
+                    cell.setOnTouchListener { v, ev -> v.isPressed = ev.actionMasked == android.view.MotionEvent.ACTION_DOWN; gd.onTouchEvent(ev) }
                     // État relu régulièrement : l'ESC peut aussi changer depuis le menu MG
                     val refresh = object : Runnable {
                         override fun run() { if (cell.isAttachedToWindow) { tint(); cell.postDelayed(this, 3000) } }

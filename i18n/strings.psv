@@ -362,3 +362,8 @@ st_map_theme_app|Like the app|Comme l'appli|Wie die App|Como la app|Come l'app|Z
 st_use_location|Use my position|Utiliser ma position|Meine Position verwenden|Usar mi posición|Usa la mia posizione|Mijn positie gebruiken
 st_no_location|Position not available yet|Position pas encore disponible|Position noch nicht verfügbar|Posición aún no disponible|Posizione non ancora disponibile|Positie nog niet beschikbaar
 st_heated|Heated seats and steering wheel|Sièges et volant chauffants|Sitz- und Lenkradheizung|Asientos y volante calefactados|Sedili e volante riscaldati|Stoel- en stuurverwarming
+doors_locked|Doors locked|Portes verrouillées|Türen verriegelt|Puertas bloqueadas|Porte bloccate|Deuren vergrendeld
+doors_unlocked|Doors unlocked|Portes déverrouillées|Türen entriegelt|Puertas desbloqueadas|Porte sbloccate|Deuren ontgrendeld
+doors_unknown|Door lock not available|Verrouillage indisponible|Verriegelung nicht verfügbar|Bloqueo no disponible|Blocco non disponibile|Vergrendeling niet beschikbaar
+en_gun_unlock|UNLOCK CABLE|DÉVERROUILLER LE PISTOLET|KABEL ENTRIEGELN|DESBLOQUEAR CABLE|SBLOCCA CAVO|KABEL ONTGRENDELEN
+en_gun_lock|LOCK CABLE|VERROUILLER LE PISTOLET|KABEL VERRIEGELN|BLOQUEAR CABLE|BLOCCA CAVO|KABEL VERGRENDELEN

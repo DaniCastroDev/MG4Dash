@@ -364,6 +364,11 @@
     <string name="st_use_location">Utiliser ma position</string>
     <string name="st_no_location">Position pas encore disponible</string>
     <string name="st_heated">Sièges et volant chauffants</string>
+    <string name="doors_locked">Portes verrouillées</string>
+    <string name="doors_unlocked">Portes déverrouillées</string>
+    <string name="doors_unknown">Verrouillage indisponible</string>
+    <string name="en_gun_unlock">DÉVERROUILLER LE PISTOLET</string>
+    <string name="en_gun_lock">VERROUILLER LE PISTOLET</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Téléphone connecté · Appuyer pour ouvrir</string>
     <string name="aa_waiting">Branchez votre téléphone en USB</string>
