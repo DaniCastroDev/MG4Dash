@@ -163,7 +163,9 @@ object LegacyCar {
             try { ctx.createPackageContext(pkg, Context.CONTEXT_INCLUDE_CODE or Context.CONTEXT_IGNORE_SECURITY) } catch (_: Exception) { null }
         } ?: return null
         val cls = try { launcher.classLoader.loadClass(className) } catch (_: Exception) { return null }
-        fun singleton(): Any? = try { cls.getMethod("getInstance").invoke(null) } catch (_: Exception) { null }
+        fun singleton(): Any? = (try { cls.getMethod("getInstance").invoke(null) } catch (_: Exception) { null })
+            ?: cls.declaredFields.firstOrNull { java.lang.reflect.Modifier.isStatic(it.modifiers) && it.type == cls }
+                ?.let { f -> try { f.isAccessible = true; f.get(null) } catch (_: Exception) { null } }
         val initM = cls.methods.firstOrNull { it.name == "init" && it.parameterCount == 2 && Context::class.java.isAssignableFrom(it.parameterTypes[0]) }
         if (initM != null) {
             val lt = initM.parameterTypes[1]
@@ -176,6 +178,34 @@ object LegacyCar {
             try { initM.invoke(null, ctx, listener) } catch (e: Exception) { Log.w(TAG, "${className.substringAfterLast('.')}.init : ${e.message}") }
         }
         return singleton()
+    }
+
+    // ── ESC : VehicleControlManager du même SDK (SWI68/165, méthodes relevées par MG4Control) ──
+    // Lecture 1 = actif, 0 ou 2 = coupé ; l'écriture est une bascule (1), comme l'interrupteur d'origine.
+    private const val CONTROL_CLASS = "com.saicmotor.sdk.vehiclesettings.manager.VehicleControlManager"
+    @Volatile private var control: Any? = null
+    @Volatile private var controlInit = false
+
+    private fun connectControl() {
+        if (control != null || controlInit) return
+        val ctx = appContext ?: return
+        controlInit = true
+        control = sdkManager(ctx, CONTROL_CLASS) { control = it }
+    }
+
+    /** ESC actif (true), coupé (false), ou null si ce SDK ne répond pas. */
+    fun escActive(): Boolean? {
+        connectControl()
+        val c = control ?: return null
+        val v = try { c.javaClass.getMethod("getEspSwitch").invoke(c) as? Int } catch (_: Exception) { null } ?: return null
+        return when (v) { 1 -> true; 0, 2 -> false; else -> null }
+    }
+
+    fun toggleEsc(): Boolean {
+        connectControl()
+        val c = control ?: return false
+        return try { c.javaClass.getMethod("setEspSwitch", Int::class.javaPrimitiveType).invoke(c, 1); true }
+        catch (e: Exception) { Log.w(TAG, "setEspSwitch : ${(e.cause ?: e).message}"); false }
     }
 
     private fun chInt(name: String): Int? {

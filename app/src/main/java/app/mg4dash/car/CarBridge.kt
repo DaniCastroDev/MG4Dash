@@ -253,6 +253,10 @@ object CarBridge {
             odometerKm = s.odometerKm ?: i(0x21401566)?.takeIf { it > 0 },
             driveMode = if (vs == null) dm ?: s.driveMode else s.driveMode ?: dm,
             regenLevel = s.regenLevel ?: i(0x2140a191)?.takeIf { it in 0..7 },
+            // Aides à la conduite (relevé sur SWI69 : mêmes échelles que le service réglages)
+            lasMode = s.lasMode ?: i(0x2140a104)?.takeIf { it in 1..5 },
+            fcwState = s.fcwState ?: i(0x2140a108)?.takeIf { it in 1..2 },
+            overSpeedSound = s.overSpeedSound ?: i(0x2140a16c)?.takeIf { it in 0..1 },
             onePedal = s.onePedal ?: i(0x2140a193)?.takeIf { it in 0..1 } ?: i(0x2140a191)?.let { if (it == 6) 1 else null },
         )
     }
@@ -338,7 +342,8 @@ object CarBridge {
     fun escActive(): Boolean? {
         if (BuildConfig.MOCK) return mockEsc
         // Relevé sur la voiture : l'état suit VEHICLE_ESP lui-même (1 = actif, 0 = coupé), comme TCS_OPNG_MD
-        val v = CarProps.readIntArea(VEHICLE_ESP, 0x1000000) ?: CarProps.readIntArea(TCS_OPNG_MD, 0x1000000) ?: return null
+        val v = CarProps.readIntArea(VEHICLE_ESP, 0x1000000) ?: CarProps.readIntArea(TCS_OPNG_MD, 0x1000000)
+            ?: return if (Firmware.family == Firmware.Family.LEGACY) LegacyCar.escActive() else null
         return v != 0
     }
     private var mockEsc = true
@@ -346,6 +351,10 @@ object CarBridge {
     /** Bascule l'ESC : la commande SAIC est un appui (valeur 1), comme l'interrupteur du menu MG. */
     fun toggleEsc() {
         if (BuildConfig.MOCK) { mockEsc = !mockEsc; return }
+        // Ancien SDK sans la propriété : VehicleControlManager (SWI68/165)
+        if (CarProps.readIntArea(VEHICLE_ESP, 0x1000000) == null && Firmware.family == Firmware.Family.LEGACY) {
+            Log.i(TAG, "ESC (ancien SDK) : ${LegacyCar.toggleEsc()}"); return
+        }
         val ok = CarProps.setIntArea(VEHICLE_ESP, 0x1000000, 1, "ESC (appui)")
         Log.i(TAG, "ESC : commande envoyée → $ok, état avant : ${escActive()}")
     }

@@ -43,6 +43,8 @@ object Apps {
     private val ALIASES = mapOf(
         "com.saicmotor.vehiclesetting" to listOf("vehiclesetting", "vehicle.setting", "carsetting", "vehicle"),
         "com.mg4.control" to listOf("mg4control", "mg4.control", "mg4"),
+        "com.saicmotor.saicev" to listOf("saicev", "hmi.ev", "energy", "charging"),
+        "com.saicmotor.settings" to listOf("hmi.settings", "systemsetting", "settings"),
     )
 
     private fun searchLauncher(context: Context, pkg: String): Intent? {
