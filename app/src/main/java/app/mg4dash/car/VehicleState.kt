@@ -23,6 +23,11 @@ data class VehicleState(
     val defrostFront: Boolean? = null,
     val defrostRear: Boolean? = null,
     val ecoOn: Boolean? = null,
+    /** Sièges chauffants conducteur / passager : 0 = arrêt … 3 = maximum (ancien SDK). */
+    val seatHeatLeft: Int? = null,
+    val seatHeatRight: Int? = null,
+    /** Volant chauffant allumé. */
+    val steeringHeat: Boolean? = null,
     // Énergie (CarEvClient, code 4)
     val batteryPercent: Int? = null,
     /** Niveau de batterie au dixième (BMS_PACK_SOC_DSP), quand la voiture le donne. */
@@ -35,6 +40,8 @@ data class VehicleState(
     /** Bouton V2L : 1 = décharge en cours, 2 = arrêtée. */
     val dischargeCtrl: Int? = null,
     val dischargeRemainMin: Int? = null,
+    /** Verrou du câble de charge : 1 = verrouillé, 2 = déverrouillé, 0 = indisponible (launcher d'origine). */
+    val chargeLock: Int? = null,
     // Conduite (CarVehicleSettingClient, code 8)
     val driveMode: Int? = null,
     val regenLevel: Int? = null,

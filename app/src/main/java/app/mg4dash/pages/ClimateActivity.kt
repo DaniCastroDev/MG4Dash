@@ -36,6 +36,10 @@ class ClimateActivity : PageActivity() {
     private lateinit var recirc: TextView
     private lateinit var defFront: TextView
     private lateinit var defRear: TextView
+    private lateinit var seatLeft: TextView
+    private lateinit var wheel: TextView
+    private lateinit var seatRight: TextView
+    private lateinit var heatRow: LinearLayout
     private val controls = mutableListOf<View>()
 
     override fun buildBody() {
@@ -103,6 +107,13 @@ class ClimateActivity : PageActivity() {
             pair.forEachIndexed { i, v -> r.addView(v, kit.lp(0, -1, 1f, l = if (i > 0) 10 else 0)) }
             mPanel.addView(r, kit.lp(-1, 0, 1f, t = 10))
         }
+        // Sièges (appui = niveau suivant, 3 → arrêt) et volant chauffants, quand la voiture les expose
+        seatLeft = kit.toggleTile(getString(R.string.cl_seat_left), heat = true) { CarBridge.cycleSeatHeat(left = true) }
+        wheel = kit.toggleTile(getString(R.string.cl_wheel), heat = true) { CarBridge.toggleSteeringHeat() }
+        seatRight = kit.toggleTile(getString(R.string.cl_seat_right), heat = true) { CarBridge.cycleSeatHeat(left = false) }
+        heatRow = kit.row()
+        listOf(seatLeft, wheel, seatRight).forEachIndexed { i, v -> heatRow.addView(v, kit.lp(0, -1, 1f, l = if (i > 0) 10 else 0)) }
+        mPanel.addView(heatRow, kit.lp(-1, 0, 1f, t = 10))
         val origin = kit.text(getString(R.string.cl_stock), 18f, R.color.accent_action).apply {
             gravity = Gravity.CENTER; setPadding(0, kit.dp(14), 0, kit.dp(4))
             setOnClickListener { Apps.open(this@ClimateActivity, Apps.HVAC, "SAIC") }
@@ -177,7 +188,19 @@ class ClimateActivity : PageActivity() {
         recirc.text = when (s.recirc) { 0 -> getString(R.string.cl_air_recirc); 1 -> getString(R.string.cl_air_outside); 2 -> getString(R.string.cl_air_auto); else -> getString(R.string.cl_recirc) }
         defFront.isSelected = s.defrostFront == true
         defRear.isSelected = s.defrostRear == true
+        heatRow.visibility = if (CarBridge.heatControl) View.VISIBLE else View.GONE
+        seatLeft.text = seatLabel(R.string.cl_seat_left, s.seatHeatLeft)
+        seatLeft.isSelected = (s.seatHeatLeft ?: 0) > 0
+        seatRight.text = seatLabel(R.string.cl_seat_right, s.seatHeatRight)
+        seatRight.isSelected = (s.seatHeatRight ?: 0) > 0
+        wheel.isSelected = s.steeringHeat == true
+        listOf(seatLeft, seatRight).forEach { it.isEnabled = s.connected }
+        wheel.isEnabled = s.connected && s.steeringHeat != null
     }
+
+    /** « SIÈGE G. » puis le niveau en points : ●●○ = niveau 2 sur 3. */
+    private fun seatLabel(res: Int, level: Int?): String =
+        getString(res) + "\n" + (1..3).joinToString("") { if ((level ?: 0) >= it) "●" else "○" }
 
     private fun repeatOnHold(view: View, action: () -> Unit) {
         val repeat = object : Runnable { override fun run() { action(); handler.postDelayed(this, 350) } }

@@ -372,4 +372,11 @@
     <string name="aa_waiting">Sluit je telefoon aan via USB</string>
     <string name="unit_kwh100">kWh/100</string>
     <string name="no_data">—</string>
+    <string name="cl_seat_left">STOEL LINKS</string>
+    <string name="cl_seat_right">STOEL RECHTS</string>
+    <string name="cl_wheel">STUUR</string>
+    <string name="cable_unlock">KABEL ONTGRENDELEN</string>
+    <string name="cable_lock">KABEL VERGRENDELEN</string>
+    <string name="dm_refused_moving">Stop de auto om de rijmodus te wijzigen</string>
+    <string name="dm_refused_speed">Snelheid onleesbaar: rijmodus niet gewijzigd</string>
 </resources>

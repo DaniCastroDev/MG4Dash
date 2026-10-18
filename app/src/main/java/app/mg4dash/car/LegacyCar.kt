@@ -38,6 +38,7 @@ object LegacyCar {
         appContext = context.applicationContext
         connect()
         connectCharging()
+        connectSetting()
     }
 
     private fun connect() {
@@ -54,12 +55,7 @@ object LegacyCar {
         val initM = cls.methods.firstOrNull { it.name == "init" && it.parameterCount == 2 && Context::class.java.isAssignableFrom(it.parameterTypes[0]) }
         if (initM != null) {
             val lt = initM.parameterTypes[1]
-            val listener = if (lt.isInterface) try {
-                java.lang.reflect.Proxy.newProxyInstance(lt.classLoader, arrayOf(lt)) { _, m, _ ->
-                    if (m.name == "onServiceConnected") { ac = singleton(); Log.i(TAG, "AirConditionManager connecté") }
-                    null
-                }
-            } catch (_: Exception) { null } else null
+            val listener = serviceListener(lt, "AirConditionManager") { ac = it ?: singleton() }
             try { initM.invoke(null, ctx, listener) } catch (e: Exception) { Log.w(TAG, "AirConditionManager.init : ${e.message}") }
         }
         if (ac == null) ac = singleton()
@@ -106,6 +102,9 @@ object LegacyCar {
             outsideTemp = float("getOutCarTemp")?.takeIf { !it.isNaN() && it > -60f && it < 70f } ?: s.outsideTemp,
             defrostFront = b(int("getFrontWindowDefroster")),
             defrostRear = b(int("getBackWindowDefroster")),
+            seatHeatLeft = int("getDrvSeatHeatLevel")?.takeIf { it in 0..3 },
+            seatHeatRight = int("getPsgSeatHeatLevel")?.takeIf { it in 0..3 },
+            steeringHeat = int("getSteeringWheelHeatLevel")?.takeIf { it >= 0 }?.let { it > 0 },
         )
     }
 
@@ -163,19 +162,40 @@ object LegacyCar {
             try { ctx.createPackageContext(pkg, Context.CONTEXT_INCLUDE_CODE or Context.CONTEXT_IGNORE_SECURITY) } catch (_: Exception) { null }
         } ?: return null
         val cls = try { launcher.classLoader.loadClass(className) } catch (_: Exception) { return null }
-        fun singleton(): Any? = try { cls.getMethod("getInstance").invoke(null) } catch (_: Exception) { null }
+        // Seul AirConditionManager a un getInstance() : les autres gestionnaires (VehicleChargingManager,
+        // VehicleSettingManager) gardent l'instance dans un champ statique et la passent à
+        // onServiceConnected(BaseManager). Sans cela, l'instance restait null et chaque relecture
+        // relançait init() (« VehicleChargingManager connecté » toutes les 3 s, bouton de charge masqué).
+        fun singleton(): Any? = try { cls.getMethod("getInstance").invoke(null) } catch (_: Exception) {
+            cls.declaredFields.firstOrNull { java.lang.reflect.Modifier.isStatic(it.modifiers) && it.type == cls }
+                ?.let { f -> try { f.isAccessible = true; f.get(null) } catch (_: Exception) { null } }
+        }
+        val name = className.substringAfterLast('.')
         val initM = cls.methods.firstOrNull { it.name == "init" && it.parameterCount == 2 && Context::class.java.isAssignableFrom(it.parameterTypes[0]) }
         if (initM != null) {
-            val lt = initM.parameterTypes[1]
-            val listener = if (lt.isInterface) try {
-                java.lang.reflect.Proxy.newProxyInstance(lt.classLoader, arrayOf(lt)) { _, m, _ ->
-                    if (m.name == "onServiceConnected") { onConnected(singleton()); Log.i(TAG, "${className.substringAfterLast('.')} connecté") }
-                    null
-                }
-            } catch (_: Exception) { null } else null
-            try { initM.invoke(null, ctx, listener) } catch (e: Exception) { Log.w(TAG, "${className.substringAfterLast('.')}.init : ${e.message}") }
+            val listener = serviceListener(initM.parameterTypes[1], name) { onConnected(it ?: singleton()) }
+            try { initM.invoke(null, ctx, listener) } catch (e: Exception) { Log.w(TAG, "$name.init : ${e.message}") }
         }
         return singleton()
+    }
+
+    /**
+     * Écouteur IVehicleServiceListener factice (le SDK refuse null). onServiceConnected reçoit le
+     * gestionnaire prêt ; les méthodes d'Object doivent répondre, le SDK range l'écouteur dans une liste.
+     */
+    private fun serviceListener(type: Class<*>, name: String, onConnected: (Any?) -> Unit): Any? {
+        if (!type.isInterface) return null
+        return try {
+            java.lang.reflect.Proxy.newProxyInstance(type.classLoader, arrayOf(type)) { proxy, m, args ->
+                when (m.name) {
+                    "onServiceConnected" -> { onConnected(args?.getOrNull(0)); Log.i(TAG, "$name connecté"); null }
+                    "hashCode" -> System.identityHashCode(proxy)
+                    "equals" -> proxy === args?.getOrNull(0)
+                    "toString" -> "MG4Dash$name"
+                    else -> null
+                }
+            }
+        } catch (_: Exception) { null }
     }
 
     private fun chInt(name: String): Int? {
@@ -191,9 +211,10 @@ object LegacyCar {
 
     /** État de charge et commandes en cours ; inchangé si le service ne répond pas. */
     fun readCharging(s: VehicleState): VehicleState {
-        if (charging == null) { chargingInit = false; connectCharging() }
+        if (charging == null && retryDue(::lastChargingTry)) { chargingInit = false; connectCharging() }
         if (charging == null) return s
         return s.copy(
+            chargeLock = chInt("getChargingLockSwitch")?.takeIf { it in 0..2 } ?: s.chargeLock,
             chargeStatus = chInt("getChargingStatus")?.takeIf { it >= 0 } ?: s.chargeStatus,
             chargeCtrl = chInt("getChargingControlSwitch")?.takeIf { it >= 0 } ?: s.chargeCtrl,
             dischargeCtrl = chInt("getDischrgControlStatus")?.takeIf { it >= 0 } ?: s.dischargeCtrl,
@@ -204,6 +225,80 @@ object LegacyCar {
 
     fun chargeCtrl(v: Int) = chSet("setChargingControlSwitch", v)
     fun dischargeCtrl(v: Int) = chSet("setDischrgControlSwitch", v)
+
+    /** Verrou du câble (bouton cadenas du launcher d'origine) : 1 = verrouiller, 2 = déverrouiller. */
+    fun chargeLock(v: Int) = chSet("setChargingLockSwitch", v)
+
+    @Volatile private var lastChargingTry = 0L
+    @Volatile private var lastSettingTry = 0L
+
+    /** Une nouvelle tentative d'init() au plus toutes les 30 s : chaque init() recrée une liaison au service. */
+    private fun retryDue(last: kotlin.reflect.KMutableProperty0<Long>): Boolean {
+        val now = System.currentTimeMillis()
+        if (now - last.get() < 30_000) return false
+        last.set(now)
+        return true
+    }
+
+    // ── Mode de conduite : VehicleSettingManager du même SDK ──
+    // Valeurs de l'appli Réglages d'origine (propriété 0x2140a17c) : 2 éco, 3 normal, 4 sport,
+    // 6 neige, 7 personnalisé.
+    private const val SETTING_CLASS = "com.saicmotor.sdk.vehiclesettings.manager.VehicleSettingManager"
+    @Volatile private var setting: Any? = null
+
+    private fun connectSetting() {
+        if (setting != null) return
+        val ctx = appContext ?: return
+        setting = sdkManager(ctx, SETTING_CLASS) { setting = it }
+    }
+
+    /** Mode de conduite écrit par le service véhicule ; false si le SDK ne répond pas. */
+    fun driveMode(v: Int): Boolean {
+        if (setting == null && retryDue(::lastSettingTry)) connectSetting()
+        val m = setting ?: return false
+        return try { m.javaClass.getMethod("setDriveMode", Int::class.javaPrimitiveType).invoke(m, v); true }
+        catch (e: Exception) { Log.w(TAG, "setDriveMode($v) : ${(e.cause ?: e).message}"); false }
+    }
+
+    // ── Sièges et volant chauffants (AirConditionManager) ──
+    // Le service d'origine écrit le niveau tel quel (0..3) sur HVAC 0x15402513 / 0x15402514 / 0x1540253a.
+    // evhardware (MG4ABRP) a relevé que la voiture peut le traiter comme un appui qui avance d'un cran :
+    // on écrit le niveau voulu, puis, s'il n'est pas atteint, on avance cran par cran en relisant.
+
+    private fun waitFor(ms: Long, ok: () -> Boolean): Boolean {
+        val end = System.currentTimeMillis() + ms
+        while (System.currentTimeMillis() < end) {
+            if (ok()) return true
+            Thread.sleep(250)
+        }
+        return ok()
+    }
+
+    fun seatHeat(left: Boolean, level: Int): Boolean {
+        val getter = if (left) "getDrvSeatHeatLevel" else "getPsgSeatHeatLevel"
+        val setter = if (left) "setDrvSeatHeatLevel" else "setPsgSeatHeatLevel"
+        val target = level.coerceIn(0, 3)
+        fun cur() = int(getter)?.takeIf { it in 0..3 }
+        if (cur() == target) return true
+        if (!set(setter, target)) return false
+        if (waitFor(1500) { cur() == target }) return true
+        repeat(4) {
+            val before = cur() ?: return false
+            if (before == target) return true
+            set(setter, 1)
+            waitFor(1500) { cur() != before }
+        }
+        return cur() == target
+    }
+
+    fun steeringHeat(on: Boolean): Boolean {
+        fun cur() = int("getSteeringWheelHeatLevel")?.takeIf { it >= 0 }?.let { it > 0 }
+        if (cur() == on) return true
+        if (!set("setSteeringWheelHeat", if (on) 1 else 0)) return false
+        if (waitFor(2000) { cur() == on }) return true
+        set("setSteeringWheelHeat", 1)   // un appui de plus si l'écriture a été lue comme une bascule
+        return waitFor(2000) { cur() == on }
+    }
 
     /** Pour l'écran Compatibilité. */
     fun probe(): String = when {

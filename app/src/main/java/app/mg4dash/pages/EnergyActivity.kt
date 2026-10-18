@@ -40,6 +40,7 @@ class EnergyActivity : PageActivity() {
     private lateinit var socGauge: SegmentedGauge
     private lateinit var power: TextView
     private lateinit var action: TextView
+    private lateinit var cableLock: TextView
     private lateinit var limitNote: TextView
     private lateinit var setLimit: (Int?) -> Unit
     private lateinit var setCurrent: (Int?) -> Unit
@@ -101,6 +102,8 @@ class EnergyActivity : PageActivity() {
         c1.addView(power, kit.lp(-1, -2, t = 8))
         action = kit.toggleTile("—") { onMainAction() }.apply { textSize = 20f }
         c1.addView(action, kit.lp(-1, kit.dp(64), t = 12))
+        cableLock = kit.toggleTile(getString(R.string.cable_unlock)) { CarBridge.toggleCableLock() }.apply { textSize = 20f }
+        c1.addView(cableLock, kit.lp(-1, kit.dp(64), t = 10))
         c1.addView(kit.title(getString(R.string.en_limit)), kit.lp(-1, -2, t = 18))
         val limits = listOf(50, 60, 70, 80, 90, 100)
         val (lRow, lSet) = kit.segmented(limits.map { "$it %" }) { i ->
@@ -353,6 +356,9 @@ class EnergyActivity : PageActivity() {
         action.visibility = if (CarBridge.chargeControl) android.view.View.VISIBLE else android.view.View.INVISIBLE
         v2lAction.visibility = if (CarBridge.chargeControl) android.view.View.VISIBLE else android.view.View.INVISIBLE
         action.isSelected = s.chargeCtrl == 1 || s.dischargeCtrl == 1
+        cableLock.visibility = if (CarBridge.cableLockControl) android.view.View.VISIBLE else android.view.View.GONE
+        cableLock.isSelected = s.chargeLock == 1
+        cableLock.text = getString(if (s.chargeLock == 2) R.string.cable_lock else R.string.cable_unlock)
         v2lStatus.text = if (discharge) VehicleState.chargeStatusLabel(s.chargeStatus) +
             (s.dischargeRemainMin?.takeIf { it in 1..6000 }?.let { getString(R.string.en_remaining, it / 60, it % 60) } ?: "")
         else getString(R.string.en_plug_v2l)

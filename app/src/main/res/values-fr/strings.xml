@@ -372,4 +372,11 @@
     <string name="aa_waiting">Branchez votre téléphone en USB</string>
     <string name="unit_kwh100">kWh/100</string>
     <string name="no_data">—</string>
+    <string name="cl_seat_left">SIÈGE G.</string>
+    <string name="cl_seat_right">SIÈGE D.</string>
+    <string name="cl_wheel">VOLANT</string>
+    <string name="cable_unlock">DÉVERROUILLER CÂBLE</string>
+    <string name="cable_lock">VERROUILLER CÂBLE</string>
+    <string name="dm_refused_moving">Arrêtez la voiture pour changer de mode de conduite</string>
+    <string name="dm_refused_speed">Vitesse illisible : mode de conduite inchangé</string>
 </resources>

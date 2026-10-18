@@ -372,4 +372,11 @@
     <string name="aa_waiting">Telefon per USB verbinden</string>
     <string name="unit_kwh100">kWh/100</string>
     <string name="no_data">—</string>
+    <string name="cl_seat_left">SITZ LINKS</string>
+    <string name="cl_seat_right">SITZ RECHTS</string>
+    <string name="cl_wheel">LENKRAD</string>
+    <string name="cable_unlock">KABEL ENTRIEGELN</string>
+    <string name="cable_lock">KABEL VERRIEGELN</string>
+    <string name="dm_refused_moving">Zum Ändern des Fahrmodus anhalten</string>
+    <string name="dm_refused_speed">Geschwindigkeit nicht lesbar: Fahrmodus unverändert</string>
 </resources>

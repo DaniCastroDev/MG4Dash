@@ -161,8 +161,26 @@ object CarBridge {
         holdFan?.let { (v, until) ->
             if (now > until || s.fanSpeed == v) holdFan = null else r = r.copy(fanSpeed = v)
         }
+        holdDrive?.let { (v, until) ->
+            if (now > until || s.driveMode == v) holdDrive = null else r = r.copy(driveMode = v)
+        }
+        holdSeatL?.let { (v, until) ->
+            if (now > until || s.seatHeatLeft == v) holdSeatL = null else r = r.copy(seatHeatLeft = v)
+        }
+        holdSeatR?.let { (v, until) ->
+            if (now > until || s.seatHeatRight == v) holdSeatR = null else r = r.copy(seatHeatRight = v)
+        }
+        holdWheel?.let { (v, until) ->
+            if (now > until || s.steeringHeat == v) holdWheel = null else r = r.copy(steeringHeat = v)
+        }
         return r
     }
+    // Sièges et volant : la voiture peut avancer cran par cran (plusieurs secondes), d'où une tenue plus longue.
+    @Volatile private var holdDrive: Pair<Int, Long>? = null
+    @Volatile private var holdSeatL: Pair<Int, Long>? = null
+    @Volatile private var holdSeatR: Pair<Int, Long>? = null
+    @Volatile private var holdWheel: Pair<Boolean, Long>? = null
+    private const val HOLD_HEAT_MS = 8000L
 
     private fun refreshHvac() {
         val h = hvac ?: run { if (Firmware.family != Firmware.Family.A9) _state.value = held(LegacyCar.readHvac(_state.value)); return }
@@ -236,8 +254,9 @@ object CarBridge {
         val dc = i(0x2140f43f)?.takeIf { it != 0 && it != 1023 } != null
         val ac = i(0x2140f43e)?.takeIf { it != 0 && it != 1023 } != null
         val status = when { raw != null && raw in 1..15 -> raw; dc || ac -> 7; else -> 0 }
-        // Mode de conduite (propriété) : 0 neige, 1 éco, 3 normal, 4 sport, 7 personnalisé → échelle A9
-        val dm = when (i(0x2140a17c)) { 0 -> 6; 1 -> 2; 3 -> 3; 4 -> 4; 7 -> 7; else -> null }
+        // SWI68 : mêmes valeurs que l'échelle A9 (appli Réglages d'origine : 2 éco, 3 normal, 4 sport,
+        // 6 neige, 7 personnalisé) ; avant, 2 et 6 n'étaient pas reconnus et Éco / Neige restaient vides.
+        val dm = when (val raw = i(0x2140a17c)) { 2, 3, 4, 6, 7 -> raw; 0 -> 6; 1 -> 2; else -> null }
         // Sans service EV, les propriétés sont la seule source : on les reprend à chaque passage
         // (avant, la première valeur lue restait affichée : % et autonomie figés, issue #13).
         val noEv = ev == null
@@ -250,8 +269,16 @@ object CarBridge {
             driveMode = if (vs == null) dm ?: s.driveMode else s.driveMode ?: dm,
             regenLevel = s.regenLevel ?: i(0x2140a191)?.takeIf { it in 0..7 },
             onePedal = s.onePedal ?: i(0x2140a193)?.takeIf { it in 0..1 },
-        )
+            chargeLock = CarProps.getInt(CarProps.CHRG_LOCK)?.takeIf { it in 0..2 } ?: s.chargeLock,
+            speedKmh = if (general == null) speedFromProps() else s.speedKmh,
+        ).let { held(it) }
     }
+
+    /** Vitesse (PERF_VEHICLE_SPEED, en km/h sur SWI68 d'après evhardware) ; null si illisible. */
+    private fun speedFromProps(): Float? =
+        (CarProps.readFloatArea(PERF_VEHICLE_SPEED, 0x1000000) ?: CarProps.readFloatArea(PERF_VEHICLE_SPEED, 0))
+            ?.takeIf { it.isFinite() }?.let { Math.abs(it) }
+    private const val PERF_VEHICLE_SPEED = 0x11600207
 
     // ── Commandes clim ────────────────────────────────────────────────────────
     // Exécutées hors thread principal, puis relecture rapide pour que l'UI suive l'état réel.
@@ -371,6 +398,72 @@ object CarBridge {
             delay(500); refreshEnergy()
             delay(1500); refreshEnergy()
         }
+    }
+
+    // ── Verrou du câble de charge (bouton cadenas du launcher d'origine) ──
+    // Même règle que ChargingViewModel d'origine : 0 = indisponible (rien n'est envoyé),
+    // 2 déverrouillé → verrouiller (1), sinon → déverrouiller (2). La trappe ne s'ouvre pas par logiciel.
+
+    /** Bouton proposé : la voiture dit où en est le verrou. */
+    val cableLockControl: Boolean get() = _state.value.chargeLock.let { it == 1 || it == 2 }
+
+    fun toggleCableLock() {
+        val cur = _state.value.chargeLock
+        if (cur != 1 && cur != 2) { Log.w(TAG, "verrou câble ignoré : état $cur"); return }
+        val target = if (cur == 2) 1 else 2
+        if (BuildConfig.MOCK) { _state.value = _state.value.copy(chargeLock = target); return }
+        scope.launch {
+            val ok = if (LegacyCar.chargingReady) LegacyCar.chargeLock(target)
+                else CarProps.setInt(CarProps.CHRG_LOCK, target, "verrou câble")
+            Log.i(TAG, "verrou câble → ${if (target == 2) "déverrouiller" else "verrouiller"} : $ok")
+            delay(1500); refreshEnergy(); delay(3000); refreshEnergy()
+        }
+    }
+
+    // ── Mode de conduite : écrit seulement à l'arrêt (vitesse lue = 0), refusé si la vitesse est illisible ──
+
+    enum class Write { SENT, MOVING, SPEED_UNKNOWN, UNAVAILABLE }
+
+    val driveModes = listOf(2, 3, 4, 6)   // éco, normal, sport, neige (personnalisé : réglé dans l'appli d'origine)
+
+    fun setDriveMode(mode: Int): Write {
+        if (mode !in driveModes && mode != 7) return Write.UNAVAILABLE
+        if (BuildConfig.MOCK) { _state.value = _state.value.copy(driveMode = mode); return Write.SENT }
+        val speed = _state.value.speedKmh?.let { Math.abs(it) } ?: speedFromProps() ?: return Write.SPEED_UNKNOWN
+        if (speed >= 0.5f) return Write.MOVING
+        holdDrive = mode to System.currentTimeMillis() + HOLD_MS
+        _state.value = _state.value.copy(driveMode = mode)
+        scope.launch {
+            val ok = (Firmware.family != Firmware.Family.A9 && LegacyCar.driveMode(mode)) ||
+                CarProps.setIntArea(0x2140a17c, 0x1000000, mode, "mode de conduite")
+            Log.i(TAG, "SET mode de conduite = $mode → $ok")
+            delay(800); refreshEnergy(); delay(1500); refreshEnergy()
+        }
+        return Write.SENT
+    }
+
+    // ── Sièges et volant chauffants (ancien SDK) ──
+
+    /** Proposés quand la voiture donne leur état. */
+    val heatControl: Boolean get() = BuildConfig.MOCK || _state.value.seatHeatLeft != null
+
+    /** Appui sur un siège : niveau suivant, 3 → arrêt. */
+    fun cycleSeatHeat(left: Boolean) {
+        val cur = (if (left) _state.value.seatHeatLeft else _state.value.seatHeatRight) ?: 0
+        val target = (cur + 1) % 4
+        val hold = target to System.currentTimeMillis() + HOLD_HEAT_MS
+        if (left) { holdSeatL = hold; _state.value = _state.value.copy(seatHeatLeft = target) }
+        else { holdSeatR = hold; _state.value = _state.value.copy(seatHeatRight = target) }
+        if (BuildConfig.MOCK) return
+        legacy("siège ${if (left) "conducteur" else "passager"}=$target") { LegacyCar.seatHeat(left, target) }
+    }
+
+    fun toggleSteeringHeat() {
+        val target = _state.value.steeringHeat != true
+        holdWheel = target to System.currentTimeMillis() + HOLD_HEAT_MS
+        _state.value = _state.value.copy(steeringHeat = target)
+        if (BuildConfig.MOCK) return
+        legacy("volant=$target") { LegacyCar.steeringHeat(target) }
     }
 
     fun startCharge() = evCommand("startCharge") { it.chargeCtrl(1) }

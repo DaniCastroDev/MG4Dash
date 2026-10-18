@@ -235,6 +235,20 @@
                         android:textSize="19sp"
                         tools:text="En charge · 1 h 20" />
 
+                    <!-- Verrou du câble (cadenas du launcher d'origine) : visible quand la voiture en donne l'état -->
+                    <TextView
+                        android:id="@+id/cableLock"
+                        style="@style/Chip"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:layout_marginRight="8dp"
+                        android:layout_weight="0"
+                        android:paddingLeft="18dp"
+                        android:paddingRight="18dp"
+                        android:text="@string/cable_unlock"
+                        android:textSize="16sp"
+                        android:visibility="gone" />
+
                     <!-- Charger / Arrêter, ou Lancer / Arrêter le V2L quand un adaptateur est branché -->
                     <TextView
                         android:id="@+id/chargeAction"
@@ -333,6 +347,11 @@
                         android:id="@+id/driveMode"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
+                        android:background="?android:attr/selectableItemBackground"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:paddingTop="6dp"
+                        android:paddingBottom="6dp"
                         android:layout_marginLeft="8dp"
                         android:textColor="?attr/mgTextValue"
                         android:textSize="21sp"

@@ -425,7 +425,11 @@ class MainActivity : AppCompatActivity() {
         b.range.text = s.rangeKm?.let { app.mg4dash.system.Units.distText(this, it.toFloat()) } ?: "— ${app.mg4dash.system.Units.distUnit(this)}"
         b.consumption.text = avg?.let { app.mg4dash.system.Units.consText(this, it) } ?: "—"
         b.consAvgLabel.text = getString(if (app.mg4dash.system.Units.miles(this)) R.string.cons_avg_mi else R.string.cons_avg)
-        b.driveMode.text = VehicleState.driveModeLabel(s.driveMode)
+        b.driveMode.text = VehicleState.driveModeLabel(s.driveMode) + " ▾"
+        // Accueil : proposé câble branché, ou tant que la voiture le dit verrouillé
+        b.cableLock.visibility = if (CarBridge.cableLockControl && (VehicleState.isPlugged(s.chargeStatus) || s.chargeLock == 1)) View.VISIBLE else View.GONE
+        b.cableLock.isSelected = s.chargeLock == 1
+        b.cableLock.text = getString(if (s.chargeLock == 2) R.string.cable_lock else R.string.cable_unlock)
         b.kersGauge.value = if (s.onePedal == 1) 4 else VehicleState.regenGauge(s.regenLevel)
         b.kersLabel.text = VehicleState.regenLabel(s.regenLevel, s.onePedal)
         // État de charge : valeurs relevées dans le launcher d'origine non encore confirmées sur
@@ -461,6 +465,23 @@ class MainActivity : AppCompatActivity() {
             s.chargeCtrl == 1 -> CarBridge.stopCharge()
             else -> CarBridge.startCharge()
         }
+    }
+
+    /** Choix du mode de conduite (Éco, Normal, Sport, Neige) ; la voiture doit être à l'arrêt. */
+    private fun chooseDriveMode(anchor: View) {
+        val menu = android.widget.PopupMenu(this, anchor)
+        CarBridge.driveModes.forEach { m -> menu.menu.add(0, m, 0, VehicleState.driveModeLabel(m)) }
+        menu.setOnMenuItemClickListener { item ->
+            val msg = when (CarBridge.setDriveMode(item.itemId)) {
+                CarBridge.Write.MOVING -> R.string.dm_refused_moving
+                CarBridge.Write.SPEED_UNKNOWN -> R.string.dm_refused_speed
+                CarBridge.Write.UNAVAILABLE -> R.string.dm_refused_speed
+                CarBridge.Write.SENT -> null
+            }
+            msg?.let { android.widget.Toast.makeText(this, it, android.widget.Toast.LENGTH_SHORT).show() }
+            true
+        }
+        menu.show()
     }
 
     // ── Média ────────────────────────────────────────────────────────────────
@@ -551,6 +572,8 @@ class MainActivity : AppCompatActivity() {
     private fun wireCards() {
         b.energyCard.setOnClickListener { startActivity(Intent(this, EnergyActivity::class.java)) }
         b.chargeAction.setOnClickListener { onChargeAction() }
+        b.cableLock.setOnClickListener { CarBridge.toggleCableLock() }
+        b.driveMode.setOnClickListener { chooseDriveMode(it) }
         b.weatherCard.setOnClickListener { WeatherRepo.refreshNow(this) }
         b.secondaryCard.setOnClickListener {
             // Style Carte : le toucher fait avancer la pile (énergie → trajet → puissance → téléphone)

@@ -372,4 +372,11 @@
     <string name="aa_waiting">Collega il telefono via USB</string>
     <string name="unit_kwh100">kWh/100</string>
     <string name="no_data">—</string>
+    <string name="cl_seat_left">SEDILE SX</string>
+    <string name="cl_seat_right">SEDILE DX</string>
+    <string name="cl_wheel">VOLANTE</string>
+    <string name="cable_unlock">SBLOCCA CAVO</string>
+    <string name="cable_lock">BLOCCA CAVO</string>
+    <string name="dm_refused_moving">Ferma l\'auto per cambiare modalità di guida</string>
+    <string name="dm_refused_speed">Velocità illeggibile: modalità di guida invariata</string>
 </resources>

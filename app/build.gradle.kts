@@ -14,7 +14,7 @@ android {
         // ni de permissions d'exécution à gérer pour une appli au uid système.
         targetSdk = 28
         versionCode = 82
-        versionName = "1.0.16-beta"
+        versionName = "1.0.16-swi68.1"
     }
 
     flavorDimensions += "target"

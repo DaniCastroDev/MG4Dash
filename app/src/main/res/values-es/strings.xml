@@ -372,4 +372,11 @@
     <string name="aa_waiting">Conecte su teléfono por USB</string>
     <string name="unit_kwh100">kWh/100</string>
     <string name="no_data">—</string>
+    <string name="cl_seat_left">ASIENTO IZQ.</string>
+    <string name="cl_seat_right">ASIENTO DCHO.</string>
+    <string name="cl_wheel">VOLANTE</string>
+    <string name="cable_unlock">DESBLOQUEAR CABLE</string>
+    <string name="cable_lock">BLOQUEAR CABLE</string>
+    <string name="dm_refused_moving">Detén el coche para cambiar el modo de conducción</string>
+    <string name="dm_refused_speed">Velocidad ilegible: modo de conducción sin cambiar</string>
 </resources>

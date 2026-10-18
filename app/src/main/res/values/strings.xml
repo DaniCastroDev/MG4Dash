@@ -372,4 +372,11 @@
     <string name="aa_waiting">Connect your phone via USB</string>
     <string name="unit_kwh100">kWh/100</string>
     <string name="no_data">—</string>
+    <string name="cl_seat_left">LEFT SEAT</string>
+    <string name="cl_seat_right">RIGHT SEAT</string>
+    <string name="cl_wheel">STEERING WHEEL</string>
+    <string name="cable_unlock">UNLOCK CABLE</string>
+    <string name="cable_lock">LOCK CABLE</string>
+    <string name="dm_refused_moving">Stop the car to change the drive mode</string>
+    <string name="dm_refused_speed">Speed unreadable: drive mode not changed</string>
 </resources>

@@ -26,6 +26,7 @@ object CarProps {
     const val V2X_SP_SOC = 557904943             // seuil d'arrêt V2L : code 1..7 = 20..80 %
     const val V2X = 557904944                    // décharge V2L en cours : 1
     const val DRVNG_PTC_HEAT = 557904937         // réchauffage batterie : écriture 1 = activer, 2 = désactiver ; lecture 0 = activé, 1 = désactivé (relevé sur la voiture le 2026-10-15)
+    const val CHRG_LOCK = 557904915              // 0x2140f413 verrou du câble : écriture 1 = verrouiller, 2 = déverrouiller (VehicleChargingBinder d'origine)
     const val BMS_CHRG_SP_RSN = 557904917        // motif d'arrêt de charge : 1 défaut, 2 surchauffe, 3 prise, 4 tension, 5 autre
     const val SPR_CHRG = 557904916               // « SPR_CHRG » : rôle inconnu, test caché dans les réglages
     const val ONBD_CHRG_AC_CRNT = 560002108      // chargeur embarqué : courant d'entrée AC (A)
