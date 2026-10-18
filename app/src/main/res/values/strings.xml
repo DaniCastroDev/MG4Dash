@@ -363,6 +363,7 @@
     <string name="st_map_theme_app">Like the app</string>
     <string name="st_use_location">Use my position</string>
     <string name="st_no_location">Position not available yet</string>
+    <string name="st_heated">Heated seats and steering wheel</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Phone connected · Tap to open</string>
     <string name="aa_waiting">Connect your phone via USB</string>

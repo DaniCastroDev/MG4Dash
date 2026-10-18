@@ -73,6 +73,8 @@ class SettingsActivity : AppCompatActivity() {
         row(style, *styleButtons(listOf(R.string.st_style_full, R.string.st_style_simple, R.string.st_style_map), { prefs.homeStyle }) { prefs.homeStyle = it })
         text(style, getString(R.string.st_units), 18f, R.color.text_value)
         row(style, *choiceButtons(listOf(getString(R.string.st_units_car), "km · kWh/100 km", "miles · mi/kWh"), { prefs.units }) { prefs.units = it })
+        text(style, getString(R.string.st_heated), 18f, R.color.text_value)
+        row(style, *choiceButtons(listOf(getString(R.string.st_mode_auto_short), getString(R.string.yes), getString(R.string.no)), { prefs.heatedSeats }) { prefs.heatedSeats = it })
         text(style, getString(R.string.st_pressure), 18f, R.color.text_value)
         row(style, *choiceButtons(listOf(getString(R.string.st_mode_auto_short), "bar", "psi", "kPa"), { prefs.pressureUnit }) { prefs.pressureUnit = it })
         text(style, getString(R.string.st_map_zoom), 18f, R.color.text_value)

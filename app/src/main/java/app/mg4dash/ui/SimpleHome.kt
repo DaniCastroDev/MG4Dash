@@ -117,8 +117,21 @@ class SimpleHome(private val a: AppCompatActivity) {
         // Titre seul ; coin haut-gauche libre pour le bouton des antibrouillards (sauf barre verticale)
         val head = kit.row()
         head.addView(title(a.getString(R.string.title_climate)), kit.lp(0, -2, 1f, l = if (Dock.vertical(a)) 0 else Kit.FOG_SAFE_DP - 20))
-        climateCard.addView(head, kit.lp(-1, kit.dp(34)))
+        climateCard.addView(head, kit.lp(-1, kit.dp(40)))
         if (hideTitles) head.visibility = if (Dock.vertical(a)) View.GONE else View.INVISIBLE
+        // Sièges et volant chauffants (versions équipées) : trois boutons centrés à la place du titre
+        if (CarBridge.heatingShown(a)) {
+            head.visibility = View.VISIBLE; head.getChildAt(0).visibility = View.GONE; head.gravity = Gravity.CENTER
+            fun chip(icon: Int, mirror: Boolean, onClick: () -> Unit) = iconChip(icon, onClick).apply {
+                if (mirror) getChildAt(0).scaleX = -1f
+                addView(TextView(a).apply { tag = "level"; setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); setTextColor(kit.color(R.color.accent_action)) },
+                    android.widget.FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.END).apply { rightMargin = kit.dp(8) })
+            }
+            heatSeatL = chip(R.drawable.ic_seat_heat, false) { CarBridge.stepSeatHeat(true) }
+            heatWheel = chip(R.drawable.ic_wheel_heat, false) { CarBridge.toggleWheelHeat() }
+            heatSeatR = chip(R.drawable.ic_seat_heat, true) { CarBridge.stepSeatHeat(false) }
+            listOf(heatSeatL!!, heatWheel!!, heatSeatR!!).forEachIndexed { i, v -> head.addView(v, kit.lp(kit.dp(96), kit.dp(40), l = if (i > 0) 10 else 0)) }
+        }
 
         // Température, avec la température extérieure en petit dessous
         val tRow = kit.row().apply { gravity = Gravity.CENTER }
@@ -341,7 +354,17 @@ class SimpleHome(private val a: AppCompatActivity) {
 
     // ── Rendu ──
 
+    private var heatSeatL: android.widget.FrameLayout? = null
+    private var heatSeatR: android.widget.FrameLayout? = null
+    private var heatWheel: android.widget.FrameLayout? = null
+
     private fun renderClimate(s: VehicleState) {
+        fun paint(v: android.widget.FrameLayout?, level: Int?, showLevel: Boolean) {
+            v ?: return
+            v.isSelected = (level ?: 0) > 0
+            v.findViewWithTag<TextView>("level")?.text = if (showLevel && (level ?: 0) > 0) level.toString() else ""
+        }
+        paint(heatSeatL, s.seatHeatL, true); paint(heatSeatR, s.seatHeatR, true); paint(heatWheel, s.wheelHeat, false)
         val on = s.hvacOn == true
         val known = s.connected && s.hvacOn != null
         power.setColorFilter(kit.color(if (on) R.color.accent_energy else R.color.text_sub))

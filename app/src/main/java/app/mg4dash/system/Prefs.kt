@@ -42,6 +42,11 @@ class Prefs(context: Context) {
         get() = sp.getInt("map_theme", 0)
         set(v) = sp.edit().putInt("map_theme", v).apply()
 
+    /** Sièges / volant chauffants : 0 = auto (batterie 64 / 77 kWh), 1 = afficher, 2 = masquer. */
+    var heatedSeats: Int
+        get() = sp.getInt("heated_seats", 0)
+        set(v) = sp.edit().putInt("heated_seats", v).apply()
+
     /** Unités : 0 = comme la voiture, 1 = km, 2 = miles. */
     var units: Int
         get() = sp.getInt("units", 0)

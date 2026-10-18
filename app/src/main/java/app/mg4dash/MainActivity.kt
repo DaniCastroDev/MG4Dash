@@ -320,7 +320,53 @@ class MainActivity : AppCompatActivity() {
 
     // ── Clim ─────────────────────────────────────────────────────────────────
 
+    private var heatSeatL: android.widget.FrameLayout? = null
+    private var heatSeatR: android.widget.FrameLayout? = null
+    private var heatWheel: android.widget.FrameLayout? = null
+
+    /**
+     * Sièges et volant chauffants (versions équipées) : trois boutons centrés sur la ligne du haut du
+     * widget clim, qui n'a plus de titre. Siège : un toucher = cran suivant ; volant : marche / arrêt.
+     */
+    private fun buildHeating() {
+        if (!CarBridge.heatingShown(this)) return
+        val header = b.climHeader
+        header.visibility = View.VISIBLE
+        (header.getChildAt(0)).visibility = View.GONE   // titre
+        header.gravity = Gravity.CENTER
+        val d = resources.displayMetrics.density
+        fun chip(icon: Int, mirror: Boolean, onClick: () -> Unit) = android.widget.FrameLayout(this).apply {
+            setBackgroundResource(R.drawable.bg_chip); isClickable = true; isFocusable = true
+            addView(ImageView(this@MainActivity).apply {
+                setImageResource(icon); isDuplicateParentStateEnabled = true; if (mirror) scaleX = -1f
+                imageTintList = androidx.core.content.ContextCompat.getColorStateList(this@MainActivity, R.color.chip_text)
+            }, android.widget.FrameLayout.LayoutParams((30 * d).toInt(), (30 * d).toInt(), Gravity.CENTER))
+            // Niveau du siège (1 à 3) en petit, en haut à droite
+            addView(TextView(this@MainActivity).apply {
+                tag = "level"; setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); setTextColor(color(R.color.accent_action))
+                typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL)
+            }, android.widget.FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.END).apply { rightMargin = (8 * d).toInt() })
+            setOnClickListener { onClick() }
+        }
+        heatSeatL = chip(R.drawable.ic_seat_heat, false) { CarBridge.stepSeatHeat(true) }
+        heatWheel = chip(R.drawable.ic_wheel_heat, false) { CarBridge.toggleWheelHeat() }
+        heatSeatR = chip(R.drawable.ic_seat_heat, true) { CarBridge.stepSeatHeat(false) }
+        listOf(heatSeatL, heatWheel, heatSeatR).forEachIndexed { i, v ->
+            header.addView(v, LinearLayout.LayoutParams((96 * d).toInt(), (40 * d).toInt()).apply { if (i > 0) leftMargin = (10 * d).toInt() })
+        }
+    }
+
+    private fun renderHeating(s: VehicleState) {
+        fun paint(v: android.widget.FrameLayout?, level: Int?, showLevel: Boolean) {
+            v ?: return
+            v.isSelected = (level ?: 0) > 0
+            (v.findViewWithTag<TextView>("level"))?.text = if (showLevel && (level ?: 0) > 0) level.toString() else ""
+        }
+        paint(heatSeatL, s.seatHeatL, true); paint(heatSeatR, s.seatHeatR, true); paint(heatWheel, s.wheelHeat, false)
+    }
+
     private fun wireClimate() {
+        buildHeating()
         b.climPower.setOnClickListener { CarBridge.togglePower() }
         repeatOnHold(b.tempDown) { CarBridge.stepTemp(-1) }
         repeatOnHold(b.tempUp) { CarBridge.stepTemp(1) }
@@ -366,6 +412,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun renderClimate(s: VehicleState) {
+        renderHeating(s)
         val on = s.hvacOn == true
         val known = s.connected && s.hvacOn != null
         b.climPower.isSelected = on

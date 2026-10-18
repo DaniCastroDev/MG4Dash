@@ -363,6 +363,7 @@
     <string name="st_map_theme_app">Wie die App</string>
     <string name="st_use_location">Meine Position verwenden</string>
     <string name="st_no_location">Position noch nicht verfügbar</string>
+    <string name="st_heated">Sitz- und Lenkradheizung</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefon verbunden · Zum Öffnen tippen</string>
     <string name="aa_waiting">Telefon per USB verbinden</string>

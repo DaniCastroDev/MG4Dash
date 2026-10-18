@@ -190,6 +190,18 @@ class ScreenshotTest {
         try { shoot(MainActivity::class.java, "home_map_layout_offline.png") } finally { flow.value = saved }
     }
 
+    @Test fun homeHeatedSeats() {
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
+            .putInt("heated_seats", 1).putBoolean("vertical_dock", true).apply()
+        shoot(MainActivity::class.java, "home_heated_seats.png")
+    }
+
+    @Test fun homeSimpleHeatedSeats() {
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
+            .putInt("heated_seats", 1).putInt("home_style", 1).apply()
+        shoot(MainActivity::class.java, "home_simple_heated_seats.png")
+    }
+
     @Test fun homeVerticalFull() {
         org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
             .putBoolean("vertical_dock", true).apply()

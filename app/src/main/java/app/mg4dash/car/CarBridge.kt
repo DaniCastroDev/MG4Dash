@@ -138,6 +138,7 @@ object CarBridge {
                     resolveClients()
                 }
                 refreshHvac()
+                refreshHeating()
                 if (tick % 3 == 0L) refreshEnergy()
             } catch (e: Exception) {
                 Log.w(TAG, "poll : ${e.message}")
@@ -166,6 +167,60 @@ object CarBridge {
             if (now > until || s.fanSpeed == v) holdFan = null else r = r.copy(fanSpeed = v)
         }
         return r
+    }
+
+    // ── Sièges et volant chauffants (propriétés clim, zone 0x75, relevées par MG4Control) ──
+    private const val SEAT_HEAT_L = 0x15402513
+    private const val SEAT_HEAT_R = 0x15402514
+    private const val WHEEL_HEAT = 0x1540253a
+    private const val HEAT_AREA = 0x75
+    @Volatile private var heatHoldUntil = 0L
+
+    private fun refreshHeating() {
+        if (BuildConfig.MOCK || System.currentTimeMillis() < heatHoldUntil) return
+        val s = _state.value
+        val l = CarProps.readIntArea(SEAT_HEAT_L, HEAT_AREA)?.takeIf { it in 0..3 }
+        val r = CarProps.readIntArea(SEAT_HEAT_R, HEAT_AREA)?.takeIf { it in 0..3 }
+        val w = CarProps.readIntArea(WHEEL_HEAT, HEAT_AREA)?.takeIf { it >= 0 }?.let { if (it > 0) 1 else 0 }
+        if (l != s.seatHeatL || r != s.seatHeatR || w != s.wheelHeat) _state.value = s.copy(seatHeatL = l, seatHeatR = r, wheelHeat = w)
+    }
+
+    /**
+     * Siège chauffant : la voiture ne connaît qu'un « cran » (valeur 1) qui fait DESCENDRE
+     * (éteint → 3 → 2 → 1 → éteint, établi sur véhicule par MG4Control). Affichage anticipé, puis relecture.
+     */
+    fun stepSeatHeat(left: Boolean) {
+        val cur = (if (left) _state.value.seatHeatL else _state.value.seatHeatR) ?: 0
+        val next = (cur + 3) % 4
+        _state.value = if (left) _state.value.copy(seatHeatL = next) else _state.value.copy(seatHeatR = next)
+        heatHoldUntil = System.currentTimeMillis() + 2_500
+        if (BuildConfig.MOCK) return
+        scope.launch {
+            CarProps.setIntArea(if (left) SEAT_HEAT_L else SEAT_HEAT_R, HEAT_AREA, 1, "siège chauffant ${if (left) "G" else "D"}")
+            delay(2_600); refreshHeating()
+        }
+    }
+
+    /** Volant chauffant : une bascule (valeur 1), comme le bouton d'origine. */
+    fun toggleWheelHeat() {
+        val on = _state.value.wheelHeat == 1
+        _state.value = _state.value.copy(wheelHeat = if (on) 0 else 1)
+        heatHoldUntil = System.currentTimeMillis() + 2_500
+        if (BuildConfig.MOCK) return
+        scope.launch {
+            CarProps.setIntArea(WHEEL_HEAT, HEAT_AREA, 1, "volant chauffant")
+            delay(2_600); refreshHeating()
+        }
+    }
+
+    /** Sièges / volant chauffants à afficher : réglage, sinon versions 64 / 77 kWh dont la voiture les expose. */
+    fun heatingShown(context: Context): Boolean {
+        val p = app.mg4dash.system.Prefs(context)
+        return when (p.heatedSeats) {
+            1 -> true
+            2 -> false
+            else -> BuildConfig.MOCK && p.batteryModel != 51 || p.batteryModel in listOf(64, 77) && _state.value.seatHeatL != null
+        }
     }
 
     private fun refreshHvac() {

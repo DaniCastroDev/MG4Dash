@@ -23,6 +23,10 @@ data class VehicleState(
     val defrostFront: Boolean? = null,
     val defrostRear: Boolean? = null,
     val ecoOn: Boolean? = null,
+    /** Sièges chauffants (0 éteint, 1 à 3) et volant chauffant (0 / 1), versions équipées. */
+    val seatHeatL: Int? = null,
+    val seatHeatR: Int? = null,
+    val wheelHeat: Int? = null,
     // Énergie (CarEvClient, code 4)
     val batteryPercent: Int? = null,
     /** Niveau de batterie au dixième (BMS_PACK_SOC_DSP), quand la voiture le donne. */
