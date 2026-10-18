@@ -269,37 +269,43 @@ class SettingsActivity : AppCompatActivity() {
      * Test caché de la propriété BMS « SPR_CHRG » (rôle inconnu, peut-être une charge rapide) :
      * lecture, écriture d'une valeur choisie, relecture 2 s plus tard. Tout est noté dans le journal.
      */
+    /**
+     * Tests cachés (appui long sur la ligne du firmware) : propriétés de charge écrites directement,
+     * pour valider les voies de secours des anciens firmwares. Lecture, écriture, relecture 2 s après.
+     */
     private fun sprChrgTest() {
         val P = app.mg4dash.car.CarProps
-        val view = TextView(this).apply { setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f); setTextColor(color(R.color.text_value)); setPadding(dp(24), dp(12), dp(24), dp(8)) }
+        val view = TextView(this).apply { setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f); setTextColor(color(R.color.text_value)); setPadding(dp(24), dp(12), dp(24), dp(8)) }
+        val tests = listOf(
+            Triple("SPR_CHRG", P.SPR_CHRG, listOf(0, 1)),
+            Triple("CHRG_CTRL", 0x2140f412, listOf(1, 2)),
+            Triple("ELEC_CLCK_CTRL", 0x2140f413, listOf(1, 2)),
+        )
         fun show() {
             lifecycleScope.launch {
-                val v = withContext(Dispatchers.IO) { P.getInt(P.SPR_CHRG) }
+                val vals = withContext(Dispatchers.IO) { tests.map { it.first to P.getInt(it.second) } + ("BMS_CHRG_STS" to P.getInt(0x2140f409)) + ("SP_RSN" to P.getInt(P.BMS_CHRG_SP_RSN)) }
                 val s = app.mg4dash.car.CarBridge.state.value
-                view.text = "SPR_CHRG (0x${Integer.toHexString(P.SPR_CHRG)}) = ${v ?: "illisible"}\n" +
-                    "Charge : ${app.mg4dash.car.VehicleState.chargeStatusLabel(s.chargeStatus)}\n" +
-                    "Motif d'arrêt BMS : ${withContext(Dispatchers.IO) { P.getInt(P.BMS_CHRG_SP_RSN) } ?: "—"}"
-                Log.i("SPR", "lecture SPR_CHRG = $v")
+                view.text = vals.joinToString("\n") { "${it.first} = ${it.second ?: "illisible"}" } +
+                    "\nCharge : ${app.mg4dash.car.VehicleState.chargeStatusLabel(s.chargeStatus)}"
+                Log.i("SPR", "lecture : " + vals.joinToString { "${it.first}=${it.second}" })
             }
         }
-        fun write(value: Int) {
+        fun write(name: String, id: Int, value: Int) {
             lifecycleScope.launch {
-                val ok = withContext(Dispatchers.IO) { P.setInt(P.SPR_CHRG, value, "SPR_CHRG") }
-                view.text = "Écriture $value → ${if (ok) "envoyée" else "refusée"}, relecture…"
+                val ok = withContext(Dispatchers.IO) { P.setInt(id, value, name) }
+                view.text = "$name ← $value : ${if (ok) "envoyé" else "refusé"}, relecture…"
                 kotlinx.coroutines.delay(2_000); show()
             }
         }
+        val col = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        col.addView(view)
+        tests.forEach { (name, id, values) ->
+            row(col, *values.map { v -> button("$name ← $v") { write(name, id, v) } }.toTypedArray())
+        }
+        row(col, button("Relire") { show() })
         show()
-        val d = AlertDialog.Builder(this)
-            .setTitle("Test SPR_CHRG")
-            .setView(view)
-            .setNeutralButton("Relire", null)
-            .setNegativeButton("Écrire 0", null)
-            .setPositiveButton("Écrire 1", null)
-            .show()
-        d.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener { show() }
-        d.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener { write(0) }
-        d.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener { write(1) }
+        AlertDialog.Builder(this).setTitle("Tests (charge)").setView(ScrollView(this).apply { addView(col) })
+            .setPositiveButton(R.string.st_close, null).show()
     }
 
     /** Radio Dash : seulement sur le firmware et l'appli radio pour lesquels elle est construite. */
