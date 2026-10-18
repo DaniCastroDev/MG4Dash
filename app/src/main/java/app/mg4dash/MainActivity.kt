@@ -340,7 +340,7 @@ class MainActivity : AppCompatActivity() {
             addView(ImageView(this@MainActivity).apply {
                 setImageResource(icon); isDuplicateParentStateEnabled = true; if (mirror) scaleX = -1f
                 imageTintList = androidx.core.content.ContextCompat.getColorStateList(this@MainActivity, R.color.chip_text)
-            }, android.widget.FrameLayout.LayoutParams((30 * d).toInt(), (30 * d).toInt(), Gravity.CENTER))
+            }, android.widget.FrameLayout.LayoutParams((36 * d).toInt(), (36 * d).toInt(), Gravity.CENTER))
             // Niveau du siège (1 à 3) en petit, en haut à droite
             addView(TextView(this@MainActivity).apply {
                 tag = "level"; setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); setTextColor(color(R.color.accent_action))
@@ -348,9 +348,9 @@ class MainActivity : AppCompatActivity() {
             }, android.widget.FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.END).apply { rightMargin = (8 * d).toInt() })
             setOnClickListener { onClick() }
         }
-        heatSeatL = chip(R.drawable.ic_seat_heat, false) { CarBridge.stepSeatHeat(true) }
+        heatSeatL = chip(R.drawable.ic_seat_heat_0, false) { CarBridge.stepSeatHeat(true) }
         heatWheel = chip(R.drawable.ic_wheel_heat, false) { CarBridge.toggleWheelHeat() }
-        heatSeatR = chip(R.drawable.ic_seat_heat, true) { CarBridge.stepSeatHeat(false) }
+        heatSeatR = chip(R.drawable.ic_seat_heat_0, true) { CarBridge.stepSeatHeat(false) }
         listOf(heatSeatL, heatWheel, heatSeatR).forEachIndexed { i, v ->
             header.addView(v, LinearLayout.LayoutParams((96 * d).toInt(), (40 * d).toInt()).apply { if (i > 0) leftMargin = (10 * d).toInt() })
         }
@@ -360,7 +360,8 @@ class MainActivity : AppCompatActivity() {
         fun paint(v: android.widget.FrameLayout?, level: Int?, showLevel: Boolean) {
             v ?: return
             v.isSelected = (level ?: 0) > 0
-            (v.findViewWithTag<TextView>("level"))?.text = if (showLevel && (level ?: 0) > 0) level.toString() else ""
+            // Siège : 0 à 3 flux de chaleur dessinés au-dessus de l'assise selon le niveau
+            if (showLevel) (v.getChildAt(0) as? ImageView)?.setImageResource(when (level) { 1 -> R.drawable.ic_seat_heat_1; 2 -> R.drawable.ic_seat_heat_2; 3 -> R.drawable.ic_seat_heat_3; else -> R.drawable.ic_seat_heat_0 })
         }
         paint(heatSeatL, s.seatHeatL, true); paint(heatSeatR, s.seatHeatR, true); paint(heatWheel, s.wheelHeat, false)
     }

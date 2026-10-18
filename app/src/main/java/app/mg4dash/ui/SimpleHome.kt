@@ -127,9 +127,9 @@ class SimpleHome(private val a: AppCompatActivity) {
                 addView(TextView(a).apply { tag = "level"; setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); setTextColor(kit.color(R.color.accent_action)) },
                     android.widget.FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.END).apply { rightMargin = kit.dp(8) })
             }
-            heatSeatL = chip(R.drawable.ic_seat_heat, false) { CarBridge.stepSeatHeat(true) }
+            heatSeatL = chip(R.drawable.ic_seat_heat_0, false) { CarBridge.stepSeatHeat(true) }
             heatWheel = chip(R.drawable.ic_wheel_heat, false) { CarBridge.toggleWheelHeat() }
-            heatSeatR = chip(R.drawable.ic_seat_heat, true) { CarBridge.stepSeatHeat(false) }
+            heatSeatR = chip(R.drawable.ic_seat_heat_0, true) { CarBridge.stepSeatHeat(false) }
             listOf(heatSeatL!!, heatWheel!!, heatSeatR!!).forEachIndexed { i, v -> head.addView(v, kit.lp(kit.dp(96), kit.dp(40), l = if (i > 0) 10 else 0)) }
         }
 
@@ -362,7 +362,8 @@ class SimpleHome(private val a: AppCompatActivity) {
         fun paint(v: android.widget.FrameLayout?, level: Int?, showLevel: Boolean) {
             v ?: return
             v.isSelected = (level ?: 0) > 0
-            v.findViewWithTag<TextView>("level")?.text = if (showLevel && (level ?: 0) > 0) level.toString() else ""
+            // Siège : 0 à 3 flux de chaleur dessinés au-dessus de l'assise selon le niveau
+            if (showLevel) (v.getChildAt(0) as? ImageView)?.setImageResource(when (level) { 1 -> R.drawable.ic_seat_heat_1; 2 -> R.drawable.ic_seat_heat_2; 3 -> R.drawable.ic_seat_heat_3; else -> R.drawable.ic_seat_heat_0 })
         }
         paint(heatSeatL, s.seatHeatL, true); paint(heatSeatR, s.seatHeatR, true); paint(heatWheel, s.wheelHeat, false)
         val on = s.hvacOn == true
