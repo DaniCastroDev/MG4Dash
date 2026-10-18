@@ -308,6 +308,36 @@ object CarBridge {
         }
     }
 
+    // ── Écran éteint et ESC (gestes de la barre verticale, issue #12) ──
+
+    /** Allume ou éteint l'écran central par le service véhicule ; false si le service ne répond pas. */
+    fun setDisplay(on: Boolean): Boolean {
+        if (BuildConfig.MOCK) return true
+        val g = general ?: run { Log.w(TAG, "écran : service général absent"); return false }
+        return try { g.setDisplayState(on); Log.i(TAG, "écran ${if (on) "allumé" else "éteint"}"); true }
+        catch (e: Exception) { Log.w(TAG, "écran : ${e.message}"); false }
+    }
+
+    /**
+     * ESC actif ? Même règle que les réglages véhicule SAIC : état TCS 0 ou 1 = contrôle actif.
+     * null si la voiture ne le dit pas.
+     */
+    fun escActive(): Boolean? {
+        if (BuildConfig.MOCK) return mockEsc
+        val sts = CarProps.readIntArea(TCS_OPNG_STS, 0x1000000) ?: CarProps.getInt(TCS_OPNG_STS) ?: return null
+        return sts == 0 || sts == 1
+    }
+    private var mockEsc = true
+
+    /** Bascule l'ESC : la commande SAIC est un appui (valeur 1), comme l'interrupteur du menu MG. */
+    fun toggleEsc() {
+        if (BuildConfig.MOCK) { mockEsc = !mockEsc; return }
+        val ok = CarProps.setIntArea(VEHICLE_ESP, 0x1000000, 1, "ESC (appui)")
+        Log.i(TAG, "ESC : commande envoyée → $ok, état avant : ${escActive()}")
+    }
+    private const val VEHICLE_ESP = 289421317       // 0x11403805 : commande ESC (setDrivingEpsMode du menu MG)
+    private const val TCS_OPNG_STS = 289421344      // 0x11403820 : état du contrôle de traction / stabilité
+
     // ── Régénération : touchée depuis la jauge KERS (accueil, page Véhicule) ──
 
     /** Niveau de régénération 0..3 ; la conduite à une pédale est d'abord coupée si elle est active. */

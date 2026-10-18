@@ -220,6 +220,46 @@ object Dock {
                     })
                     cell.setOnTouchListener { v, ev -> v.isPressed = ev.actionMasked == android.view.MotionEvent.ACTION_DOWN; gd.onTouchEvent(ev) }
                 }
+                R.string.dock_energy -> {
+                    // Double toucher : écran éteint (un toucher le rallume) ; toucher : page Énergie
+                    val gd = android.view.GestureDetector(activity, object : android.view.GestureDetector.SimpleOnGestureListener() {
+                        override fun onSingleTapConfirmed(e: android.view.MotionEvent): Boolean { open(activity, item, current); return true }
+                        override fun onDoubleTap(e: android.view.MotionEvent): Boolean {
+                            activity.startActivity(Intent(activity, ScreenOffActivity::class.java)); return true
+                        }
+                        override fun onDown(e: android.view.MotionEvent) = true
+                    })
+                    cell.setOnTouchListener { v, ev -> v.isPressed = ev.actionMasked == android.view.MotionEvent.ACTION_DOWN; gd.onTouchEvent(ev) }
+                }
+                R.string.dock_vehicle -> {
+                    // Appui long : ESC désactivé / réactivé (confirmation pour désactiver) ; icône rouge si coupé
+                    fun tint() {
+                        val escOff = app.mg4dash.car.CarBridge.escActive() == false
+                        icon.setColorFilter(color(when { escOff -> R.color.accent_danger; selected -> R.color.accent_action; else -> R.color.text_sub }))
+                    }
+                    tint()
+                    cell.setOnClickListener { open(activity, item, current) }
+                    cell.setOnLongClickListener {
+                        val active = app.mg4dash.car.CarBridge.escActive() != false
+                        if (active) {
+                            android.app.AlertDialog.Builder(activity)
+                                .setTitle(R.string.esc_off_title)
+                                .setMessage(R.string.esc_off_msg)
+                                .setPositiveButton(R.string.esc_off_confirm) { _, _ ->
+                                    app.mg4dash.car.CarBridge.toggleEsc()
+                                    cell.postDelayed({ tint() }, 1500)
+                                }
+                                .setNegativeButton(R.string.cancel, null)
+                                .setOnDismissListener { Fullscreen.apply(activity) }
+                                .show()
+                        } else {
+                            app.mg4dash.car.CarBridge.toggleEsc()
+                            android.widget.Toast.makeText(activity, R.string.esc_on_done, android.widget.Toast.LENGTH_SHORT).show()
+                            cell.postDelayed({ tint() }, 1500)
+                        }
+                        true
+                    }
+                }
                 else -> {
                     cell.setOnClickListener { open(activity, item, current) }
                     if (item.label == R.string.dock_home) cell.setOnLongClickListener { activity.startActivity(Intent(activity, AppsActivity::class.java)); true }

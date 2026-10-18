@@ -169,6 +169,21 @@ object CarProps {
         return ""
     }
 
+    /** Écriture entière sur une zone précise (ex. 0x1000000 pour l'ESC, comme le menu MG). */
+    fun setIntArea(id: Int, area: Int, value: Int, label: String): Boolean {
+        if (BuildConfig.MOCK) { mock[id] = value; return true }
+        val m = cpm ?: run { Log.w(TAG, "SET $label ignoré : service non prêt"); return false }
+        return try {
+            m.javaClass.getMethod("setIntProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Int::class.javaPrimitiveType)
+                .invoke(m, id, area, value)
+            Log.i(TAG, "SET $label = $value (0x${Integer.toHexString(id)}, zone 0x${Integer.toHexString(area)})")
+            true
+        } catch (e: Throwable) {
+            Log.w(TAG, "SET $label échec : ${(e.cause ?: e).message}")
+            false
+        }
+    }
+
     /** Écriture entière ; relue ensuite par l'appelant pour confirmer. */
     fun setInt(id: Int, value: Int, label: String): Boolean {
         if (BuildConfig.MOCK) { mock[id] = value; return true }

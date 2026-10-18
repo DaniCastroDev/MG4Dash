@@ -107,6 +107,8 @@ class VehicleSettingService(b: IBinder) : RemoteService(b, "com.saicmotor.carapi
 
 /** Informations générales (queryClient 1). */
 class GeneralService(b: IBinder) : RemoteService(b, "com.saicmotor.carapi.general.ICarGeneralService") {
+    /** Rétroéclairage de l'écran central : false = éteint (commande « écran éteint » du launcher d'origine). */
+    fun setDisplayState(on: Boolean) = voidInt(4, if (on) 1 else 0)
     val latestSpeed get() = float(17)
     val totalMileage get() = int(23)
 }
