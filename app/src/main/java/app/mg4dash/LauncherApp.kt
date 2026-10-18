@@ -15,6 +15,19 @@ class LauncherApp : Application() {
         Tr.app = this
         installCrashGuard()
         Log.i("App", "démarrage ${BuildConfig.VERSION_NAME} (${BuildConfig.FLAVOR})")
+        // Première installation : style Complet, plein écran et barre verticale à gauche par défaut.
+        // Les installations existantes gardent leurs réglages (le fichier de préférences n'est pas vide).
+        if (!BuildConfig.MOCK) {
+            val sp = app.mg4dash.system.Prefs(this).raw
+            if (!sp.contains("defaults_v1")) {
+                val fresh = sp.all.isEmpty()
+                sp.edit().apply {
+                    if (fresh) putInt("home_style", 0).putBoolean("fullscreen", true).putBoolean("vertical_dock", true)
+                    putBoolean("defaults_v1", true)
+                }.apply()
+                if (fresh) Log.i("App", "première installation : style Complet, plein écran, barre verticale")
+            }
+        }
         app.mg4dash.system.HomeSwitcher.init(this)
         CarBridge.start(this)
         app.mg4dash.car.CarProps.start(this)
