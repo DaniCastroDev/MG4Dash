@@ -253,7 +253,7 @@ object CarBridge {
             odometerKm = s.odometerKm ?: i(0x21401566)?.takeIf { it > 0 },
             driveMode = if (vs == null) dm ?: s.driveMode else s.driveMode ?: dm,
             regenLevel = s.regenLevel ?: i(0x2140a191)?.takeIf { it in 0..7 },
-            onePedal = s.onePedal ?: i(0x2140a193)?.takeIf { it in 0..1 },
+            onePedal = s.onePedal ?: i(0x2140a193)?.takeIf { it in 0..1 } ?: i(0x2140a191)?.let { if (it == 6) 1 else null },
         )
     }
 

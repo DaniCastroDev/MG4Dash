@@ -135,11 +135,12 @@ data class VehicleState(
             1 -> 2
             2 -> 3
             3 -> 4
+            6 -> 4          // 6 = conduite à une pédale (relevé sur la voiture le 2026-10-18)
             else -> -1
         }
 
         fun regenLabel(v: Int?, onePedal: Int?): String = when {
-            onePedal == 1 -> Tr.s(R.string.rg_one_pedal)
+            onePedal == 1 || v == 6 -> Tr.s(R.string.rg_one_pedal)
             v == 0 -> Tr.s(R.string.rg_low)
             v == 1 -> Tr.s(R.string.rg_medium)
             v == 2 -> Tr.s(R.string.rg_high)
