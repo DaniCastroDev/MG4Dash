@@ -73,6 +73,12 @@ class SettingsActivity : AppCompatActivity() {
         row(style, *styleButtons(listOf(R.string.st_style_full, R.string.st_style_simple, R.string.st_style_map), { prefs.homeStyle }) { prefs.homeStyle = it })
         text(style, getString(R.string.st_units), 18f, R.color.text_value)
         row(style, *choiceButtons(listOf(getString(R.string.st_units_car), "km · kWh/100 km", "miles · mi/kWh"), { prefs.units }) { prefs.units = it })
+        text(style, getString(R.string.st_pressure), 18f, R.color.text_value)
+        row(style, *choiceButtons(listOf(getString(R.string.st_mode_auto_short), "bar", "psi", "kPa"), { prefs.pressureUnit }) { prefs.pressureUnit = it })
+        text(style, getString(R.string.st_map_zoom), 18f, R.color.text_value)
+        row(style, *choiceButtons(listOf("14", "15", "16", "17", "18"), { prefs.mapZoom - 14 }) { prefs.mapZoom = 14 + it })
+        text(style, getString(R.string.st_map_theme), 18f, R.color.text_value)
+        row(style, *styleButtons(listOf(R.string.st_map_theme_app, R.string.st_mode_light, R.string.st_mode_dark), { prefs.mapTheme }) { prefs.mapTheme = it })
         toggle(style, R.string.st_map_vdock, null, { prefs.verticalDock }) { prefs.verticalDock = it; app.mg4dash.ui.Themes.publish(this) }
         toggle(style, R.string.st_fullscreen, null, { prefs.fullscreen }) { prefs.fullscreen = it; Fullscreen.apply(this) }
         toggle(style, R.string.st_stack_auto, null, { prefs.stackAuto }) { prefs.stackAuto = it }
@@ -203,6 +209,16 @@ class SettingsActivity : AppCompatActivity() {
             val c = cities[idx]
             prefs.weatherCity = c.first; prefs.weatherLat = c.second; prefs.weatherLon = c.third
             showCity(); WeatherRepo.refreshNow(this)
+        }, button(getString(R.string.st_use_location)) {
+            // Ville de repli = position actuelle (#7) ; nom de ville déjà trouvé par la météo s'il existe
+            val loc = app.mg4dash.map.LocationRepo.location.value
+            if (loc == null) {
+                android.widget.Toast.makeText(this, R.string.st_no_location, android.widget.Toast.LENGTH_LONG).show()
+            } else {
+                prefs.weatherLat = loc.latitude.toFloat(); prefs.weatherLon = loc.longitude.toFloat()
+                prefs.weatherCity = WeatherRepo.weather.value?.place?.takeIf { it.isNotBlank() } ?: getString(R.string.weather_here)
+                showCity(); WeatherRepo.refreshNow(this)
+            }
         })
 
         // ── Home Assistant ──

@@ -354,3 +354,10 @@ cons_avg_mi|mi/kWh avg.|mi/kWh moy.|mi/kWh Ø|mi/kWh med.|mi/kWh media|mi/kWh ge
 st_units|Units|Unités|Einheiten|Unidades|Unità|Eenheden
 st_units_car|Like the car|Comme la voiture|Wie das Auto|Como el coche|Come l'auto|Zoals de auto
 wx_clear|Clear|Dégagé|Klar|Despejado|Sereno|Helder
+st_pressure|Tyre pressure|Pression des pneus|Reifendruck|Presión de neumáticos|Pressione pneumatici|Bandenspanning
+st_mode_auto_short|Auto|Auto|Auto|Auto|Auto|Auto
+st_map_zoom|Default map zoom|Zoom de la carte par défaut|Standard-Kartenzoom|Zoom del mapa por defecto|Zoom predefinito della mappa|Standaardzoom kaart
+st_map_theme|Map colours|Couleurs de la carte|Kartenfarben|Colores del mapa|Colori della mappa|Kaartkleuren
+st_map_theme_app|Like the app|Comme l'appli|Wie die App|Como la app|Come l'app|Zoals de app
+st_use_location|Use my position|Utiliser ma position|Meine Position verwenden|Usar mi posición|Usa la mia posizione|Mijn positie gebruiken
+st_no_location|Position not available yet|Position pas encore disponible|Position noch nicht verfügbar|Posición aún no disponible|Posizione non ancora disponibile|Positie nog niet beschikbaar

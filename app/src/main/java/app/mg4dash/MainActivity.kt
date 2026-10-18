@@ -585,9 +585,11 @@ class MainActivity : AppCompatActivity() {
 
     /** Sans connexion data, la carte (tuiles en ligne) cède la place à la consommation. */
     private fun offline(): Boolean {
+        // Même signal que le widget météo (#15) : pas de météo, ou dernière requête en échec ;
+        // « internet disponible » d'Android restait vrai sans accès réel.
         val w = WeatherRepo.weather.value
-        return !app.mg4dash.system.StatusMonitor.hasInternet(this) &&
-            (w == null || System.currentTimeMillis() - w.updatedAt > 3600_000L)
+        return w == null || WeatherRepo.offline ||
+            !app.mg4dash.system.StatusMonitor.hasInternet(this) && System.currentTimeMillis() - w.updatedAt > 3600_000L
     }
 
     /** 0 = carte, 1 = raccourcis, 2 = consommation. */
@@ -693,6 +695,8 @@ class MainActivity : AppCompatActivity() {
             // 77 kWh 245 ch / 180 kW), plus une marge pour les pertes ; elle s'élargit d'elle-même si la
             // voiture tire davantage (XPower 435 ch / 320 kW), par paliers de 50 kW, et s'en souvient.
             val model = when (prefs.batteryModel) { 77 -> 200f; 64 -> 170f; else -> 140f }
+            // Manuel MG4 (puissance nette batterie) : 51 kWh 54 kW en continu / 125 kW max ; autres 68 / 150 (#16)
+            if (prefs.batteryModel == 51) { continuousKw = 54f; peakKw = 125f } else { continuousKw = 68f; peakKw = 150f }
             maxDrawKw = maxOf(model, prefs.raw.getFloat("power_scale_kw", 0f))
             onScale = { prefs.raw.edit().putFloat("power_scale_kw", it).apply() }
         }

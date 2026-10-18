@@ -114,6 +114,9 @@ class PowerBar @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
         }
     var maxRegenKw = 50f
     var maxDrawKw = 140f
+    /** Puissance continue et maximale du modèle (manuel MG4) : orange au-delà de la continue, rouge vers le max (#16). */
+    var continuousKw = 54f
+    var peakKw = 125f
     /** Appelé quand l'échelle s'élargit (puissance mesurée au-delà du maximum prévu). */
     var onScale: ((Float) -> Unit)? = null
 
@@ -129,6 +132,7 @@ class PowerBar @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
     private val cold = app.mg4dash.ui.Themes.color(context, R.color.accent_cold)
     private val draw = app.mg4dash.ui.Themes.color(context, R.color.accent_action)
     private val heat = app.mg4dash.ui.Themes.color(context, R.color.accent_heat)
+    private val danger = app.mg4dash.ui.Themes.color(context, R.color.accent_danger)
     private val tick = app.mg4dash.ui.Themes.color(context, R.color.text_sub)
 
     private var shown = 0f          // valeur affichée (animée vers kw)
@@ -171,7 +175,9 @@ class PowerBar @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 
         val end = xFor(shown)
         if (shown > 0.05f) {
-            paint.shader = LinearGradient(zero, 0f, x1, 0f, intArrayOf(cold, draw, heat), floatArrayOf(0f, 0.55f, 1f), Shader.TileMode.CLAMP)
+            // Bleu jusqu'à la puissance continue, orange au-delà, rouge à partir de 80 % du maximum
+            val endCol = when { shown >= peakKw * 0.8f -> danger; shown > continuousKw -> heat; else -> draw }
+            paint.shader = LinearGradient(zero, 0f, maxOf(end, zero + barH), 0f, intArrayOf(cold, endCol), null, Shader.TileMode.CLAMP)
             fill(zero, top, maxOf(end, zero + barH), bottom, roundRight = true); canvas.drawPath(path, paint)
         } else if (shown < -0.05f) {
             paint.shader = LinearGradient(zero, 0f, x0, 0f, intArrayOf(0x66000000 or (regen and 0xFFFFFF), regen), null, Shader.TileMode.CLAMP)
@@ -181,7 +187,7 @@ class PowerBar @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 
         // Pastille au bout, avec un halo
         if (kotlin.math.abs(shown) > 0.05f) {
-            val col = if (shown > 0f) (if (end > zero + (x1 - zero) * 0.7f) heat else draw) else regen
+            val col = if (shown > 0f) (when { shown >= peakKw * 0.8f -> danger; shown > continuousKw -> heat; else -> draw }) else regen
             val cy = (top + bottom) / 2f
             paint.color = col; paint.alpha = 70; canvas.drawCircle(end, cy, barH * 0.95f, paint)
             paint.alpha = 255; paint.color = 0xFFFFFFFF.toInt(); canvas.drawCircle(end, cy, barH * 0.42f, paint)
@@ -193,6 +199,13 @@ class PowerBar @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
         if (peakRegen > 1f && -peakRegen < shown - 1f) {
             val px = xFor(-peakRegen); paint.color = regen; canvas.drawRect(px - d, top - 3 * d, px + d, bottom + 3 * d, paint)
         }
+
+        // Repères discrets : puissance continue et 80 % du maximum
+        paint.color = tick; paint.alpha = 110
+        listOf(continuousKw, peakKw * 0.8f).filter { it < maxDrawKw }.forEach { k ->
+            val px = xFor(k); canvas.drawRect(px - d * 0.6f, top, px + d * 0.6f, bottom, paint)
+        }
+        paint.alpha = 255
 
         // Repère du 0 et graduations
         paint.color = tick

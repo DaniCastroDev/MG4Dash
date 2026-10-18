@@ -117,7 +117,7 @@ class VehicleActivity : PageActivity() {
         }
         data.forEachIndexed { i, (kpa, temp, state) ->
             val alert = state != null && state != 0
-            tirePressure[i].text = kpa?.takeIf { it in 50..600 }?.let { String.format(Locale.getDefault(), "%.2f bar", it / 100f) } ?: "—"
+            tirePressure[i].text = kpa?.takeIf { it in 50..600 }?.let { app.mg4dash.system.Units.pressureText(this, it) } ?: "—"
             tirePressure[i].setTextColor(kit.color(if (alert) R.color.accent_danger else R.color.text_value))
             tireTemp[i].text = listOfNotNull(
                 temp?.takeIf { it in -40..150 }?.let { "$it °C" },

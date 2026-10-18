@@ -30,6 +30,7 @@ class WeatherCompact(context: Context, private val onPage: () -> Unit) : LinearL
     }
 
     private val icon = ImageView(context)
+    private val top = LinearLayout(context)
     private val temp = tv(52f, R.color.text_value, bold = true)
     private val sub = tv(18f, R.color.text_sub)
     private val date = tv(18f, R.color.text_sub).apply { gravity = Gravity.END }
@@ -44,7 +45,7 @@ class WeatherCompact(context: Context, private val onPage: () -> Unit) : LinearL
 
     init {
         orientation = VERTICAL
-        val top = LinearLayout(context).apply { orientation = HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+        top.apply { orientation = HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         val left = LinearLayout(context).apply { orientation = VERTICAL }
         val tr = LinearLayout(context).apply { orientation = HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
         tr.addView(icon, LayoutParams((52 * d).toInt(), (52 * d).toInt()))
@@ -76,12 +77,20 @@ class WeatherCompact(context: Context, private val onPage: () -> Unit) : LinearL
         tick()
         city.text = w?.place ?: place
         if (w == null) {
-            icon.setImageResource(R.drawable.ic_cloud); icon.setColorFilter(c(R.color.text_sub))
+            // Hors connexion (#18) : heure et température extérieure en grand, centrées dans tout le widget
+            icon.visibility = GONE
             temp.text = outside?.let { "${Math.round(it)}°" } ?: "—"
+            temp.setTextSize(TypedValue.COMPLEX_UNIT_SP, 72f)
+            time.setTextSize(TypedValue.COMPLEX_UNIT_SP, 72f)
             sub.text = context.getString(R.string.weather_outside_vehicle)
+            top.gravity = Gravity.CENTER
             forecast.removeAllViews(); forecast.visibility = GONE; dots.visibility = GONE
             return
         }
+        icon.visibility = VISIBLE
+        temp.setTextSize(TypedValue.COMPLEX_UNIT_SP, 52f)
+        time.setTextSize(TypedValue.COMPLEX_UNIT_SP, 50f)
+        top.gravity = Gravity.CENTER_VERTICAL
         icon.setImageResource(WeatherRepo.icon(w.code))
         icon.setColorFilter(c(WeatherRepo.iconColor(w.code)))
         temp.text = "${w.tempC}°"

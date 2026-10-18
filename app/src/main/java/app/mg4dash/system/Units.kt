@@ -42,5 +42,12 @@ object Units {
     /** kWh/100 km → valeur affichée (mi/kWh = 62,14 / kWh/100 km). */
     fun cons(c: Context, per100: Float): Float = if (miles(c)) (100f / KM_PER_MI) / per100 else per100
 
+    /** Pression : kPa (valeur de la voiture) → texte dans l'unité choisie (#11). */
+    fun pressureText(c: Context, kpa: Int): String = when (Prefs(c).pressureUnit.let { if (it == 0) (if (miles(c)) 2 else 1) else it }) {
+        2 -> String.format(Locale.getDefault(), "%.1f psi", kpa * 0.145038f)
+        3 -> "$kpa kPa"
+        else -> String.format(Locale.getDefault(), "%.2f bar", kpa / 100f)
+    }
+
     fun consText(c: Context, per100: Float): String = String.format(Locale.getDefault(), "%.1f", cons(c, per100))
 }

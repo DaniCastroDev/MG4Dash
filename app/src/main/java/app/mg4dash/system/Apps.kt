@@ -39,8 +39,28 @@ object Apps {
 
     fun openPackage(context: Context, pkg: String, label: String = pkg): Boolean = fallback(context, pkg, label)
 
+    /** Autres noms connus selon le firmware : mots-clés cherchés dans les paquets lanceurs (issue #13). */
+    private val ALIASES = mapOf(
+        "com.saicmotor.vehiclesetting" to listOf("vehiclesetting", "vehicle.setting", "carsetting", "vehicle"),
+        "com.mg4.control" to listOf("mg4control", "mg4.control", "mg4"),
+    )
+
+    private fun searchLauncher(context: Context, pkg: String): Intent? {
+        val keys = ALIASES[pkg] ?: return null
+        val pm = context.packageManager
+        val apps = pm.queryIntentActivities(Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER), 0)
+        val hit = keys.firstNotNullOfOrNull { k ->
+            apps.firstOrNull { ri ->
+                val p = ri.activityInfo.packageName.lowercase()
+                val l = ri.loadLabel(pm).toString().lowercase().replace(" ", "")
+                p != context.packageName && (p.contains(k) || l.contains(k.replace(".", "")))
+            }
+        } ?: return null
+        return Intent(Intent.ACTION_MAIN).setClassName(hit.activityInfo.packageName, hit.activityInfo.name)
+    }
+
     private fun fallback(context: Context, pkg: String, label: String): Boolean {
-        val launch = context.packageManager.getLaunchIntentForPackage(pkg)
+        val launch = context.packageManager.getLaunchIntentForPackage(pkg) ?: searchLauncher(context, pkg)
         return if (launch != null) {
             context.startActivity(launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             Log.i(TAG, "ouverture $label via intent de lancement")

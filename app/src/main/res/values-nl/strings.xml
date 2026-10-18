@@ -356,6 +356,13 @@
     <string name="st_units">Eenheden</string>
     <string name="st_units_car">Zoals de auto</string>
     <string name="wx_clear">Helder</string>
+    <string name="st_pressure">Bandenspanning</string>
+    <string name="st_mode_auto_short">Auto</string>
+    <string name="st_map_zoom">Standaardzoom kaart</string>
+    <string name="st_map_theme">Kaartkleuren</string>
+    <string name="st_map_theme_app">Zoals de app</string>
+    <string name="st_use_location">Mijn positie gebruiken</string>
+    <string name="st_no_location">Positie nog niet beschikbaar</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefoon verbonden · Tik om te openen</string>
     <string name="aa_waiting">Sluit je telefoon aan via USB</string>

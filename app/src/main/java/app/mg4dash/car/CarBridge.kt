@@ -229,20 +229,26 @@ object CarBridge {
         fun i(id: Int) = CarProps.readIntArea(id, area)
         fun f(id: Int) = CarProps.readFloatArea(id, area)?.takeIf { it.isFinite() && it != 82.3f && it != 511.5f }
         val soc = f(0x2160f404)?.takeIf { it in 0f..100f }?.let { Math.round(it) }
-        val charging = i(0x2140f409) == 1
+        val range = i(0x2140f41c)?.takeIf { it in 1..1500 }
+        // État de charge BMS : même échelle que le service EV (10 = charge rapide, relevé sur SWI133 en
+        // charge DC, issue #13) ; 0 câble branché = connecté sans charger.
+        val raw = i(0x2140f409)
         val dc = i(0x2140f43f)?.takeIf { it != 0 && it != 1023 } != null
         val ac = i(0x2140f43e)?.takeIf { it != 0 && it != 1023 } != null
-        val status = when { charging && dc -> 10; charging -> 1; dc || ac -> 7; else -> 0 }
-        // Mode de conduite (propriété) : 0 neige, 1 éco, 3 normal, 4 sport → échelle A9 de VehicleState
-        val dm = when (i(0x2140a17c)) { 0 -> 6; 1 -> 2; 3 -> 3; 4 -> 4; else -> null }
+        val status = when { raw != null && raw in 1..15 -> raw; dc || ac -> 7; else -> 0 }
+        // Mode de conduite (propriété) : 0 neige, 1 éco, 3 normal, 4 sport, 7 personnalisé → échelle A9
+        val dm = when (i(0x2140a17c)) { 0 -> 6; 1 -> 2; 3 -> 3; 4 -> 4; 7 -> 7; else -> null }
+        // Sans service EV, les propriétés sont la seule source : on les reprend à chaque passage
+        // (avant, la première valeur lue restait affichée : % et autonomie figés, issue #13).
+        val noEv = ev == null
         _state.value = s.copy(
             connected = s.connected || soc != null,
-            batteryPercent = s.batteryPercent ?: soc,
-            rangeKm = s.rangeKm ?: i(0x2140f41c)?.takeIf { it in 1..1500 },
+            batteryPercent = if (noEv) soc ?: s.batteryPercent else s.batteryPercent ?: soc,
+            rangeKm = if (noEv) range ?: s.rangeKm else s.rangeKm ?: range,
             chargeStatus = if (ev == null) status else s.chargeStatus,
             odometerKm = s.odometerKm ?: i(0x21401566)?.takeIf { it > 0 },
-            driveMode = s.driveMode ?: dm,
-            regenLevel = s.regenLevel ?: i(0x2140a191)?.takeIf { it in 0..3 },
+            driveMode = if (vs == null) dm ?: s.driveMode else s.driveMode ?: dm,
+            regenLevel = s.regenLevel ?: i(0x2140a191)?.takeIf { it in 0..7 },
             onePedal = s.onePedal ?: i(0x2140a193)?.takeIf { it in 0..1 },
         )
     }

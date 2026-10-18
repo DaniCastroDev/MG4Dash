@@ -29,6 +29,19 @@ class Prefs(context: Context) {
         get() = sp.getInt("consumption_period", 0)
         set(v) = sp.edit().putInt("consumption_period", v).apply()
 
+    /** Pression des pneus : 0 = auto (psi en miles, sinon bar), 1 = bar, 2 = psi, 3 = kPa. */
+    var pressureUnit: Int
+        get() = sp.getInt("pressure_unit", 0)
+        set(v) = sp.edit().putInt("pressure_unit", v).apply()
+
+    /** Carte : zoom par défaut (14 à 18) et thème (0 = comme l'appli, 1 = clair, 2 = sombre). */
+    var mapZoom: Int
+        get() = sp.getInt("map_zoom", 16)
+        set(v) = sp.edit().putInt("map_zoom", v).apply()
+    var mapTheme: Int
+        get() = sp.getInt("map_theme", 0)
+        set(v) = sp.edit().putInt("map_theme", v).apply()
+
     /** Unités : 0 = comme la voiture, 1 = km, 2 = miles. */
     var units: Int
         get() = sp.getInt("units", 0)

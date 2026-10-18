@@ -356,6 +356,13 @@
     <string name="st_units">Unités</string>
     <string name="st_units_car">Comme la voiture</string>
     <string name="wx_clear">Dégagé</string>
+    <string name="st_pressure">Pression des pneus</string>
+    <string name="st_mode_auto_short">Auto</string>
+    <string name="st_map_zoom">Zoom de la carte par défaut</string>
+    <string name="st_map_theme">Couleurs de la carte</string>
+    <string name="st_map_theme_app">Comme l\'appli</string>
+    <string name="st_use_location">Utiliser ma position</string>
+    <string name="st_no_location">Position pas encore disponible</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Téléphone connecté · Appuyer pour ouvrir</string>
     <string name="aa_waiting">Branchez votre téléphone en USB</string>

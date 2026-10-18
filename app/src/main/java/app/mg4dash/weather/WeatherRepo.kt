@@ -55,6 +55,7 @@ object WeatherRepo {
     fun start(context: Context) {
         val app = context.applicationContext
         if (BuildConfig.MOCK) {
+            if (Prefs(app).raw.getBoolean("mock_offline", false)) return
             _weather.value = Weather(
                 "Paris", 14, 12, 2, 18, 72,
                 listOf(Hour("14h", 2, 14), Hour("15h", 3, 15), Hour("16h", 61, 13), Hour("17h", 61, 12), Hour("18h", 3, 11)),
@@ -87,6 +88,8 @@ object WeatherRepo {
     }
 
     @Volatile private var lastFailed = false
+    /** Dernière requête météo en échec (pas de connexion réelle), même si Android voit un réseau. */
+    val offline: Boolean get() = lastFailed
     @Volatile private var missingCity = false
     private val wake = kotlinx.coroutines.channels.Channel<Unit>(kotlinx.coroutines.channels.Channel.CONFLATED)
 

@@ -31,7 +31,7 @@ class MapCard(private val context: Context, holder: ViewGroup) {
     private var follow = true
     private var lastTouch = 0L
     /** Niveau de zoom voulu : le suivi l'utilise, sinon chaque position annulait le zoom en cours. */
-    private var zoomLevel = 16.0
+    private var zoomLevel = app.mg4dash.system.Prefs(context).mapZoom.coerceIn(14, 18).toDouble()
     /** Carte orientée selon le cap de la voiture (sinon nord en haut) ; 2e appui sur « recentrer ». */
     var headingUp = app.mg4dash.system.Prefs(context).mapHeadingUp
         private set
@@ -55,9 +55,9 @@ class MapCard(private val context: Context, holder: ViewGroup) {
                 isTilesScaledToDpi = true
                 minZoomLevel = 5.0
                 maxZoomLevel = 19.0
-                controller.setZoom(16.0)
+                controller.setZoom(zoomLevel)
                 // Carte sombre en thème sombre ; tuiles d'origine en thème clair
-                if (!app.mg4dash.ui.Themes.isLight(context)) overlayManager.tilesOverlay.setColorFilter(darkFilter())
+                if (darkMap()) overlayManager.tilesOverlay.setColorFilter(darkFilter())
                 overlayManager.tilesOverlay.loadingBackgroundColor = app.mg4dash.ui.Themes.color(context, R.color.bg_top)
                 overlayManager.tilesOverlay.loadingLineColor = app.mg4dash.ui.Themes.color(context, R.color.panel_border)
             }
@@ -85,6 +85,13 @@ class MapCard(private val context: Context, holder: ViewGroup) {
             holder.addView(m, ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
             map = m; marker = mk
         }
+    }
+
+    /** Thème de la carte : comme l'appli, ou clair / sombre forcé (#15). */
+    private fun darkMap(): Boolean = when (app.mg4dash.system.Prefs(context).mapTheme) {
+        1 -> false
+        2 -> true
+        else -> !app.mg4dash.ui.Themes.isLight(context)
     }
 
     /** Inversion des couleurs + désaturation : rendu « nuit » lisible, sans clé ni style payant. */
@@ -133,7 +140,7 @@ class MapCard(private val context: Context, holder: ViewGroup) {
         frame.addView(android.widget.ImageView(context).apply {
             scaleType = android.widget.ImageView.ScaleType.MATRIX
             setImageBitmap(mosaic)
-            if (!app.mg4dash.ui.Themes.isLight(context)) colorFilter = darkFilter()
+            if (darkMap()) colorFilter = darkFilter()
         }, android.widget.FrameLayout.LayoutParams(-1, -1))
         val d = context.resources.displayMetrics.density
         frame.addView(android.widget.ImageView(context).apply {

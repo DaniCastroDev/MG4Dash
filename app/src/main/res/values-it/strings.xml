@@ -356,6 +356,13 @@
     <string name="st_units">Unità</string>
     <string name="st_units_car">Come l\'auto</string>
     <string name="wx_clear">Sereno</string>
+    <string name="st_pressure">Pressione pneumatici</string>
+    <string name="st_mode_auto_short">Auto</string>
+    <string name="st_map_zoom">Zoom predefinito della mappa</string>
+    <string name="st_map_theme">Colori della mappa</string>
+    <string name="st_map_theme_app">Come l\'app</string>
+    <string name="st_use_location">Usa la mia posizione</string>
+    <string name="st_no_location">Posizione non ancora disponibile</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefono connesso · Tocca per aprire</string>
     <string name="aa_waiting">Collega il telefono via USB</string>

@@ -129,12 +129,13 @@ data class VehicleState(
         }
 
         /** Niveau de récupération (KERS) en index de jauge 1..4, 0 si inconnu. */
+        /** -1 = niveau inconnu (jauge grisée). */
         fun regenGauge(v: Int?): Int = when (v) {
             0 -> 1
             1 -> 2
             2 -> 3
             3 -> 4
-            else -> 0
+            else -> -1
         }
 
         fun regenLabel(v: Int?, onePedal: Int?): String = when {
