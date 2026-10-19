@@ -9,7 +9,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
-import app.mg4dash.MainActivity
+import app.mg4dash.ClassicActivity
 import app.mg4dash.R
 import app.mg4dash.apps.AppsActivity
 import app.mg4dash.pages.ClimateActivity
@@ -62,7 +62,7 @@ object Dock {
                 .setItems(arrayOf(activity.getString(R.string.dock_slot_clock), activity.getString(R.string.dock_slot_wifi))) { _, w ->
                     app.mg4dash.system.Prefs(activity).dockSlot = w
                     build(activity, dock, current, simple)
-                    (activity as? app.mg4dash.MainActivity)?.onDockSlotChanged()
+                    (activity as? app.mg4dash.ClassicActivity)?.onDockSlotChanged()
                 }
                 .setNegativeButton(R.string.cancel, null)
                 .show()
@@ -318,7 +318,7 @@ object Dock {
         val page = item.page ?: return
         if (page == current) return
         val target = when (page) {
-            Page.HOME -> MainActivity::class.java
+            Page.HOME -> ClassicActivity::class.java
             Page.VEHICLE -> VehicleActivity::class.java
             Page.CLIMATE -> ClimateActivity::class.java
             Page.ENERGY -> EnergyActivity::class.java

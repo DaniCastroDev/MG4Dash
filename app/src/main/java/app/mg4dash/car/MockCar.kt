@@ -44,6 +44,8 @@ object MockCar {
             "stopCharge" -> s.copy(chargeStatus = 8, chargeCtrl = 2)
             "startV2L" -> s.copy(chargeStatus = 13, dischargeCtrl = 1)
             "stopV2L" -> s.copy(chargeStatus = 14, dischargeCtrl = 2)
+            "drive" -> s.copy(speedKmh = if ((s.speedKmh ?: 0f) > 1f) 0f else 64f)
+            "unplug" -> s.copy(chargeStatus = 0, chargeCtrl = 2)
             else -> s
         }
     }

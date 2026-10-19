@@ -190,12 +190,17 @@ object LegacyCar {
         if (charging != null || chargingInit) return
         val ctx = appContext ?: return
         chargingInit = true
-        charging = sdkManager(ctx, CHARGING_CLASS) { charging = it }
+        charging = sdkManager(ctx, CHARGING_CLASS, { charging = it })
     }
 
     /** Charge un gestionnaire du SDK SAIC depuis le launcher d'origine et l'initialise (écouteur factice). */
-    private fun sdkManager(ctx: Context, className: String, onConnected: (Any?) -> Unit): Any? {
-        val launcher = listOf(Firmware.LEGACY_LAUNCHER, "com.saicmotor.launcher").firstNotNullOfOrNull { pkg ->
+    internal fun sdkManager(
+        ctx: Context,
+        className: String,
+        onConnected: (Any?) -> Unit,
+        packages: List<String> = listOf(Firmware.LEGACY_LAUNCHER, "com.saicmotor.launcher"),
+    ): Any? {
+        val launcher = packages.firstNotNullOfOrNull { pkg ->
             try { ctx.createPackageContext(pkg, Context.CONTEXT_INCLUDE_CODE or Context.CONTEXT_IGNORE_SECURITY) } catch (_: Exception) { null }
         } ?: return null
         val cls = try { launcher.classLoader.loadClass(className) } catch (_: Exception) { return null }
@@ -286,7 +291,7 @@ object LegacyCar {
     private fun connectSetting() {
         if (setting != null) return
         val ctx = appContext ?: return
-        setting = sdkManager(ctx, SETTING_CLASS) { setting = it }
+        setting = sdkManager(ctx, SETTING_CLASS, { setting = it })
     }
 
     /** Mode de conduite écrit par le service véhicule ; false si le SDK ne répond pas. */

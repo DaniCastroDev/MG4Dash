@@ -33,6 +33,8 @@ class LauncherApp : Application() {
         app.mg4dash.car.CarProps.start(this)
         app.mg4dash.energy.ChargeGuard.start(this)
         app.mg4dash.energy.EnergyMonitor.start(this)
+        app.mg4dash.cockpit.ChargeLog.start(this)
+        if (!BuildConfig.MOCK) app.mg4dash.cockpit.Adas.start(this)
         // Capacité de la batterie : valeur de la voiture dès qu'elle répond (CarPropertyManager asynchrone)
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({ app.mg4dash.energy.BatteryCapacity.apply(this) }, 15_000)
         ConsumptionEstimator.start(this)
@@ -42,6 +44,7 @@ class LauncherApp : Application() {
         app.mg4dash.map.NavRepo.start(this)
         WeatherRepo.start(this)
         app.mg4dash.ui.Themes.publish(this)
+        app.mg4dash.cockpit.strip.StripService.sync(this)
         // Thème auto pour Radio Dash : l'accueil ne republie le thème que lorsqu'il est affiché ; quand
         // la radio est au premier plan, les feux qui s'allument n'étaient donc jamais transmis.
         val h = android.os.Handler(android.os.Looper.getMainLooper())

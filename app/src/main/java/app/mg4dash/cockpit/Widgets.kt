@@ -1,0 +1,473 @@
+package app.mg4dash.cockpit
+
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.res.ColorStateList
+import android.graphics.Canvas
+import android.graphics.Matrix
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.RectF
+import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.RippleDrawable
+import android.view.Gravity
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
+import android.widget.FrameLayout
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.core.graphics.PathParser
+
+// ───────────────────────────── mise en page ─────────────────────────────
+
+fun lp(w: Int, h: Int, weight: Float = 0f) = LinearLayout.LayoutParams(w, h, weight)
+const val MATCH = ViewGroup.LayoutParams.MATCH_PARENT
+const val WRAP = ViewGroup.LayoutParams.WRAP_CONTENT
+
+fun Context.col(gap: Int = 0) = LinearLayout(this).apply {
+    orientation = LinearLayout.VERTICAL
+    if (gap > 0) { showDividers = LinearLayout.SHOW_DIVIDER_MIDDLE; dividerDrawable = Spacer(gap) }
+}
+
+fun Context.row(gap: Int = 0) = LinearLayout(this).apply {
+    orientation = LinearLayout.HORIZONTAL
+    gravity = Gravity.CENTER_VERTICAL
+    if (gap > 0) { showDividers = LinearLayout.SHOW_DIVIDER_MIDDLE; dividerDrawable = Spacer(gap) }
+}
+
+/** Espacement entre enfants (diviseur transparent) : équivalent du `gap` du lienzo. */
+class Spacer(private val size: Int) : android.graphics.drawable.ColorDrawable(0) {
+    override fun getIntrinsicWidth() = size
+    override fun getIntrinsicHeight() = size
+}
+
+fun rounded(color: Int, radius: Float, stroke: Int = 0, strokeColor: Int = 0) = GradientDrawable().apply {
+    setColor(color); cornerRadius = radius
+    if (stroke > 0) setStroke(stroke, strokeColor)
+}
+
+/** Panneau du lienzo : fond surface, coins 20 px, marge intérieure 24 px. */
+fun Context.card(pad: Int = Dim.PAD, gap: Int = Dim.GAP): LinearLayout = col(gap).apply {
+    background = rounded(Pal.surface, Dim.CARD_R)
+    setPadding(pad, pad, pad, pad)
+}
+
+fun Context.text(s: String = "", size: Float = Ty.BODY, color: Int = Pal.text, face: android.graphics.Typeface = Ty.ui, upper: Boolean = false) =
+    TextView(this).apply { text = s; style(size, color, face, upper); maxLines = 2 }
+
+/** En-tête de carte : libellé entier à gauche, pastille d'état calée à droite (abrégée si besoin). */
+fun Context.header(title: String, pill: View, h: Int = 40): LinearLayout = row().apply {
+    addView(label(title), lp(WRAP, WRAP))
+    addView(android.widget.FrameLayout(context).apply {
+        addView(pill, android.widget.FrameLayout.LayoutParams(WRAP, h, Gravity.END or Gravity.CENTER_VERTICAL))
+    }, lp(0, h, 1f).apply { leftMargin = 12 })
+}
+
+/** Étiquette de section en capitales (20 px, text-2). */
+fun Context.label(s: String) = text(s, Ty.CAPTION, Pal.text2, Ty.uiMedium, upper = true).apply { maxLines = 1 }
+
+/** Valeur chiffrée + unité alignées sur la ligne de base. */
+class ValueText(c: Context, size: Float, unitSize: Float, private val unitColor: Int = Pal.text2) : LinearLayout(c) {
+    val value = c.text("—", size, Pal.text, Ty.num).apply { maxLines = 1 }
+    val unit = c.text("", unitSize, unitColor, Ty.uiMedium).apply { maxLines = 1 }
+    init {
+        orientation = HORIZONTAL
+        gravity = Gravity.BOTTOM
+        addView(value)
+        addView(unit, lp(WRAP, WRAP).apply { leftMargin = (unitSize / 4).toInt(); bottomMargin = (size * 0.08f).toInt() })
+    }
+    fun set(v: String, u: String = unit.text.toString(), color: Int = Pal.text) {
+        if (value.text != v) value.text = v
+        if (unit.text != u) unit.text = u
+        value.setTextColor(color)
+    }
+}
+
+// ───────────────────────────── icônes ─────────────────────────────
+
+/** Dessine une [Icon] (viewBox 32) au trait arrondi, à la couleur du texte. */
+class IconView(c: Context, icon: Icon, private val sizePx: Int = 32, private val strokeVb: Float = 2.5f) : View(c) {
+    private val paths = ArrayList<Pair<Path, Boolean>>()
+    private val m = Matrix()
+    private val stroke = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND }
+    private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.FILL }
+    var icon: Icon = icon
+        set(v) { field = v; build(); invalidate() }
+    var color: Int = Pal.text
+        set(v) { if (field != v) { field = v; invalidate() } }
+
+    init { build() }
+
+    private fun build() {
+        paths.clear()
+        for (part in icon.parts) {
+            val p = cache.getOrPut(part.d) { PathParser.createPathFromPathData(part.d) }
+            val copy = Path(p)
+            if (part.rotate != 0f) copy.transform(Matrix().apply { setRotate(part.rotate, 16f, 16f) })
+            if (icon.mirror) copy.transform(Matrix().apply { setScale(-1f, 1f, 16f, 16f) })
+            paths.add(copy to part.fill)
+        }
+    }
+
+    override fun onMeasure(w: Int, h: Int) = setMeasuredDimension(sizePx, sizePx)
+
+    override fun onDraw(canvas: Canvas) {
+        val s = width / 32f
+        stroke.color = color; fill.color = color
+        stroke.strokeWidth = strokeVb
+        canvas.save()
+        canvas.scale(s, s)
+        for ((p, f) in paths) canvas.drawPath(p, if (f) fill else stroke)
+        canvas.restore()
+    }
+
+    companion object { private val cache = HashMap<String, Path>() }
+}
+
+// ───────────────────────────── boutons ─────────────────────────────
+
+enum class Look { NEUTRAL, RAISED, PRIMARY, SELECTED, HEAT, ALERT, GHOST, DISABLED }
+
+/**
+ * Bouton du lienzo : icône facultative, libellé, sous-libellé, voyant (LED). Les styles suivent
+ * le vocabulaire « sélectionné = surface-3 + texte bleu + anneau 2 px », « primaire = fond bleu ».
+ */
+@SuppressLint("ViewConstructor")
+open class Btn(
+    c: Context,
+    label: String? = null,
+    icon: Icon? = null,
+    iconSize: Int = 32,
+    vertical: Boolean = true,
+    textSize: Float = Ty.LABEL,
+    sub: String? = null,
+    led: Boolean = false,
+    radius: Float = Dim.BTN_R,
+    iconEnd: Boolean = false,
+) : LinearLayout(c) {
+    val iconView: IconView? = icon?.let { IconView(c, it, iconSize) }
+    val labelView: TextView? = label?.let { c.text(it, textSize, Pal.text, Ty.uiMedium).apply { maxLines = 2; gravity = if (vertical) Gravity.CENTER else Gravity.START } }
+    val subView: TextView? = sub?.let { c.text(it, Ty.CAPTION, Pal.text2).apply { maxLines = 1 } }
+    private val ledView: View? = if (led) View(c) else null
+    private val bg = GradientDrawable().apply { cornerRadius = radius }
+    var look: Look = Look.NEUTRAL
+        set(v) { field = v; paint() }
+    /** Couleur « allumé » de l'icône et du voyant (chaleur, froid, énergie…). */
+    var accent: Int = Pal.action
+        set(v) { field = v; paint() }
+    var on: Boolean = false
+        set(v) { if (field != v) { field = v; paint() } }
+
+    init {
+        orientation = if (vertical) VERTICAL else HORIZONTAL
+        gravity = Gravity.CENTER
+        isClickable = true
+        isFocusable = true
+        background = RippleDrawable(ColorStateList.valueOf(0x33FFFFFF), bg, null)
+        val inner = if (vertical) 8 else 14
+        if (!iconEnd) iconView?.let { addView(it) }
+        if (labelView != null || subView != null) {
+            val texts = c.col(2).apply { gravity = if (vertical) Gravity.CENTER_HORIZONTAL else Gravity.START }
+            labelView?.let { texts.addView(it) }
+            subView?.let { texts.addView(it) }
+            addView(texts, lp(if (vertical) WRAP else 0, WRAP, if (vertical) 0f else 1f).apply {
+                if (iconView != null && !iconEnd) { if (vertical) topMargin = inner else leftMargin = inner }
+            })
+        }
+        if (iconEnd) iconView?.let { addView(it, lp(WRAP, WRAP).apply { leftMargin = inner }) }
+        ledView?.let { addView(it, lp(28, 5).apply { if (vertical) topMargin = 8 else leftMargin = inner }) }
+        if (!vertical) setPadding(20, 0, 20, 0)
+        paint()
+    }
+
+    fun setLabel(s: String) { if (labelView?.text != s) labelView?.text = s }
+    fun setSub(s: String) { if (subView?.text != s) subView?.text = s }
+
+    protected fun paint() {
+        val (fill, ink, ring) = when (look) {
+            Look.NEUTRAL -> Triple(Pal.surface2, Pal.text, 0)
+            Look.RAISED -> Triple(Pal.surface3, Pal.text, 0)
+            Look.PRIMARY -> Triple(Pal.action, Pal.onFill, 0)
+            Look.SELECTED -> Triple(Pal.surface3, Pal.action, Pal.action)
+            Look.HEAT -> Triple(Pal.surface3, Pal.heat, Pal.heat)
+            Look.ALERT -> Triple(Pal.alert, Pal.onFill, 0)
+            Look.GHOST -> Triple(0, Pal.text2, 0)
+            Look.DISABLED -> Triple(Pal.surface2, Pal.text3, 0)
+        }
+        bg.setColor(fill)
+        if (ring != 0) bg.setStroke(2, ring) else bg.setStroke(0, 0)
+        val iconInk = if (on && look == Look.NEUTRAL) accent else if (look == Look.NEUTRAL) Pal.text2 else ink
+        iconView?.color = iconInk
+        labelView?.setTextColor(ink)
+        subView?.setTextColor(if (look == Look.PRIMARY || look == Look.ALERT) ink else Pal.text2)
+        ledView?.background = rounded(if (on) accent else Pal.line, 3f)
+        isEnabled = look != Look.DISABLED
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(e: MotionEvent): Boolean {
+        when (e.actionMasked) {
+            MotionEvent.ACTION_DOWN -> { scaleX = 0.97f; scaleY = 0.97f }
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> { scaleX = 1f; scaleY = 1f }
+        }
+        return super.onTouchEvent(e)
+    }
+}
+
+/** Sélecteur à choix unique ; [select] met à jour l'affichage sans rappeler [onPick]. */
+class Segmented(
+    c: Context,
+    labels: List<String>,
+    height: Int = Dim.TAP,
+    textSize: Float = Ty.LABEL,
+    gap: Int = 12,
+    private val selectedLook: Look = Look.SELECTED,
+    private val onPick: (Int) -> Unit,
+) : LinearLayout(c) {
+    val buttons = labels.mapIndexed { i, l ->
+        Btn(c, l, textSize = textSize).also { b ->
+            b.labelView?.typeface = Ty.num
+            b.labelView?.fontFeatureSettings = "tnum"
+            b.setOnClickListener { onPick(i) }
+            addView(b, lp(0, height, 1f).apply { if (i > 0) leftMargin = gap })
+        }
+    }
+    var selected = -1
+        private set
+
+    init { orientation = HORIZONTAL }
+
+    fun select(i: Int?) {
+        selected = i ?: -1
+        buttons.forEachIndexed { k, b -> b.look = if (k == selected) selectedLook else Look.NEUTRAL }
+    }
+    fun lookFor(i: Int, look: Look) { buttons.getOrNull(i)?.look = look }
+}
+
+/** Pastille d'état : point coloré + texte, fond surface-2. */
+class Pill(c: Context, s: String = "", dot: Int = Pal.text2) : LinearLayout(c) {
+    private val dotView = View(c)
+    val textView = c.text(s, 22f, Pal.text, Ty.uiMedium).apply { maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END }
+    init {
+        orientation = HORIZONTAL
+        gravity = Gravity.CENTER_VERTICAL
+        background = rounded(Pal.surface2, 999f)
+        setPadding(14, 0, 18, 0)
+        addView(dotView, lp(12, 12))
+        addView(textView, lp(WRAP, WRAP).apply { leftMargin = 10 })
+        set(s, dot)
+    }
+    fun set(s: String, dot: Int) {
+        if (textView.text != s) textView.text = s
+        dotView.background = rounded(dot, 6f)
+    }
+}
+
+// ───────────────────────────── jauges ─────────────────────────────
+
+/** Barres de niveau (sièges 0–3, ventilateur 1–7). */
+class LevelBars(c: Context, private val count: Int, private val w: Int, private val h: Int, private val rising: Boolean = false, private val gapPx: Int = 4) : View(c) {
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val r = RectF()
+    var level = 0
+        set(v) { if (field != v) { field = v; invalidate() } }
+    var color = Pal.heat
+        set(v) { if (field != v) { field = v; invalidate() } }
+    override fun onMeasure(a: Int, b: Int) = setMeasuredDimension(count * w + (count - 1) * gapPx, if (rising) h + count * 2 else h)
+    override fun onDraw(canvas: Canvas) {
+        for (i in 1..count) {
+            val bh = if (rising) h + i * 2f else h.toFloat()
+            val x = (i - 1) * (w + gapPx).toFloat()
+            r.set(x, height - bh, x + w, height.toFloat())
+            paint.color = if (i <= level) color else Pal.line
+            canvas.drawRoundRect(r, 3f, 3f, paint)
+        }
+    }
+}
+
+/** Barre de batterie : remplissage, segment « à venir » (charge ou V2L) et repère de limite. */
+class BatteryBar(c: Context) : View(c) {
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val r = RectF()
+    var level = 0f; var pendingTo = -1f; var marker = -1f
+    var fillColor = Pal.energy; var pendingColor = Pal.energy
+    fun set(level: Float, marker: Float = -1f, pendingTo: Float = -1f) {
+        if (this.level == level && this.marker == marker && this.pendingTo == pendingTo) return
+        this.level = level; this.marker = marker; this.pendingTo = pendingTo; invalidate()
+    }
+    override fun onDraw(canvas: Canvas) {
+        val top = 10f; val bottom = height - 10f; val w = width.toFloat()
+        r.set(0f, top, w, bottom); paint.color = Pal.surface3; canvas.drawRoundRect(r, 12f, 12f, paint)
+        canvas.save(); canvas.clipRect(0f, top, w, bottom)
+        if (pendingTo > level) {
+            paint.color = pendingColor; paint.alpha = 72
+            canvas.drawRect(w * level / 100f, top, w * pendingTo / 100f, bottom, paint)
+            paint.alpha = 255
+        }
+        paint.color = fillColor
+        r.set(0f, top, w * level.coerceIn(0f, 100f) / 100f, bottom); canvas.drawRoundRect(r, 12f, 12f, paint)
+        canvas.restore()
+        if (marker in 0f..100f) {
+            paint.color = Pal.text
+            val x = (w * marker / 100f).coerceIn(2f, w - 2f)
+            canvas.drawRoundRect(x - 2f, 0f, x + 2f, height.toFloat(), 2f, 2f, paint)
+        }
+    }
+}
+
+/** Puissance instantanée : −60 kW (régénération, vert) … +150 kW (consommation). */
+class PowerGauge(c: Context, private val minKw: Float = -60f, private val maxKw: Float = 150f) : View(c) {
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val r = RectF()
+    var kw = 0f
+        set(v) { if (field != v) { field = v; invalidate() } }
+    override fun onDraw(canvas: Canvas) {
+        val w = width.toFloat(); val h = height.toFloat()
+        val zero = w * (-minKw) / (maxKw - minKw)
+        val top = h * 0.3f; val bottom = h * 0.7f
+        r.set(0f, top, w, bottom); paint.color = Pal.surface3; canvas.drawRoundRect(r, h, h, paint)
+        if (kw > 0) { paint.color = Pal.text; r.set(zero, top, zero + (w - zero) * (kw / maxKw).coerceAtMost(1f), bottom) }
+        else { paint.color = Pal.energy; r.set(zero - zero * (kw / minKw).coerceAtMost(1f), top, zero, bottom) }
+        canvas.drawRoundRect(r, h, h, paint)
+        paint.color = Pal.text; canvas.drawRoundRect(zero - 1.5f, 0f, zero + 1.5f, h, 2f, 2f, paint)
+    }
+}
+
+/** Histogramme avec ligne de moyenne facultative (consommation par km, énergie par jour). */
+class BarChart(c: Context) : View(c) {
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val txt = Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Ty.num; textSize = c.pxf(20f) }
+    private val dash = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 2f; pathEffect = android.graphics.DashPathEffect(floatArrayOf(6f, 6f), 0f) }
+    var values: List<Float> = emptyList()
+    var labels: List<String> = emptyList()
+    var average: Float? = null
+    var highlightLast = true
+    var unitTop = ""
+    fun set(values: List<Float>, labels: List<String> = emptyList(), average: Float? = null) {
+        this.values = values; this.labels = labels; this.average = average; invalidate()
+    }
+    override fun onDraw(canvas: Canvas) {
+        if (values.isEmpty()) return
+        val bottomPad = if (labels.isNotEmpty()) 30f else 4f
+        val h = height - bottomPad; val w = width.toFloat()
+        val max = (values.maxOrNull() ?: 1f).coerceAtLeast(1f) * 1.1f
+        val slot = w / values.size; val bw = (slot * 0.62f).coerceAtLeast(2f)
+        values.forEachIndexed { i, v ->
+            val x = i * slot + (slot - bw) / 2
+            paint.color = if (highlightLast && i == values.lastIndex) Pal.action else Pal.text3
+            canvas.drawRoundRect(x, h - h * v / max, x + bw, h, 3f, 3f, paint)
+        }
+        average?.let { a ->
+            val y = h - h * a / max
+            dash.color = Pal.text2
+            canvas.drawLine(0f, y, w, y, dash)
+        }
+        txt.color = Pal.text2
+        labels.forEachIndexed { i, l ->
+            if (l.isEmpty()) return@forEachIndexed
+            val tw = txt.measureText(l)
+            canvas.drawText(l, (i * slot + slot / 2 - tw / 2).coerceIn(0f, w - tw), height - 4f, txt)
+        }
+    }
+}
+
+/** Courbe de charge : batterie (%) en haut, puissance (kW) en bas, sur le même axe de temps. */
+class ChargeCurve(c: Context) : View(c) {
+    private val line = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 3f; strokeJoin = Paint.Join.ROUND; strokeCap = Paint.Cap.ROUND }
+    private val area = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val grid = Paint().apply { strokeWidth = 1f }
+    private val txt = Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Ty.num; textSize = c.pxf(20f) }
+    private val path = Path()
+    /** Échantillons (minutes depuis le début, % batterie, kW). */
+    var samples: List<Triple<Float, Float, Float>> = emptyList()
+    var spanMin = 60f
+    var startLabel = ""; var endLabel = ""
+    var maxKw = 8f
+    fun set(samples: List<Triple<Float, Float, Float>>, spanMin: Float, startLabel: String, endLabel: String, maxKw: Float) {
+        this.samples = samples; this.spanMin = spanMin; this.startLabel = startLabel; this.endLabel = endLabel; this.maxKw = maxKw; invalidate()
+    }
+    override fun onDraw(canvas: Canvas) {
+        val left = 70f; val right = width - 8f; val w = right - left
+        val socTop = 20f; val socBot = height * 0.48f
+        val kwTop = height * 0.58f; val kwBot = height - 34f
+        grid.color = Pal.line; txt.color = Pal.text2
+        for ((y, l) in listOf(socTop to "100 %", (socTop + socBot) / 2 to "50 %", socBot to "0 %", kwTop to "${maxKw.toInt()} kW", kwBot to "0 kW")) {
+            canvas.drawLine(left, y, right, y, grid)
+            canvas.drawText(l, left - 10f - txt.measureText(l), y + 7f, txt)
+        }
+        canvas.drawText(startLabel, left, height - 4f, txt)
+        canvas.drawText(endLabel, right - txt.measureText(endLabel), height - 4f, txt)
+        if (samples.size < 2) return
+        fun x(t: Float) = left + w * (t / spanMin).coerceIn(0f, 1f)
+        // puissance (aire + ligne)
+        path.reset(); path.moveTo(x(samples[0].first), kwBot)
+        samples.forEach { (t, _, k) -> path.lineTo(x(t), kwBot - (kwBot - kwTop) * (k / maxKw).coerceIn(0f, 1f)) }
+        path.lineTo(x(samples.last().first), kwBot); path.close()
+        area.color = Pal.energy; area.alpha = 36; canvas.drawPath(path, area)
+        path.reset()
+        samples.forEachIndexed { i, (t, _, k) -> val y = kwBot - (kwBot - kwTop) * (k / maxKw).coerceIn(0f, 1f); if (i == 0) path.moveTo(x(t), y) else path.lineTo(x(t), y) }
+        line.color = Pal.energy; canvas.drawPath(path, line)
+        // batterie
+        path.reset()
+        samples.forEachIndexed { i, (t, soc, _) -> val y = socBot - (socBot - socTop) * soc / 100f; if (i == 0) path.moveTo(x(t), y) else path.lineTo(x(t), y) }
+        line.color = Pal.text; canvas.drawPath(path, line)
+    }
+}
+
+/** Mini courbe (consommation récente, sortie V2L). */
+class Sparkline(c: Context) : View(c) {
+    private val line = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 3f; strokeJoin = Paint.Join.ROUND; strokeCap = Paint.Cap.ROUND }
+    private val dash = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 2f; pathEffect = android.graphics.DashPathEffect(floatArrayOf(5f, 6f), 0f) }
+    private val dot = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val path = Path()
+    var values: List<Float> = emptyList()
+    var color = Pal.text
+    var average: Float? = null
+    fun set(v: List<Float>, avg: Float? = null) { values = v; average = avg; invalidate() }
+    override fun onDraw(canvas: Canvas) {
+        if (values.size < 2) return
+        val min = values.minOrNull()!! * 0.9f; val max = values.maxOrNull()!! * 1.1f
+        val span = (max - min).coerceAtLeast(0.1f)
+        fun y(v: Float) = height - 6f - (height - 12f) * (v - min) / span
+        average?.let { dash.color = Pal.text3; canvas.drawLine(0f, y(it), width.toFloat(), y(it), dash) }
+        path.reset()
+        values.forEachIndexed { i, v -> val x = 6f + (width - 12f) * i / (values.size - 1); if (i == 0) path.moveTo(x, y(v)) else path.lineTo(x, y(v)) }
+        line.color = color; canvas.drawPath(path, line)
+        dot.color = color; canvas.drawCircle(width - 6f, y(values.last()), 5f, dot)
+    }
+}
+
+/** Vue de dessus de la voiture avec les quatre pressions (bar) et températures. */
+class TyreView(c: Context) : View(c) {
+    private val body = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 3f }
+    private val tyre = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val big = Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Ty.num; textSize = c.pxf(34f) }
+    private val small = Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Ty.ui; textSize = c.pxf(20f) }
+    private val r = RectF()
+    /** FL, FR, RL, RR : presión (bar), temperatura (°C), alerta. */
+    var wheels: List<Triple<Float?, Int?, Boolean>> = List(4) { Triple(null, null, false) }
+        set(v) { field = v; invalidate() }
+    override fun onDraw(canvas: Canvas) {
+        val cx = width / 2f; val bw = width * 0.22f; val bh = height * 0.86f; val top = (height - bh) / 2
+        body.color = Pal.text3
+        r.set(cx - bw / 2, top, cx + bw / 2, top + bh); canvas.drawRoundRect(r, bw * 0.4f, bw * 0.4f, body)
+        val tw = bw * 0.18f; val th = bh * 0.2f
+        val pos = listOf(cx - bw / 2 - tw * 0.6f to top + bh * 0.16f, cx + bw / 2 - tw * 0.4f to top + bh * 0.16f,
+            cx - bw / 2 - tw * 0.6f to top + bh * 0.64f, cx + bw / 2 - tw * 0.4f to top + bh * 0.64f)
+        wheels.forEachIndexed { i, (bar, temp, warn) ->
+            val (x, y) = pos[i]
+            tyre.color = if (warn) Pal.alert else Pal.energy
+            r.set(x, y, x + tw, y + th); canvas.drawRoundRect(r, 6f, 6f, tyre)
+            val left = i % 2 == 0
+            big.color = if (warn) Pal.alert else Pal.text; small.color = Pal.text2
+            val v = bar?.let { Fmt.dec(it) + " bar" } ?: "—"
+            val t = temp?.let { "$it °C" } ?: ""
+            val tx = if (left) x - 16f - big.measureText(v) else x + tw + 16f
+            canvas.drawText(v, tx, y + th / 2, big)
+            val sx = if (left) x - 16f - small.measureText(t) else x + tw + 16f
+            canvas.drawText(t, sx, y + th / 2 + 30f, small)
+        }
+    }
+}
+

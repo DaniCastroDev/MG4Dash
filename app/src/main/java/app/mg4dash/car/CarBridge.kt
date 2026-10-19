@@ -51,6 +51,9 @@ object CarBridge {
     private var appContext: Context? = null
     @Volatile private var fastPoll = true
 
+    /** Émulateur : commande simulée (adb : --es mock drive|unplug|startCharge…). */
+    fun mock(label: String) { if (BuildConfig.MOCK) MockCar.command(label, _state) }
+
     fun start(context: Context) {
         if (appContext != null) return
         appContext = context.applicationContext
@@ -468,7 +471,12 @@ object CarBridge {
     /** Appui sur un siège : niveau suivant, 3 → arrêt. */
     fun cycleSeatHeat(left: Boolean) {
         val cur = (if (left) _state.value.seatHeatLeft else _state.value.seatHeatRight) ?: 0
-        val target = (cur + 1) % 4
+        setSeatHeat(left, (cur + 1) % 4)
+    }
+
+    /** Niveau de siège choisi directement (0–3). */
+    fun setSeatHeat(left: Boolean, level: Int) {
+        val target = level.coerceIn(0, 3)
         val hold = target to System.currentTimeMillis() + HOLD_HEAT_MS
         if (left) { holdSeatL = hold; _state.value = _state.value.copy(seatHeatLeft = target) }
         else { holdSeatR = hold; _state.value = _state.value.copy(seatHeatRight = target) }
@@ -550,9 +558,14 @@ object CarBridge {
      */
     fun toggleRecirc() {
         val cur = _state.value.recirc
-        val (target, steps) = when (cur) { 1 -> 0 to 3; 0 -> 2 to 2; else -> 1 to 3 }
+        setRecirc(when (cur) { 1 -> 0; 0 -> 2; else -> 1 })
+    }
+
+    /** Recyclage choisi directement : 0 intérieur, 1 extérieur, 2 auto (la commande avance d'un cran). */
+    fun setRecirc(target: Int) {
+        if (_state.value.recirc == target) return
         if (useLegacy) { legacy("recirc=$target") { LegacyCar.loop(target) }; return }
-        cycleTo("recirc", target, steps, { it.airCirculationStatus.takeIf { v -> v >= 0 } }, { it.switchAirCirculationStatus() })
+        cycleTo("recirc", target, 3, { it.airCirculationStatus.takeIf { v -> v >= 0 } }, { it.switchAirCirculationStatus() })
     }
 
     /**
