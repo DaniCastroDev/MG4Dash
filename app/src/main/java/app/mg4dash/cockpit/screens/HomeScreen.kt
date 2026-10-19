@@ -209,7 +209,7 @@ class HomeScreen(host: Host) : Screen(host) {
 
         val t = (0..3).map { CarProps.getInt(0x21401553 + it)?.takeIf { v -> v in 50..600 } }
         tyres.text = if (t.all { it == null }) "Neumáticos sin datos"
-            else "Neumáticos  " + t.joinToString(" · ") { it?.let { v -> Fmt.dec(v / 100f) } ?: "—" } + " bar"
+            else "Neumáticos  " + t.joinToString(" · ") { it?.let { v -> Fmt.dec(v / 100f, 2) } ?: "—" } + " bar"
 
         val aa = MediaHub.androidAutoAvailable()
         aaPill.set(if (aa) "Conectado" else "Buscando teléfono…", if (aa) Pal.energy else Pal.heat)

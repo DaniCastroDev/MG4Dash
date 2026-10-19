@@ -525,7 +525,7 @@ class TyreView(c: Context) : View(c) {
             r.set(x, y, x + tw, y + th); canvas.drawRoundRect(r, 6f, 6f, tyre)
             val left = i % 2 == 0
             big.color = if (warn) Pal.alert else Pal.text; small.color = Pal.text2
-            val v = bar?.let { Fmt.dec(it) + " bar" } ?: "—"
+            val v = bar?.let { Fmt.dec(it, 2) + " bar" } ?: "—"
             val t = temp?.let { "$it °C" } ?: ""
             val tx = if (left) x - 16f - big.measureText(v) else x + tw + 16f
             canvas.drawText(v, tx, y + th / 2, big)
