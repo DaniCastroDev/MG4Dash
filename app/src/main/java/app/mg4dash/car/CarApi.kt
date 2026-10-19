@@ -83,6 +83,8 @@ class EvService(b: IBinder) : RemoteService(b, "com.saicmotor.carapi.ev.ICarEvSe
     /** 1 = démarrer, 2 = arrêter (comme le bouton du launcher d'origine). */
     fun chargeCtrl(v: Int) = voidInt(5, v)
     fun disChargeCtrl(v: Int) = voidInt(8, v)
+    /** Verrou du pistolet de charge : 1 = verrouiller, 2 = déverrouiller (bouton du launcher d'origine). */
+    fun elecClckCtrl(v: Int) = voidInt(16, v)
 }
 
 /** Réglages véhicule (queryClient 8). Seules la régénération et la conduite à une pédale sont modifiées. */
@@ -103,6 +105,12 @@ class VehicleSettingService(b: IBinder) : RemoteService(b, "com.saicmotor.carapi
     fun setRegenerativeLevel(v: Int) = voidInt(159, v)
     /** Conduite à une pédale : 1 = oui, 0 = non. */
     fun setSignalPedalState(v: Int) = voidInt(162, v)
+}
+
+/** Configuration du véhicule (queryClient 2) : équipements présents (codes relevés dans l'appli clim SAIC). */
+class ConfigService(b: IBinder) : RemoteService(b, "com.saicmotor.carapi.config.ICarConfigService") {
+    val seatHeatingConfig get() = int(23)
+    val steeringWheelHeatConfig get() = int(52)
 }
 
 /** Informations générales (queryClient 1). */

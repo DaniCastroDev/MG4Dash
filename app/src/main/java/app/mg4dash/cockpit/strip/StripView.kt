@@ -264,9 +264,9 @@ class StripView(c: Context, private val onRight: Boolean, private val onExpand: 
         fan.put(when { s.hvacOn == false -> "—"; s.autoOn == true -> "A"; else -> s.fanSpeed?.toString() ?: "—" })
         val heat = CarBridge.heatControl
         for (b in listOf(seatL, wheel, seatR)) b.visibility = if (heat) VISIBLE else GONE
-        seatL.on = (s.seatHeatLeft ?: 0) > 0; seatLBars.level = s.seatHeatLeft ?: 0
-        seatR.on = (s.seatHeatRight ?: 0) > 0; seatRBars.level = s.seatHeatRight ?: 0
-        wheel.on = s.steeringHeat == true
+        seatL.on = (s.seatHeatL ?: 0) > 0; seatLBars.level = s.seatHeatL ?: 0
+        seatR.on = (s.seatHeatR ?: 0) > 0; seatRBars.level = s.seatHeatR ?: 0
+        wheel.on = s.wheelHeat == 1
         defF.on = s.defrostFront == true
         ac.on = s.acOn == true
         (sheet as? ClimateSheet)?.bind(s)
@@ -314,8 +314,8 @@ class ClimateSheet(c: Context, onClose: () -> Unit) : LinearLayout(c) {
         Fmt.temp(t).let { (v, u) -> temp.set(v, u) }
         fan.select(s.fanSpeed?.minus(1))
         air.select(s.fanDirection?.takeIf { it in 0..4 })
-        seatL.select(s.seatHeatLeft); seatR.select(s.seatHeatRight)
-        if (s.seatHeatLeft == 0) seatL.lookFor(0, Look.SELECTED)
-        if (s.seatHeatRight == 0) seatR.lookFor(0, Look.SELECTED)
+        seatL.select(s.seatHeatL); seatR.select(s.seatHeatR)
+        if (s.seatHeatL == 0) seatL.lookFor(0, Look.SELECTED)
+        if (s.seatHeatR == 0) seatR.lookFor(0, Look.SELECTED)
     }
 }

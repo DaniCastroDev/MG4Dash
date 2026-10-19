@@ -73,6 +73,8 @@ class SettingsActivity : AppCompatActivity() {
         row(style, *styleButtons(listOf(R.string.st_style_full, R.string.st_style_simple, R.string.st_style_map), { prefs.homeStyle }) { prefs.homeStyle = it })
         text(style, getString(R.string.st_units), 18f, R.color.text_value)
         row(style, *choiceButtons(listOf(getString(R.string.st_units_car), "km · kWh/100 km", "miles · mi/kWh"), { prefs.units }) { prefs.units = it })
+        text(style, getString(R.string.st_heated), 18f, R.color.text_value)
+        row(style, *choiceButtons(listOf(getString(R.string.st_mode_auto_short), getString(R.string.yes), getString(R.string.no)), { prefs.heatedSeats }) { prefs.heatedSeats = it })
         text(style, getString(R.string.st_pressure), 18f, R.color.text_value)
         row(style, *choiceButtons(listOf(getString(R.string.st_mode_auto_short), "bar", "psi", "kPa"), { prefs.pressureUnit }) { prefs.pressureUnit = it })
         text(style, getString(R.string.st_map_zoom), 18f, R.color.text_value)
@@ -106,9 +108,10 @@ class SettingsActivity : AppCompatActivity() {
             capSrc.text = when {
                 prefs.batteryKwhManual -> getString(R.string.st_cap_manual)
                 car != null -> getString(R.string.st_cap_car, String.format(Locale.getDefault(), "%.1f", car))
-                est != null && est.second > 0 -> getString(R.string.st_cap_est, String.format(Locale.getDefault(), "%.1f", est.first), est.second)
-                est != null -> getString(R.string.st_cap_est_current, String.format(Locale.getDefault(), "%.1f", est.first))
-                else -> getString(R.string.st_cap_none)
+                est != null -> getString(R.string.st_cap_est, String.format(Locale.getDefault(), "%.1f", est.first), est.second)
+                else -> app.mg4dash.energy.BatteryCapacity.progress(this).provisional
+                    ?.let { getString(R.string.st_cap_est_current, String.format(Locale.getDefault(), "%.1f", it)) }
+                    ?: getString(R.string.st_cap_none)
             }
         }
         showCap()
@@ -117,21 +120,13 @@ class SettingsActivity : AppCompatActivity() {
             button("+ 0.5 kWh") { prefs.batteryKwhManual = true; prefs.batteryKwh = (prefs.batteryKwh + 0.5f).coerceAtMost(100f); showCap() },
             button(getString(R.string.st_cap_auto)) { prefs.batteryKwhManual = false; app.mg4dash.energy.BatteryCapacity.apply(this); showCap() },
         )
-        // Santé batterie : capacité mesurée ÷ capacité d'origine du modèle
-        val soh = text(energy, "", 18f, R.color.text_value)
-        fun showSoh() {
-            val h = app.mg4dash.energy.BatteryCapacity.health(this)
-            val n = app.mg4dash.energy.BatteryCapacity.samples(this).size
-            soh.text = if (h == null) getString(R.string.st_soh_none, prefs.batteryModel)
-                else getString(R.string.st_soh, h.first, h.second, n, prefs.batteryModel)
-        }
-        showSoh()
-        row(energy, *app.mg4dash.energy.BatteryCapacity.MODELS.map { (gross, _) ->
-            gross
-        }.let { models ->
-            choiceButtons(models.map { "$it kWh" }, { models.indexOf(prefs.batteryModel) }) { prefs.batteryModel = models[it]; showSoh() }
-        })
         text(energy, getString(R.string.st_capacity_desc), 16f, R.color.text_title)
+        // Modèle de batterie : référence de la santé estimée (affichée sur la page Véhicule)
+        text(energy, getString(R.string.st_battery_model), 18f, R.color.text_value)
+        val models = app.mg4dash.energy.BatteryCapacity.MODELS.map { it.first }
+        row(energy, *choiceButtons(models.map { "$it kWh" }, { models.indexOf(prefs.batteryModel) }) { prefs.batteryModel = models[it] })
+        toggle(energy, R.string.st_xpower, R.string.st_xpower_desc, { prefs.xpower }) { prefs.xpower = it }
+        powerFxSetting(energy)
 
         // ════ Colonne droite : système, connexions, diagnostic ════
 
@@ -183,7 +178,7 @@ class SettingsActivity : AppCompatActivity() {
                     val notes = ScrollView(this@SettingsActivity).apply {
                         setPadding(dp(24), dp(8), dp(24), 0)
                         addView(TextView(this@SettingsActivity).apply {
-                            text = plainNotes(newer.notes); setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
+                            text = app.mg4dash.system.Updater.plainNotes(newer.notes); setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
                             setTextColor(color(R.color.text_value)); setLineSpacing(0f, 1.15f)
                         })
                     }
@@ -268,37 +263,43 @@ class SettingsActivity : AppCompatActivity() {
      * Test caché de la propriété BMS « SPR_CHRG » (rôle inconnu, peut-être une charge rapide) :
      * lecture, écriture d'une valeur choisie, relecture 2 s plus tard. Tout est noté dans le journal.
      */
+    /**
+     * Tests cachés (appui long sur la ligne du firmware) : propriétés de charge écrites directement,
+     * pour valider les voies de secours des anciens firmwares. Lecture, écriture, relecture 2 s après.
+     */
     private fun sprChrgTest() {
         val P = app.mg4dash.car.CarProps
-        val view = TextView(this).apply { setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f); setTextColor(color(R.color.text_value)); setPadding(dp(24), dp(12), dp(24), dp(8)) }
+        val view = TextView(this).apply { setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f); setTextColor(color(R.color.text_value)); setPadding(dp(24), dp(12), dp(24), dp(8)) }
+        val tests = listOf(
+            Triple("SPR_CHRG", P.SPR_CHRG, listOf(0, 1)),
+            Triple("CHRG_CTRL", 0x2140f412, listOf(1, 2)),
+            Triple("ELEC_CLCK_CTRL", 0x2140f413, listOf(1, 2)),
+        )
         fun show() {
             lifecycleScope.launch {
-                val v = withContext(Dispatchers.IO) { P.getInt(P.SPR_CHRG) }
+                val vals = withContext(Dispatchers.IO) { tests.map { it.first to P.getInt(it.second) } + ("BMS_CHRG_STS" to P.getInt(0x2140f409)) + ("SP_RSN" to P.getInt(P.BMS_CHRG_SP_RSN)) }
                 val s = app.mg4dash.car.CarBridge.state.value
-                view.text = "SPR_CHRG (0x${Integer.toHexString(P.SPR_CHRG)}) = ${v ?: "illisible"}\n" +
-                    "Charge : ${app.mg4dash.car.VehicleState.chargeStatusLabel(s.chargeStatus)}\n" +
-                    "Motif d'arrêt BMS : ${withContext(Dispatchers.IO) { P.getInt(P.BMS_CHRG_SP_RSN) } ?: "—"}"
-                Log.i("SPR", "lecture SPR_CHRG = $v")
+                view.text = vals.joinToString("\n") { "${it.first} = ${it.second ?: "illisible"}" } +
+                    "\nCharge : ${app.mg4dash.car.VehicleState.chargeStatusLabel(s.chargeStatus)}"
+                Log.i("SPR", "lecture : " + vals.joinToString { "${it.first}=${it.second}" })
             }
         }
-        fun write(value: Int) {
+        fun write(name: String, id: Int, value: Int) {
             lifecycleScope.launch {
-                val ok = withContext(Dispatchers.IO) { P.setInt(P.SPR_CHRG, value, "SPR_CHRG") }
-                view.text = "Écriture $value → ${if (ok) "envoyée" else "refusée"}, relecture…"
+                val ok = withContext(Dispatchers.IO) { P.setInt(id, value, name) }
+                view.text = "$name ← $value : ${if (ok) "envoyé" else "refusé"}, relecture…"
                 kotlinx.coroutines.delay(2_000); show()
             }
         }
+        val col = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        col.addView(view)
+        tests.forEach { (name, id, values) ->
+            row(col, *values.map { v -> button("$name ← $v") { write(name, id, v) } }.toTypedArray())
+        }
+        row(col, button("Relire") { show() })
         show()
-        val d = AlertDialog.Builder(this)
-            .setTitle("Test SPR_CHRG")
-            .setView(view)
-            .setNeutralButton("Relire", null)
-            .setNegativeButton("Écrire 0", null)
-            .setPositiveButton("Écrire 1", null)
-            .show()
-        d.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener { show() }
-        d.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener { write(0) }
-        d.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener { write(1) }
+        AlertDialog.Builder(this).setTitle("Tests (charge)").setView(ScrollView(this).apply { addView(col) })
+            .setPositiveButton(R.string.st_close, null).show()
     }
 
     /** Radio Dash : seulement sur le firmware et l'appli radio pour lesquels elle est construite. */
@@ -317,14 +318,14 @@ class SettingsActivity : AppCompatActivity() {
         row(parent, button(getString(R.string.st_rd_check), R.color.accent_action) {
             state.text = getString(R.string.st_update_checking)
             lifecycleScope.launch {
-                val r = withContext(Dispatchers.IO) { try { R2.latest() } catch (e: Exception) { Log.w("MàJ", "Radio Dash : ${e.message}"); null } }
+                val r = withContext(Dispatchers.IO) { try { R2.latest(prefs.updateBeta) } catch (e: Exception) { Log.w("MàJ", "Radio Dash : ${e.message}"); null } }
                 if (r == null) { state.text = getString(R.string.st_update_error); return@launch }
                 val cur = R2.installedVersion(this@SettingsActivity)
                 if (cur != null && !app.mg4dash.system.Updater.isNewer(r.version, cur)) { state.text = getString(R.string.st_rd_uptodate, cur); return@launch }
                 showState()
                 AlertDialog.Builder(this@SettingsActivity)
                     .setTitle(getString(R.string.st_rd_available, r.version))
-                    .setMessage(plainNotes(r.notes))
+                    .setMessage(app.mg4dash.system.Updater.plainNotes(r.notes))
                     .setPositiveButton(R.string.st_update_install) { _, _ ->
                         lifecycleScope.launch {
                             try {
@@ -349,6 +350,43 @@ class SettingsActivity : AppCompatActivity() {
                     .show()
             }
         })
+    }
+
+    /** Animation pleine puissance du widget Puissance en direct : liste déroulante, aperçu sur une mini carte. */
+    private fun powerFxSetting(parent: LinearLayout) {
+        text(parent, getString(R.string.st_power_fx), 18f, R.color.text_value)
+        val names = listOf(R.string.fx_none, R.string.fx_rocket, R.string.fx_lightning, R.string.fx_flames).map { getString(it) }
+        val preview = app.mg4dash.ui.PowerFxPreview(this).apply {
+            // Même échelle que le widget de l'accueil pour le modèle choisi
+            bar.configureFor(prefs.batteryModel, prefs.xpower)
+        }
+        lateinit var pick: Button
+        // Liste déroulante dans la page même : une fenêtre surgissante ferait réapparaître les barres système
+        val list = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; visibility = View.GONE }
+        fun label() { pick.text = "${names[prefs.powerFx.coerceIn(0, names.size - 1)]}   ${if (list.visibility == View.VISIBLE) "▴" else "▾"}" }
+        pick = button("") { list.visibility = if (list.visibility == View.VISIBLE) View.GONE else View.VISIBLE; label() }
+            .apply { setBackgroundResource(R.drawable.bg_chip); setTextColor(color(R.color.accent_action)) }
+        names.forEachIndexed { i, n ->
+            list.addView(button(n) {
+                prefs.powerFx = i; list.visibility = View.GONE; label()
+                for (k in 0 until list.childCount) (list.getChildAt(k) as Button).apply {
+                    isSelected = k == i; setTextColor(color(if (k == i) R.color.accent_action else R.color.text_value))
+                }
+                if (i != app.mg4dash.ui.PowerFx.NONE) preview.play(i)
+            }.apply {
+                setBackgroundResource(R.drawable.bg_chip); gravity = Gravity.CENTER_VERTICAL or Gravity.START
+                isSelected = i == prefs.powerFx; setTextColor(color(if (i == prefs.powerFx) R.color.accent_action else R.color.text_value))
+            }, LinearLayout.LayoutParams(-1, dp(56)).apply { topMargin = dp(6) })
+        }
+        label()
+        row(parent, pick, button(getString(R.string.fx_preview)) { preview.play(prefs.powerFx) }.apply { setBackgroundResource(R.drawable.bg_chip) })
+        // Sous le bouton de choix seulement (moitié gauche de la ligne)
+        val half = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        half.addView(list, LinearLayout.LayoutParams(0, -2, 1f))
+        half.addView(View(this), LinearLayout.LayoutParams(0, 1, 1f).apply { leftMargin = dp(10) })
+        parent.addView(half, LinearLayout.LayoutParams(-1, -2))
+        text(parent, getString(R.string.st_power_fx_desc), 16f, R.color.text_title)
+        parent.addView(preview, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
     }
 
     private fun confirmReplace() {
@@ -409,11 +447,6 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     /** Notes de release GitHub (Markdown) en texte lisible. */
-    private fun plainNotes(md: String): String = md
-        .replace("**", "").replace("`", "")
-        .lines().joinToString("\n") { l -> l.trim().let { if (it.startsWith("- ")) "•  " + it.drop(2) else it } }
-        .trim()
-
     private fun onThemeChanged() {
         app.mg4dash.ui.Themes.publish(this)
         recreate()

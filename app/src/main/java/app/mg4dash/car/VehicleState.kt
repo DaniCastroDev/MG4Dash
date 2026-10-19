@@ -23,11 +23,10 @@ data class VehicleState(
     val defrostFront: Boolean? = null,
     val defrostRear: Boolean? = null,
     val ecoOn: Boolean? = null,
-    /** Sièges chauffants conducteur / passager : 0 = arrêt … 3 = maximum (ancien SDK). */
-    val seatHeatLeft: Int? = null,
-    val seatHeatRight: Int? = null,
-    /** Volant chauffant allumé. */
-    val steeringHeat: Boolean? = null,
+    /** Sièges chauffants (0 éteint, 1 à 3) et volant chauffant (0 / 1), versions équipées. */
+    val seatHeatL: Int? = null,
+    val seatHeatR: Int? = null,
+    val wheelHeat: Int? = null,
     // Énergie (CarEvClient, code 4)
     val batteryPercent: Int? = null,
     /** Niveau de batterie au dixième (BMS_PACK_SOC_DSP), quand la voiture le donne. */
@@ -122,6 +121,11 @@ data class VehicleState(
 
         /** Mode V2L : même règle que le launcher d'origine (11 et ≥ 13 = écran de décharge). */
         fun isDischargeMode(v: Int?): Boolean = v == 11 || (v != null && v >= 13)
+        /**
+         * V2L en cours : bouton V2L à 1, ou état « décharge en cours » (13). Les anciens firmwares
+         * (SWI68, #8) ne renvoient pas l'état du bouton : le bouton restait sur « Lancer ».
+         */
+        fun isDischarging(s: VehicleState): Boolean = s.dischargeCtrl == 1 || s.chargeStatus == 13
         fun isPlugged(v: Int?): Boolean = v != null && v != 0
         fun isCharging(v: Int?): Boolean = v == 1 || v == 3 || v == 10 || v == 12
 
@@ -142,11 +146,12 @@ data class VehicleState(
             1 -> 2
             2 -> 3
             3 -> 4
+            6 -> 4          // 6 = conduite à une pédale (relevé sur la voiture le 2026-10-18)
             else -> -1
         }
 
         fun regenLabel(v: Int?, onePedal: Int?): String = when {
-            onePedal == 1 -> Tr.s(R.string.rg_one_pedal)
+            onePedal == 1 || v == 6 -> Tr.s(R.string.rg_one_pedal)
             v == 0 -> Tr.s(R.string.rg_low)
             v == 1 -> Tr.s(R.string.rg_medium)
             v == 2 -> Tr.s(R.string.rg_high)
@@ -182,12 +187,17 @@ data class VehicleState(
 
         fun onOff(v: Int?): String = when (v) { 0 -> Tr.s(R.string.st_off); 1 -> Tr.s(R.string.st_on); null -> "—"; else -> Tr.s(R.string.value_n, v) }
 
+        /** Calibration de la consigne affichée (appui long sur la température), réglée au démarrage. */
+        @Volatile var tempOffset = 0
+
+        /** LO / HI d'après la consigne de la voiture ; le chiffre affiché inclut la calibration. */
         fun tempLabel(t: Float?): String = when {
             t == null || t.isNaN() || t <= 0f -> "—"
             t <= TEMP_MIN -> "LO"
             t >= TEMP_MAX -> "HI"
-            t % 1f == 0f -> "${t.toInt()}°"
-            else -> String.format(Locale.getDefault(), "%.1f°", t)
+            else -> (t + tempOffset).let { d ->
+                if (d % 1f == 0f) "${d.toInt()}°" else String.format(Locale.getDefault(), "%.1f°", d)
+            }
         }
     }
 }

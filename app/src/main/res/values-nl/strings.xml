@@ -115,7 +115,6 @@
     <string name="en_stock">Originele energie-app  ›</string>
     <string name="en_charging">LADEN</string>
     <string name="en_limit">LAADLIMIET</string>
-    <string name="en_auto_stop">AUTO-STOP</string>
     <string name="en_ac_current">AC-LAADSTROOM</string>
     <string name="en_max">Max</string>
     <string name="en_scheduled">GEPLAND LADEN</string>
@@ -135,8 +134,6 @@
     <string name="en_power">Vermogen %1$s kW</string>
     <string name="en_ends_in">klaar over %1$d u %2$02d</string>
     <string name="en_no_limit" formatted="false">Geen limiet: laadt tot 100 %.</string>
-    <string name="en_enforced">MG4Dash stopt het laden bij %1$d %% (scherm aan).</string>
-    <string name="en_car_limit">" Auto: %1$d %%."</string>
     <string name="en_car_only">Limiet alleen naar de auto gestuurd</string>
     <string name="en_drive">Rijden</string>
     <string name="en_climate">Klimaatregeling</string>
@@ -171,6 +168,10 @@
     <string name="vh_speed">Snelheid</string>
     <string name="vh_outside">Buitentemperatuur</string>
     <string name="vh_charge">Laden</string>
+    <string name="vh_soh">Batterijgezondheid (geschat)</string>
+    <string name="vh_soh_detail">Geschat over ongeveer %1$s gereden.</string>
+    <string name="vh_soh_progress">Meting: %1$s %% van 15 %%, tot nu toe %2$s.</string>
+    <string name="vh_soh_disclaimer">Schatting van MG4Dash, niet officieel. In test.</string>
     <string name="st_home">STARTSCHERM</string>
     <string name="st_home_desc">\"SAIC-start vervangen\" schakelt alleen het originele startscherm uit (de dienst blijft actief). De onderhoudsmodus zet het weer aan, bijvoorbeeld voor een onderhoudsbeurt.</string>
     <string name="st_replace">SAIC-start vervangen</string>
@@ -178,6 +179,7 @@
     <string name="st_adb">ADB-herstel als MG4Dash niet meer start: adb shell cmd package compile -m speed -f app.mg4dash</string>
     <string name="st_capacity">Bruikbare batterijcapaciteit: %1$s kWh</string>
     <string name="st_capacity_desc">Voor de kWh/100-schatting (MG4 Standard 51 kWh: ongeveer 49 kWh bruikbaar).</string>
+    <string name="st_battery_model">Batterijmodel (referentie voor de geschatte gezondheid op de voertuigpagina):</string>
     <string name="st_city">Reservestad: %1$s (als de auto geen positie geeft)</string>
     <string name="st_change_city">Stad wijzigen</string>
     <string name="st_startup">OPSTARTEN</string>
@@ -196,6 +198,9 @@
     <string name="st_replace_msg">Het SAIC-startscherm wordt uitgeschakeld en MG4Dash wordt het startscherm. De onderhoudsmodus herstelt het op elk moment. Doorgaan?</string>
     <string name="st_replace_btn">Vervangen</string>
     <string name="cancel">Annuleren</string>
+    <string name="temp_cal_title">Temperatuurkalibratie</string>
+    <string name="temp_cal_preview">Weergegeven: %1$s</string>
+    <string name="temp_cal_reset">Herstellen</string>
     <string name="st_valet_msg">De originele SAIC-launcher wordt weer het standaard startscherm. Doorgaan?</string>
     <string name="activate">Activeren</string>
     <string name="st_home_changed">Startscherm gewijzigd</string>
@@ -214,6 +219,7 @@
     <string name="cd_recenter">Centreren</string>
     <string name="cd_zoom_in">Inzoomen</string>
     <string name="cd_zoom_out">Uitzoomen</string>
+    <string name="cd_map_fullscreen">Kaart schermvullend</string>
     <string name="cardinals">N,NO,O,ZO,Z,ZW,W,NW</string>
     <string name="cd_widget_toggle">Kaart of snelkoppelingen</string>
     <string name="title_shortcuts">SNELKOPPELINGEN</string>
@@ -301,7 +307,11 @@
     <string name="st_compat_scan">Scan met je telefoon om een vooraf ingevulde GitHub-issue te openen. Er wordt niets automatisch verzonden en het rapport bevat geen persoonlijke gegevens.</string>
     <string name="st_compat_open">Openen in browser</string>
     <string name="st_compat_no_browser">Geen browser op dit toestel: scan de QR-code met je telefoon.</string>
-    <string name="st_update_beta">Bètaversies meenemen: %1$s</string>
+    <string name="st_update_beta">Bètaversies meenemen (MG4Dash en Radio Dash): %1$s</string>
+    <string name="upd_title">NIEUWE VERSIE BESCHIKBAAR</string>
+    <string name="upd_skip">Niet meer melden voor deze versie</string>
+    <string name="upd_later">Later</string>
+    <string name="upd_now">Bijwerken</string>
     <string name="dock_cp">CarPlay</string>
     <string name="dock_cp_stock">CarPlay (origineel)</string>
     <string name="dock_other_app">Andere app…</string>
@@ -313,13 +323,11 @@
     <string name="dock_slot_wifi">Wifi-instellingen</string>
     <string name="dock_slot_wifi_short">Wifi</string>
     <string name="st_cap_car">Uitgelezen uit de auto: %1$s kWh.</string>
-    <string name="st_cap_none" formatted="false">De auto geeft hem niet: MG4Dash meet hem na 15 % daling sinds het laatste laden.</string>
+    <string name="st_cap_none" formatted="false">De auto geeft hem niet: MG4Dash meet hem tijdens het rijden, na 15 % daling (opgeteld over meerdere ritten).</string>
     <string name="st_cap_manual">Handmatig ingesteld (Auto: terug naar de waarde van de auto of de meting).</string>
     <string name="st_cap_auto">Auto</string>
     <string name="st_cap_est">Gemeten door MG4Dash: %1$s kWh (%2$d meting(en) tussen twee laadbeurten, afgevlakt over 30 dagen).</string>
-    <string name="st_cap_est_current">Gemeten door MG4Dash op de huidige lading: %1$s kWh (voorlopig).</string>
-    <string name="st_soh">Batterijgezondheid (geschat): %1$d %% over 30 dagen, %2$d %% sinds de eerste meting (%3$d metingen, vergeleken met een nieuwe %4$d kWh-batterij).</string>
-    <string name="st_soh_none">Batterijgezondheid: gemeten vanaf de volgende laadbeurt (15 %% daling nodig), vergeleken met een nieuwe %1$d kWh-batterij. Kies uw model:</string>
+    <string name="st_cap_est_current">Wordt gemeten door MG4Dash: %1$s kWh (voorlopig).</string>
     <string name="sw_batt_temp">Batterij %1$d °C</string>
     <string name="st_map_vdock">Verticale balk links (alle schermen en Radio Dash): %1$s</string>
     <string name="st_map_titles">Widgettitels verbergen (alle stijlen): %1$s</string>
@@ -363,10 +371,23 @@
     <string name="st_map_theme_app">Zoals de app</string>
     <string name="st_use_location">Mijn positie gebruiken</string>
     <string name="st_no_location">Positie nog niet beschikbaar</string>
-    <string name="esc_off_title">ESC uitschakelen?</string>
-    <string name="esc_off_msg">Het uitschakelen van de stabiliteitscontrole kan het voertuig instabiel maken. Houd de knop Voertuig opnieuw ingedrukt om het weer in te schakelen.</string>
-    <string name="esc_off_confirm">Uitschakelen</string>
-    <string name="esc_on_done">ESC weer ingeschakeld</string>
+    <string name="st_heated">Stoel- en stuurverwarming</string>
+    <string name="doors_locked">Deuren vergrendeld</string>
+    <string name="doors_unlocked">Deuren ontgrendeld</string>
+    <string name="doors_unknown">Vergrendeling niet beschikbaar</string>
+    <string name="en_gun_unlock">KABEL ONTGRENDELEN</string>
+    <string name="en_gun_lock">KABEL VERGRENDELEN</string>
+    <string name="power_off_driving">Niet tijdens het rijden</string>
+    <string name="st_power_fx">Animatie bij vol vermogen (widget Live vermogen):</string>
+    <string name="st_power_fx_desc" formatted="false">Speelt boven 80 % van het maximale vermogen van de auto en toont daarna 10 seconden lang de bereikte piek (kW en pk).</string>
+    <string name="fx_none">Geen</string>
+    <string name="fx_rocket">Raket</string>
+    <string name="fx_lightning">Bliksem</string>
+    <string name="fx_flames">Vlammen</string>
+    <string name="fx_preview">Voorbeeld</string>
+    <string name="fx_peak">Piek %1$s kW · %2$s pk</string>
+    <string name="st_xpower">MG4 XPower (320 kW)</string>
+    <string name="st_xpower_desc" formatted="false">Wordt vanzelf herkend zodra meer dan 350 pk wordt gemeten: de auto meldt zijn versie niet. Bepaalt de vermogensschaal en de drempel van 80 % voor de animatie.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefoon verbonden · Tik om te openen</string>
     <string name="aa_waiting">Sluit je telefoon aan via USB</string>

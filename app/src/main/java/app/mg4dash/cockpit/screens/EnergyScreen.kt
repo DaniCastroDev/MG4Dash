@@ -178,6 +178,9 @@ class EnergyScreen(host: Host) : Screen(host) {
             })
             bar = BatteryBar(c); addView(bar, lp(MATCH, 32))
             addView(c.row(14).apply {
+                // Limite : seulement là où la voiture l'applique elle-même (ancien SDK) ; ailleurs elle l'ignore
+                // et l'appli ne peut pas couper la charge à sa place (constaté dans le dépôt d'origine).
+                if (!app.mg4dash.system.Firmware.nativeChargeLimit && !app.mg4dash.BuildConfig.MOCK) visibility = View.GONE
                 addView(c.label("Límite"), lp(WRAP, WRAP))
                 limits = Segmented(c, (4..10).map { "${it * 10}" }, height = Dim.TAP_MIN, gap = 8) { i -> ChargeGuard.setLimit(c, (i + 4) * 10); limits.select(i) }
                 addView(limits, lp(0, Dim.TAP_MIN, 1f))

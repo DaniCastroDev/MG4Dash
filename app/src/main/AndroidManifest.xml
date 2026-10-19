@@ -113,6 +113,8 @@
         </receiver>
 
         <!-- Mise à jour depuis GitHub : résultat de l'installation et relance de l'accueil -->
+        <activity android:name=".ui.ScreenOffActivity" android:exported="false"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" android:excludeFromRecents="true" />
         <receiver android:name=".system.Updater$Result" android:exported="false" />
         <receiver android:name=".system.RadioDashUpdater$Result" android:exported="false" />
         <receiver

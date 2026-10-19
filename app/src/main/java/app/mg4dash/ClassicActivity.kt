@@ -59,11 +59,19 @@ class ClassicActivity : AppCompatActivity() {
         prefs = Prefs(this)
         app.mg4dash.ui.Themes.apply(this)
         themeSig = app.mg4dash.ui.Themes.signature(this)
+        // Sièges chauffants lus après la construction de l'écran (redémarrage de l'appli) : on reconstruit
+        // pour afficher leurs boutons, au lieu d'attendre un retour sur l'accueil (#19).
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                CarBridge.state.collect { if (!builtHeating && CarBridge.heatingShown(this@ClassicActivity)) recreate() }
+            }
+        }
         if (prefs.homeStyle == 1) {
             // Accueil épuré : même activité HOME, autre contenu
             simpleMode = true
             builtVertical = Dock.vertical(this)
             builtHideTitles = prefs.hideTitles
+            builtHeating = CarBridge.heatingShown(this)
             val sh = SimpleHome(this)
             simple = sh
             setContentView(sh.root)
@@ -249,7 +257,9 @@ class ClassicActivity : AppCompatActivity() {
         CarBridge.setForeground(true)
         // Style d'accueil changé dans les paramètres : on reconstruit l'écran
         if ((prefs.homeStyle == 1) != simpleMode || (prefs.homeStyle == 2) != mapLayout || Dock.vertical(this) != builtVertical || prefs.hideTitles != builtHideTitles ||
+            CarBridge.heatingShown(this) != builtHeating ||
             app.mg4dash.ui.Themes.signature(this) != themeSig) { recreate(); return }
+        app.mg4dash.ui.UpdatePrompt.maybeShow(this)
         if (simpleMode) { simple?.onResume(); Fullscreen.apply(this); return }
         mapCard.onResume()
         if (prefs.homeWidget == 1) renderShortcuts()
@@ -271,13 +281,14 @@ class ClassicActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         CarBridge.setForeground(false)
-        if (!simpleMode) mapCard.onPause()
+        if (!simpleMode) { mapCard.onPause(); setMapFullscreen(false) }   // une page ouverte depuis la barre
         handler.removeCallbacksAndMessages(null)
     }
 
-    /** HOME pressé alors qu'on est déjà l'accueil : rien à faire, mais on ne recrée rien. */
+    /** HOME pressé alors qu'on est déjà l'accueil : on ne recrée rien, la carte reprend sa taille de widget. */
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
+        if (!simpleMode) setMapFullscreen(false)
     }
 
     @Deprecated("Accueil : retour sans effet")
@@ -312,15 +323,64 @@ class ClassicActivity : AppCompatActivity() {
         Dock.mount(this, b.root as LinearLayout, b.dock, Dock.Page.HOME)
         builtVertical = Dock.vertical(this)
         builtHideTitles = prefs.hideTitles
+        builtHeating = CarBridge.heatingShown(this)
     }
 
     private var builtVertical = false
     private var builtHideTitles = false
+    private var builtHeating = false
 
 
     // ── Clim ─────────────────────────────────────────────────────────────────
 
+    private var heatSeatL: android.widget.FrameLayout? = null
+    private var heatSeatR: android.widget.FrameLayout? = null
+    private var heatWheel: android.widget.FrameLayout? = null
+
+    /**
+     * Sièges et volant chauffants (versions équipées) : trois boutons centrés sur la ligne du haut du
+     * widget clim, qui n'a plus de titre. Siège : un toucher = cran suivant ; volant : marche / arrêt.
+     */
+    private fun buildHeating() {
+        if (!CarBridge.heatingShown(this)) return
+        val header = b.climHeader
+        header.visibility = View.VISIBLE
+        (header.getChildAt(0)).visibility = View.GONE   // titre
+        header.gravity = Gravity.CENTER
+        val d = resources.displayMetrics.density
+        fun chip(icon: Int, mirror: Boolean, onClick: () -> Unit) = android.widget.FrameLayout(this).apply {
+            setBackgroundResource(R.drawable.bg_chip); isClickable = true; isFocusable = true
+            addView(ImageView(this@ClassicActivity).apply {
+                setImageResource(icon); isDuplicateParentStateEnabled = true; if (mirror) scaleX = -1f
+                imageTintList = androidx.core.content.ContextCompat.getColorStateList(this@ClassicActivity, R.color.chip_text)
+            }, android.widget.FrameLayout.LayoutParams((36 * d).toInt(), (36 * d).toInt(), Gravity.CENTER))
+            // Niveau du siège (1 à 3) en petit, en haut à droite
+            addView(TextView(this@ClassicActivity).apply {
+                tag = "level"; setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); setTextColor(color(R.color.accent_action))
+                typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL)
+            }, android.widget.FrameLayout.LayoutParams(-2, -2, Gravity.TOP or Gravity.END).apply { rightMargin = (8 * d).toInt() })
+            setOnClickListener { onClick() }
+        }
+        heatSeatL = chip(R.drawable.ic_seat_heat_0, false) { CarBridge.stepSeatHeat(true) }
+        heatWheel = chip(R.drawable.ic_wheel_heat, false) { CarBridge.toggleWheelHeat() }
+        heatSeatR = chip(R.drawable.ic_seat_heat_0, true) { CarBridge.stepSeatHeat(false) }
+        listOf(heatSeatL, heatWheel, heatSeatR).forEachIndexed { i, v ->
+            header.addView(v, LinearLayout.LayoutParams((96 * d).toInt(), (40 * d).toInt()).apply { if (i > 0) leftMargin = (10 * d).toInt() })
+        }
+    }
+
+    private fun renderHeating(s: VehicleState) {
+        fun paint(v: android.widget.FrameLayout?, level: Int?, showLevel: Boolean) {
+            v ?: return
+            v.isSelected = (level ?: 0) > 0
+            // Siège : 0 à 3 flux de chaleur dessinés au-dessus de l'assise selon le niveau
+            if (showLevel) (v.getChildAt(0) as? ImageView)?.setImageResource(when (level) { 1 -> R.drawable.ic_seat_heat_1; 2 -> R.drawable.ic_seat_heat_2; 3 -> R.drawable.ic_seat_heat_3; else -> R.drawable.ic_seat_heat_0 })
+        }
+        paint(heatSeatL, s.seatHeatL, true); paint(heatSeatR, s.seatHeatR, true); paint(heatWheel, s.wheelHeat, false)
+    }
+
     private fun wireClimate() {
+        buildHeating()
         b.climPower.setOnClickListener { CarBridge.togglePower() }
         repeatOnHold(b.tempDown) { CarBridge.stepTemp(-1) }
         repeatOnHold(b.tempUp) { CarBridge.stepTemp(1) }
@@ -349,6 +409,8 @@ class ClassicActivity : AppCompatActivity() {
             }
         }
         b.temp.setOnClickListener { startActivity(Intent(this, ClimateActivity::class.java)) }
+        // Appui long : calibration de la température affichée
+        b.temp.setOnLongClickListener { app.mg4dash.ui.TempCalibration.show(this) { renderClimate(CarBridge.state.value) }; true }
     }
 
     /** Appui = un cran ; appui maintenu = répétition toutes les 350 ms. */
@@ -366,6 +428,7 @@ class ClassicActivity : AppCompatActivity() {
     }
 
     private fun renderClimate(s: VehicleState) {
+        renderHeating(s)
         val on = s.hvacOn == true
         val known = s.connected && s.hvacOn != null
         b.climPower.isSelected = on
@@ -449,9 +512,9 @@ class ClassicActivity : AppCompatActivity() {
         b.chargeAction.visibility = if (CarBridge.chargeControl) View.VISIBLE else View.GONE
         b.chargeAction.setBackgroundResource(if (discharge) R.drawable.bg_chip_heat else R.drawable.bg_chip)
         b.chargeAction.setTextColor(androidx.core.content.ContextCompat.getColorStateList(this, if (discharge) R.color.chip_text_heat else R.color.chip_text))
-        b.chargeAction.isSelected = if (discharge) s.dischargeCtrl == 1 else s.chargeCtrl == 1
+        b.chargeAction.isSelected = if (discharge) VehicleState.isDischarging(s) else s.chargeCtrl == 1
         b.chargeAction.text = when {
-            discharge -> getString(if (s.dischargeCtrl == 1) R.string.v2l_stop else R.string.v2l_start)
+            discharge -> getString(if (VehicleState.isDischarging(s)) R.string.v2l_stop else R.string.v2l_start)
             s.chargeCtrl == 1 -> getString(R.string.stop_btn)
             else -> getString(R.string.charge_btn)
         }
@@ -461,7 +524,7 @@ class ClassicActivity : AppCompatActivity() {
         val s = CarBridge.state.value
         if (!VehicleState.isPlugged(s.chargeStatus)) return
         when {
-            VehicleState.isDischargeMode(s.chargeStatus) -> if (s.dischargeCtrl == 1) CarBridge.stopV2L() else CarBridge.startV2L()
+            VehicleState.isDischargeMode(s.chargeStatus) -> if (VehicleState.isDischarging(s)) CarBridge.stopV2L() else CarBridge.startV2L()
             s.chargeCtrl == 1 -> CarBridge.stopCharge()
             else -> CarBridge.startCharge()
         }
@@ -584,6 +647,7 @@ class ClassicActivity : AppCompatActivity() {
         }
         b.mapZoomIn.setOnClickListener { mapCard.zoom(1) }
         b.mapZoomOut.setOnClickListener { mapCard.zoom(-1) }
+        b.mapFullscreen.setOnClickListener { setMapFullscreen(hiddenForMap == null) }
         b.mapCenter.setOnClickListener { mapCard.recenter(LocationRepo.location.value); tintMapCenter() }
         tintMapCenter()
         // Carte → Consommation → Raccourcis → Carte (issue #6 : la consommation dans le widget carte)
@@ -616,10 +680,46 @@ class ClassicActivity : AppCompatActivity() {
     }
 
     /** 0 = carte, 1 = raccourcis, 2 = consommation. */
-    private fun effectiveWidget(): Int = prefs.homeWidget.let { if (it == 0 && offline()) 2 else it }
+    private fun effectiveWidget(): Int = prefs.homeWidget.let {
+        if (it == 0 && offline() && !mapCard.hasCachedTiles(LocationRepo.location.value)) 2 else it
+    }
+
+    /** Vues masquées par la carte en plein écran, avec leur visibilité d'avant (null : carte en widget). */
+    private var hiddenForMap: List<Pair<View, Int>>? = null
+
+    /** Appelé par la barre : chacun de ses boutons ramène la carte à sa taille de widget. */
+    fun exitMapFullscreen() = setMapFullscreen(false)
+
+    /**
+     * Carte en plein écran (issue #4) : les autres widgets s'effacent, la barre (verticale ou du bas)
+     * reste. HOME, un bouton de la barre ou le même bouton ramènent la carte à sa taille de widget.
+     */
+    private fun setMapFullscreen(on: Boolean) {
+        if (simpleMode || on == (hiddenForMap != null)) return
+        if (on) {
+            // On remonte de la carte jusqu'à la rangée des colonnes en masquant tout ce qui l'entoure
+            val row = (b.climateCard.parent as View).parent as android.view.ViewGroup
+            val hidden = mutableListOf<Pair<View, Int>>()
+            var child: View = b.mapCard
+            while (child !== row) {
+                val parent = child.parent as? android.view.ViewGroup ?: break
+                for (i in 0 until parent.childCount) {
+                    val v = parent.getChildAt(i)
+                    if (v !== child && v.visibility != View.GONE) { hidden += v to v.visibility; v.visibility = View.GONE }
+                }
+                child = parent
+            }
+            hiddenForMap = hidden
+        } else {
+            hiddenForMap?.forEach { (v, vis) -> v.visibility = vis }
+            hiddenForMap = null
+        }
+        b.mapFullscreen.setImageResource(if (on) R.drawable.ic_fullscreen_exit else R.drawable.ic_fullscreen)
+    }
 
     private fun applyHomeWidget() {
         val mode = effectiveWidget()
+        if (mode != 0) setMapFullscreen(false)
         val consumption = mode == 2
         val cc = consumptionCard ?: app.mg4dash.ui.ConsumptionCard(this).also {
             consumptionCard = it
@@ -653,10 +753,19 @@ class ClassicActivity : AppCompatActivity() {
     private var powerLabel: TextView? = null
     private var powerAvg: TextView? = null
     private var powerBar: app.mg4dash.ui.PowerBar? = null
+    private var powerFx: app.mg4dash.ui.PowerFx? = null
+    private var xpowerHits = 0
+
+    /** Retire l'animation pleine puissance de la carte (autre widget, ou carte reconstruite). */
+    private fun dropPowerFx() {
+        powerFx?.let { b.secondaryCard.overlay.remove(it); it.onBadge = null; it.stop() }
+        powerFx = null
+    }
 
     private fun renderSecondary() {
         val mode = prefs.secondaryWidget.coerceIn(0, 2)
         b.secondaryDots.text = (0..2).joinToString(" ") { if (it == mode) "●" else "○" }
+        if (mode != 1) dropPowerFx()
         when (mode) {
             0 -> renderTripEnergy()
             1 -> if (builtMode != 1) { buildPower(); builtMode = 1; lifecycleScope.launch { updatePower() } }
@@ -717,10 +826,8 @@ class ClassicActivity : AppCompatActivity() {
             // Échelle selon le modèle (puissance moteur : 51 kWh 170 ch / 125 kW, 64 kWh 204 ch / 150 kW,
             // 77 kWh 245 ch / 180 kW), plus une marge pour les pertes ; elle s'élargit d'elle-même si la
             // voiture tire davantage (XPower 435 ch / 320 kW), par paliers de 50 kW, et s'en souvient.
-            val model = when (prefs.batteryModel) { 77 -> 200f; 64 -> 170f; else -> 140f }
-            // Manuel MG4 (puissance nette batterie) : 51 kWh 54 kW en continu / 125 kW max ; autres 68 / 150 (#16)
-            if (prefs.batteryModel == 51) { continuousKw = 54f; peakKw = 125f } else { continuousKw = 68f; peakKw = 150f }
-            maxDrawKw = maxOf(model, prefs.raw.getFloat("power_scale_kw", 0f))
+            configureFor(prefs.batteryModel, prefs.xpower)
+            maxDrawKw = maxOf(maxDrawKw, prefs.raw.getFloat("power_scale_kw", 0f))
             onScale = { prefs.raw.edit().putFloat("power_scale_kw", it).apply() }
         }
         g.addView(powerBar, LinearLayout.LayoutParams(-1, (40 * d).toInt()).apply { marginStart = (8 * d).toInt(); marginEnd = (8 * d).toInt() })
@@ -732,12 +839,18 @@ class ClassicActivity : AppCompatActivity() {
         row.addView(left, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
         row.addView(right, LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f))
         g.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = (12 * d).toInt() })
-        // Détail en petit : tension, courant (vert en récupération), température batterie (issue #6)
+        // Détail : tension, courant (vert en récupération), centré dans la place restante sous les chiffres
         powerExtra = TextView(this).apply {
-            setTextColor(color(R.color.text_sub)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 17f); gravity = Gravity.CENTER
+            setTextColor(color(R.color.text_sub)); setTextSize(TypedValue.COMPLEX_UNIT_SP, 24f); gravity = Gravity.CENTER
             fontFeatureSettings = "tnum"
         }
-        g.addView(powerExtra, LinearLayout.LayoutParams(-1, -2).apply { topMargin = (6 * d).toInt() })
+        g.addView(powerExtra, LinearLayout.LayoutParams(-1, 0, 1f))
+        // Animation pleine puissance (réglages) : par-dessus la carte, le pic remplace la ligne tension · courant
+        dropPowerFx()
+        powerFx = app.mg4dash.ui.PowerFx(this).also { fx ->
+            fx.onBadge = { on -> powerExtra?.animate()?.alpha(if (on) 0f else 1f)?.setDuration(250)?.start() }
+            b.secondaryCard.overlay.add(fx)
+        }
     }
 
     private var powerExtra: TextView? = null
@@ -758,6 +871,19 @@ class ClassicActivity : AppCompatActivity() {
         powerValue?.setTextColor(color(if (regen) R.color.accent_energy else R.color.text_value))
         powerLabel?.text = getString(when { plugged -> R.string.sw_charging; regen -> R.string.sw_recovering; else -> R.string.sw_drawn })
         powerBar?.kw = if (plugged) 0f else kw ?: 0f
+        val bar = powerBar; val under = powerExtra
+        // XPower : la voiture ne donne pas sa version ; deux mesures de suite au-delà de 350 ch la trahissent
+        xpowerHits = if (!plugged && kw != null && kw >= app.mg4dash.ui.PowerBar.XPOWER_DETECT_KW) xpowerHits + 1 else 0
+        if (xpowerHits >= 2 && !prefs.xpower) {
+            prefs.xpower = true
+            android.util.Log.i("MG4L.Power", "MG4 XPower reconnue (${kw} kW) : max 320 kW, animation à 80 %")
+            bar?.let { val keep = it.maxDrawKw; it.configureFor(prefs.batteryModel, true); it.maxDrawKw = maxOf(keep, it.maxDrawKw) }
+        }
+        if (bar != null && under != null) powerFx?.let { fx ->
+            fx.style = prefs.powerFx
+            fx.place(b.secondaryCard, bar, under)
+            fx.update(if (plugged) 0f else kw ?: 0f, bar.peakKw * 0.8f, bar.peakKw)
+        }
         val avg = app.mg4dash.energy.EnergyMonitor.sinceStart.value.per100
         powerAvg?.text = avg?.let { "${app.mg4dash.system.Units.consText(this, it)} ${if (app.mg4dash.system.Units.miles(this)) "mi/kWh" else "kWh/100"}" } ?: "—"
         powerExtra?.let { tv ->

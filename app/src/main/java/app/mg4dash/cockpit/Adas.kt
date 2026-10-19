@@ -58,8 +58,9 @@ object Adas {
     private fun connect() {
         val ctx = appContext ?: return
         if (manager != null) return
-        manager = LegacyCar.sdkManager(ctx, SETTING_CLASS, { manager = it ?: manager; scope.launch { refresh() } },
-            listOf("com.saicmotor.hmi.vehiclesettings", app.mg4dash.system.Firmware.LEGACY_LAUNCHER))
+        manager = LegacyCar.sdkManager(ctx, SETTING_CLASS, listOf("com.saicmotor.hmi.vehiclesettings", app.mg4dash.system.Firmware.LEGACY_LAUNCHER)) {
+            manager = it ?: manager; scope.launch { refresh() }
+        }
     }
 
     fun profile(context: Context): Map<Item, Int> {

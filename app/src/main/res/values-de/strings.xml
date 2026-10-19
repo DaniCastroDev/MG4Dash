@@ -115,7 +115,6 @@
     <string name="en_stock">Original-Energie-App  ›</string>
     <string name="en_charging">LADEN</string>
     <string name="en_limit">LADELIMIT</string>
-    <string name="en_auto_stop">AUTO-STOPP</string>
     <string name="en_ac_current">AC-LADESTROM</string>
     <string name="en_max">Max</string>
     <string name="en_scheduled">GEPLANTES LADEN</string>
@@ -135,8 +134,6 @@
     <string name="en_power">Leistung %1$s kW</string>
     <string name="en_ends_in">fertig in %1$d h %2$02d</string>
     <string name="en_no_limit" formatted="false">Kein Limit: lädt bis 100 %.</string>
-    <string name="en_enforced">MG4Dash stoppt das Laden bei %1$d %% (Bildschirm an).</string>
-    <string name="en_car_limit">" Fahrzeug: %1$d %%."</string>
     <string name="en_car_only">Limit nur an das Fahrzeug übermittelt</string>
     <string name="en_drive">Fahren</string>
     <string name="en_climate">Klimaanlage</string>
@@ -171,6 +168,10 @@
     <string name="vh_speed">Geschwindigkeit</string>
     <string name="vh_outside">Außentemperatur</string>
     <string name="vh_charge">Laden</string>
+    <string name="vh_soh">Batteriezustand (geschätzt)</string>
+    <string name="vh_soh_detail">Geschätzt über etwa %1$s Fahrt.</string>
+    <string name="vh_soh_progress">Messung: %1$s %% von 15 %%, bisher %2$s.</string>
+    <string name="vh_soh_disclaimer">Schätzung von MG4Dash, nicht offiziell. In Test.</string>
     <string name="st_home">STARTBILDSCHIRM</string>
     <string name="st_home_desc">„SAIC-Startbildschirm ersetzen“ deaktiviert nur den originalen Startbildschirm (sein Dienst läuft weiter). Der Wartungsmodus aktiviert ihn wieder, z. B. vor einem Werkstatttermin.</string>
     <string name="st_replace">SAIC-Startbildschirm ersetzen</string>
@@ -178,6 +179,7 @@
     <string name="st_adb">ADB-Notfall, falls MG4Dash nicht mehr startet: adb shell cmd package compile -m speed -f app.mg4dash</string>
     <string name="st_capacity">Nutzbare Batteriekapazität: %1$s kWh</string>
     <string name="st_capacity_desc">Für die kWh/100-Schätzung (MG4 Standard 51 kWh: ca. 49 kWh nutzbar).</string>
+    <string name="st_battery_model">Batteriemodell (Bezug für den geschätzten Zustand auf der Fahrzeugseite):</string>
     <string name="st_city">Ersatzstadt: %1$s (falls das Auto keine Position liefert)</string>
     <string name="st_change_city">Stadt ändern</string>
     <string name="st_startup">START</string>
@@ -196,6 +198,9 @@
     <string name="st_replace_msg">Der SAIC-Startbildschirm wird deaktiviert und MG4Dash wird zum Startbildschirm. Der Wartungsmodus stellt ihn jederzeit wieder her. Fortfahren?</string>
     <string name="st_replace_btn">Ersetzen</string>
     <string name="cancel">Abbrechen</string>
+    <string name="temp_cal_title">Temperaturkalibrierung</string>
+    <string name="temp_cal_preview">Angezeigt: %1$s</string>
+    <string name="temp_cal_reset">Zurücksetzen</string>
     <string name="st_valet_msg">Der originale SAIC-Launcher wird wieder Standard-Startbildschirm. Fortfahren?</string>
     <string name="activate">Aktivieren</string>
     <string name="st_home_changed">Startbildschirm geändert</string>
@@ -214,6 +219,7 @@
     <string name="cd_recenter">Zentrieren</string>
     <string name="cd_zoom_in">Vergrößern</string>
     <string name="cd_zoom_out">Verkleinern</string>
+    <string name="cd_map_fullscreen">Karte im Vollbild</string>
     <string name="cardinals">N,NO,O,SO,S,SW,W,NW</string>
     <string name="cd_widget_toggle">Karte oder Verknüpfungen</string>
     <string name="title_shortcuts">VERKNÜPFUNGEN</string>
@@ -301,7 +307,11 @@
     <string name="st_compat_scan">Mit dem Telefon scannen, um ein vorausgefülltes GitHub-Issue zu öffnen. Nichts wird automatisch gesendet, der Bericht enthält keine persönlichen Daten.</string>
     <string name="st_compat_open">Im Browser öffnen</string>
     <string name="st_compat_no_browser">Kein Browser auf diesem Gerät: QR-Code mit dem Telefon scannen.</string>
-    <string name="st_update_beta">Beta-Versionen einbeziehen: %1$s</string>
+    <string name="st_update_beta">Beta-Versionen einbeziehen (MG4Dash und Radio Dash): %1$s</string>
+    <string name="upd_title">NEUE VERSION VERFÜGBAR</string>
+    <string name="upd_skip">Für diese Version nicht mehr melden</string>
+    <string name="upd_later">Später</string>
+    <string name="upd_now">Aktualisieren</string>
     <string name="dock_cp">CarPlay</string>
     <string name="dock_cp_stock">CarPlay (original)</string>
     <string name="dock_other_app">Andere App…</string>
@@ -313,13 +323,11 @@
     <string name="dock_slot_wifi">WLAN-Einstellungen</string>
     <string name="dock_slot_wifi_short">WLAN</string>
     <string name="st_cap_car">Vom Fahrzeug gelesen: %1$s kWh.</string>
-    <string name="st_cap_none" formatted="false">Das Fahrzeug liefert sie nicht: MG4Dash misst sie nach 15 % Abnahme seit dem letzten Laden.</string>
+    <string name="st_cap_none" formatted="false">Das Fahrzeug liefert sie nicht: MG4Dash misst sie beim Fahren, nach 15 % Abnahme (über mehrere Fahrten summiert).</string>
     <string name="st_cap_manual">Manuell eingestellt (Auto: zurück zum Fahrzeug- oder Messwert).</string>
     <string name="st_cap_auto">Auto</string>
     <string name="st_cap_est">Von MG4Dash gemessen: %1$s kWh (%2$d Messung(en) zwischen zwei Ladungen, über 30 Tage geglättet).</string>
-    <string name="st_cap_est_current">Von MG4Dash auf der aktuellen Ladung gemessen: %1$s kWh (vorläufig).</string>
-    <string name="st_soh">Batteriezustand (geschätzt): %1$d %% über 30 Tage, %2$d %% seit der ersten Messung (%3$d Messungen, verglichen mit einer neuen %4$d-kWh-Batterie).</string>
-    <string name="st_soh_none">Batteriezustand: gemessen ab dem nächsten Laden (15 %% Abnahme nötig), verglichen mit einer neuen %1$d-kWh-Batterie. Modell wählen:</string>
+    <string name="st_cap_est_current">Wird von MG4Dash gemessen: %1$s kWh (vorläufig).</string>
     <string name="sw_batt_temp">Batterie %1$d °C</string>
     <string name="st_map_vdock">Senkrechte Leiste links (alle Bildschirme und Radio Dash): %1$s</string>
     <string name="st_map_titles">Widget-Titel ausblenden (alle Layouts): %1$s</string>
@@ -363,10 +371,23 @@
     <string name="st_map_theme_app">Wie die App</string>
     <string name="st_use_location">Meine Position verwenden</string>
     <string name="st_no_location">Position noch nicht verfügbar</string>
-    <string name="esc_off_title">ESC ausschalten?</string>
-    <string name="esc_off_msg">Das Ausschalten der Stabilitätskontrolle kann das Fahrzeug instabil machen. Erneut lange auf Fahrzeug drücken, um sie wieder einzuschalten.</string>
-    <string name="esc_off_confirm">Ausschalten</string>
-    <string name="esc_on_done">ESC wieder eingeschaltet</string>
+    <string name="st_heated">Sitz- und Lenkradheizung</string>
+    <string name="doors_locked">Türen verriegelt</string>
+    <string name="doors_unlocked">Türen entriegelt</string>
+    <string name="doors_unknown">Verriegelung nicht verfügbar</string>
+    <string name="en_gun_unlock">KABEL ENTRIEGELN</string>
+    <string name="en_gun_lock">KABEL VERRIEGELN</string>
+    <string name="power_off_driving">Nicht während der Fahrt</string>
+    <string name="st_power_fx">Volllast-Animation (Widget Leistung live):</string>
+    <string name="st_power_fx_desc" formatted="false">Startet über 80 % der Höchstleistung des Autos und zeigt dann 10 Sekunden lang die erreichte Spitze (kW und PS).</string>
+    <string name="fx_none">Keine</string>
+    <string name="fx_rocket">Rakete</string>
+    <string name="fx_lightning">Blitz</string>
+    <string name="fx_flames">Flammen</string>
+    <string name="fx_preview">Vorschau</string>
+    <string name="fx_peak">Spitze %1$s kW · %2$s PS</string>
+    <string name="st_xpower">MG4 XPower (320 kW)</string>
+    <string name="st_xpower_desc" formatted="false">Wird automatisch erkannt, sobald mehr als 350 PS gemessen werden: das Auto meldet seine Version nicht. Legt die Leistungsskala und die 80-%-Schwelle der Animation fest.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefon verbunden · Zum Öffnen tippen</string>
     <string name="aa_waiting">Telefon per USB verbinden</string>

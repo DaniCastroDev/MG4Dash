@@ -44,8 +44,8 @@ class EnergyActivity : PageActivity() {
     private lateinit var limitNote: TextView
     private lateinit var setLimit: (Int?) -> Unit
     private lateinit var setCurrent: (Int?) -> Unit
-    private lateinit var enforce: TextView
     private lateinit var heating: TextView
+    private lateinit var gunLock: TextView
     // Programmation
     private lateinit var schedule: TextView
     private lateinit var finish: TextView
@@ -101,24 +101,28 @@ class EnergyActivity : PageActivity() {
         power = kit.text("", 18f, R.color.text_sub)
         c1.addView(power, kit.lp(-1, -2, t = 8))
         action = kit.toggleTile("—") { onMainAction() }.apply { textSize = 20f }
-        c1.addView(action, kit.lp(-1, kit.dp(64), t = 12))
-        cableLock = kit.toggleTile(getString(R.string.cable_unlock)) { CarBridge.toggleCableLock() }.apply { textSize = 20f }
-        c1.addView(cableLock, kit.lp(-1, kit.dp(64), t = 10))
-        c1.addView(kit.title(getString(R.string.en_limit)), kit.lp(-1, -2, t = 18))
-        val limits = listOf(50, 60, 70, 80, 90, 100)
-        val (lRow, lSet) = kit.segmented(limits.map { "$it %" }) { i ->
-            ChargeGuard.setLimit(this, limits[i]); refreshProps()
+        // Bouton principal et, câble branché, verrou du pistolet (bouton du launcher d'origine)
+        val actRow = kit.row()
+        actRow.addView(action, kit.lp(0, kit.dp(64), 1f))
+        gunLock = kit.toggleTile(getString(R.string.en_gun_unlock)) {
+            CarBridge.toggleChargeLock(); gunLock.postDelayed({ refreshProps() }, 1500)
+        }.apply { textSize = 18f; setPadding(kit.dp(16), 0, kit.dp(16), 0); visibility = android.view.View.GONE }
+        actRow.addView(gunLock, kit.lp(-2, kit.dp(64), l = 10))
+        c1.addView(actRow, kit.lp(-1, -2, t = 12))
+        // Limite de charge : seulement là où la voiture l'applique elle-même (ancien SDK). Ailleurs
+        // (MG4 Standard sans la limite d'origine), la voiture l'ignore, et MG4Dash ne peut pas arrêter
+        // la charge à sa place : il est coupé quand la voiture est fermée (constaté le 2026-10-18).
+        if (app.mg4dash.system.Firmware.nativeChargeLimit) {
+            c1.addView(kit.title(getString(R.string.en_limit)), kit.lp(-1, -2, t = 18))
+            val limits = listOf(50, 60, 70, 80, 90, 100)
+            val (lRow, lSet) = kit.segmented(limits.map { "$it %" }) { i ->
+                ChargeGuard.setLimit(this, limits[i]); refreshProps()
+            }
+            setLimit = lSet
+            c1.addView(lRow, kit.lp(-1, -2, t = 8))
+            limitNote = kit.text("", 16f, R.color.text_title).apply { maxLines = 2 }
+            c1.addView(limitNote, kit.lp(-1, -2, t = 8))
         }
-        setLimit = lSet
-        c1.addView(lRow, kit.lp(-1, -2, t = 8))
-        val eRow = kit.row()
-        limitNote = kit.text("", 16f, R.color.text_title).apply { maxLines = 2 }
-        eRow.addView(limitNote, kit.lp(0, -2, 1f))
-        enforce = kit.toggleTile(getString(R.string.en_auto_stop)) {
-            prefs.enforceChargeLimit = !prefs.enforceChargeLimit; renderLimit()
-        }.apply { textSize = 16f }
-        eRow.addView(enforce, kit.lp(kit.dp(150), kit.dp(48), l = 10))
-        c1.addView(eRow, kit.lp(-1, -2, t = 8))
         c1.addView(kit.title(getString(R.string.en_ac_current)), kit.lp(-1, -2, t = 14))
         val (cRow, cSet) = kit.segmented(listOf("6 A", "8 A", "16 A", getString(R.string.en_max))) { i ->
             CarProps.setInt(CarProps.ALTNG_CHRG_CRNT, i + 1, "courant AC"); refreshProps()
@@ -158,7 +162,7 @@ class EnergyActivity : PageActivity() {
         c2.addView(vRow, kit.lp(-1, -2, t = 8))
         v2lAction = kit.toggleTile(getString(R.string.en_v2l_start), heat = true) {
             val s = CarBridge.state.value
-            if (s.dischargeCtrl == 1) CarBridge.stopV2L() else CarBridge.startV2L()
+            if (VehicleState.isDischarging(s)) CarBridge.stopV2L() else CarBridge.startV2L()
         }.apply { textSize = 18f }
         c2.addView(LinearLayout(this), kit.lp(-1, 0, 1f))
         c2.addView(v2lAction, kit.lp(-1, kit.dp(60), t = 10))
@@ -240,6 +244,9 @@ class EnergyActivity : PageActivity() {
     private fun renderProps(p: Props) {
         reser = p.reser
         heating.isSelected = p.heat == 0
+        val locked = CarBridge.chargeLockLocked()
+        gunLock.visibility = if (locked != null && VehicleState.isPlugged(CarBridge.state.value.chargeStatus)) android.view.View.VISIBLE else android.view.View.GONE
+        gunLock.text = getString(if (locked == false) R.string.en_gun_lock else R.string.en_gun_unlock)
         heating.isEnabled = p.heat != null
         val carLimit = CarProps.targetSocPercent(p.target)
         renderLimit(carLimit)
@@ -289,18 +296,11 @@ class EnergyActivity : PageActivity() {
     }
 
     private fun renderLimit(carLimit: Int? = null) {
+        if (!::setLimit.isInitialized) return
         val wanted = prefs.chargeLimit
         setLimit(listOf(50, 60, 70, 80, 90, 100).indexOf(wanted).takeIf { it >= 0 })
-        val native = app.mg4dash.system.Firmware.nativeChargeLimit
-        enforce.isSelected = prefs.enforceChargeLimit
-        enforce.visibility = if (native) android.view.View.GONE else android.view.View.VISIBLE
-        limitNote.text = when {
-            wanted >= 100 -> getString(R.string.en_no_limit)
-            native -> getString(R.string.en_car_only) + (carLimit?.let { " ($it %)." } ?: ".")
-            prefs.enforceChargeLimit -> getString(R.string.en_enforced, wanted) +
-                (carLimit?.let { getString(R.string.en_car_limit, it) } ?: "")
-            else -> getString(R.string.en_car_only) + (carLimit?.let { " ($it %)." } ?: ".")
-        }
+        limitNote.text = if (wanted >= 100) getString(R.string.en_no_limit)
+            else getString(R.string.en_car_only) + (carLimit?.let { " ($it %)." } ?: ".")
     }
 
     private fun renderConsumption(c: FloatArray) {
@@ -355,21 +355,18 @@ class EnergyActivity : PageActivity() {
         // Démarrer / arrêter la charge et le V2L : seulement là où le service EV répond (voie A9)
         action.visibility = if (CarBridge.chargeControl) android.view.View.VISIBLE else android.view.View.INVISIBLE
         v2lAction.visibility = if (CarBridge.chargeControl) android.view.View.VISIBLE else android.view.View.INVISIBLE
-        action.isSelected = s.chargeCtrl == 1 || s.dischargeCtrl == 1
-        cableLock.visibility = if (CarBridge.cableLockControl) android.view.View.VISIBLE else android.view.View.GONE
-        cableLock.isSelected = s.chargeLock == 1
-        cableLock.text = getString(if (s.chargeLock == 2) R.string.cable_lock else R.string.cable_unlock)
+        action.isSelected = s.chargeCtrl == 1 || VehicleState.isDischarging(s)
         v2lStatus.text = if (discharge) VehicleState.chargeStatusLabel(s.chargeStatus) +
             (s.dischargeRemainMin?.takeIf { it in 1..6000 }?.let { getString(R.string.en_remaining, it / 60, it % 60) } ?: "")
         else getString(R.string.en_plug_v2l)
         v2lAction.isEnabled = discharge
-        v2lAction.isSelected = s.dischargeCtrl == 1
-        v2lAction.text = getString(if (s.dischargeCtrl == 1) R.string.en_v2l_stopbtn else R.string.en_v2l_start)
+        v2lAction.isSelected = VehicleState.isDischarging(s)
+        v2lAction.text = getString(if (VehicleState.isDischarging(s)) R.string.en_v2l_stopbtn else R.string.en_v2l_start)
     }
 
     private fun mainActionLabel(s: VehicleState): String = when {
         !VehicleState.isPlugged(s.chargeStatus) -> getString(R.string.en_unplugged)
-        VehicleState.isDischargeMode(s.chargeStatus) -> getString(if (s.dischargeCtrl == 1) R.string.en_v2l_stopbtn else R.string.en_v2l_start)
+        VehicleState.isDischargeMode(s.chargeStatus) -> getString(if (VehicleState.isDischarging(s)) R.string.en_v2l_stopbtn else R.string.en_v2l_start)
         s.chargeCtrl == 1 -> getString(R.string.en_stop_charge)
         else -> getString(R.string.en_charge_now)
     }
@@ -378,7 +375,7 @@ class EnergyActivity : PageActivity() {
         val s = CarBridge.state.value
         if (!VehicleState.isPlugged(s.chargeStatus)) return
         when {
-            VehicleState.isDischargeMode(s.chargeStatus) -> if (s.dischargeCtrl == 1) CarBridge.stopV2L() else CarBridge.startV2L()
+            VehicleState.isDischargeMode(s.chargeStatus) -> if (VehicleState.isDischarging(s)) CarBridge.stopV2L() else CarBridge.startV2L()
             s.chargeCtrl == 1 -> CarBridge.stopCharge()
             else -> CarBridge.startCharge()
         }

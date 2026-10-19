@@ -115,7 +115,6 @@
     <string name="en_stock">Appli Énergie d\'origine  ›</string>
     <string name="en_charging">RECHARGE</string>
     <string name="en_limit">LIMITE DE CHARGE</string>
-    <string name="en_auto_stop">ARRÊT AUTO</string>
     <string name="en_ac_current">COURANT DE CHARGE AC</string>
     <string name="en_max">Max</string>
     <string name="en_scheduled">CHARGE PROGRAMMÉE</string>
@@ -135,8 +134,6 @@
     <string name="en_power">Puissance %1$s kW</string>
     <string name="en_ends_in">fin dans %1$d h %2$02d</string>
     <string name="en_no_limit" formatted="false">Pas de limite : charge jusqu\'à 100 %.</string>
-    <string name="en_enforced">MG4Dash arrête la charge à %1$d %% (écran allumé).</string>
-    <string name="en_car_limit">" Voiture : %1$d %%."</string>
     <string name="en_car_only">Limite transmise à la voiture uniquement</string>
     <string name="en_drive">Conduite</string>
     <string name="en_climate">Climatisation</string>
@@ -171,6 +168,10 @@
     <string name="vh_speed">Vitesse</string>
     <string name="vh_outside">Température extérieure</string>
     <string name="vh_charge">Charge</string>
+    <string name="vh_soh">Santé batterie (estimée)</string>
+    <string name="vh_soh_detail">Estimée sur environ %1$s parcourus.</string>
+    <string name="vh_soh_progress">Mesure en cours : %1$s %% sur 15 %%, %2$s pour l\'instant.</string>
+    <string name="vh_soh_disclaimer">Estimation MG4Dash, pas officielle. En test.</string>
     <string name="st_home">ÉCRAN D\'ACCUEIL</string>
     <string name="st_home_desc">« Remplacer l\'accueil SAIC » désactive uniquement l\'écran d\'accueil d\'origine (son service reste actif). Le mode Entretien le réactive, par exemple avant une révision en concession.</string>
     <string name="st_replace">Remplacer l\'accueil SAIC</string>
@@ -178,6 +179,7 @@
     <string name="st_adb">Secours ADB si MG4Dash ne démarre plus : adb shell cmd package compile -m speed -f app.mg4dash</string>
     <string name="st_capacity">Capacité utile de la batterie : %1$s kWh</string>
     <string name="st_capacity_desc">Sert à l\'estimation kWh/100 (MG4 Standard 51 kWh : environ 49 kWh utiles).</string>
+    <string name="st_battery_model">Modèle de batterie (référence de la santé estimée, page Véhicule) :</string>
     <string name="st_city">Ville de repli : %1$s (si la voiture ne fournit pas de position)</string>
     <string name="st_change_city">Changer de ville</string>
     <string name="st_startup">DÉMARRAGE</string>
@@ -196,6 +198,9 @@
     <string name="st_replace_msg">L\'écran d\'accueil SAIC sera désactivé et MG4Dash deviendra l\'accueil. Le mode Entretien le rétablit à tout moment. Continuer ?</string>
     <string name="st_replace_btn">Remplacer</string>
     <string name="cancel">Annuler</string>
+    <string name="temp_cal_title">Calibration de la température</string>
+    <string name="temp_cal_preview">Affiché : %1$s</string>
+    <string name="temp_cal_reset">Remettre à 0</string>
     <string name="st_valet_msg">Le launcher SAIC d\'origine va redevenir l\'écran d\'accueil par défaut. Continuer ?</string>
     <string name="activate">Activer</string>
     <string name="st_home_changed">Accueil modifié</string>
@@ -214,6 +219,7 @@
     <string name="cd_recenter">Recentrer</string>
     <string name="cd_zoom_in">Zoom avant</string>
     <string name="cd_zoom_out">Zoom arrière</string>
+    <string name="cd_map_fullscreen">Carte en plein écran</string>
     <string name="cardinals">N,NE,E,SE,S,SO,O,NO</string>
     <string name="cd_widget_toggle">Carte ou raccourcis</string>
     <string name="title_shortcuts">RACCOURCIS</string>
@@ -301,7 +307,11 @@
     <string name="st_compat_scan">Scannez avec votre téléphone pour ouvrir une issue GitHub pré-remplie. Rien n\'est envoyé automatiquement et le rapport ne contient aucune donnée personnelle.</string>
     <string name="st_compat_open">Ouvrir dans le navigateur</string>
     <string name="st_compat_no_browser">Pas de navigateur sur cet autoradio : scannez le QR code avec votre téléphone.</string>
-    <string name="st_update_beta">Inclure les versions bêta : %1$s</string>
+    <string name="st_update_beta">Inclure les versions bêta (MG4Dash et Radio Dash) : %1$s</string>
+    <string name="upd_title">NOUVELLE VERSION DISPONIBLE</string>
+    <string name="upd_skip">Ne plus notifier cette release</string>
+    <string name="upd_later">Plus tard</string>
+    <string name="upd_now">Mettre à jour</string>
     <string name="dock_cp">CarPlay</string>
     <string name="dock_cp_stock">CarPlay (d\'origine)</string>
     <string name="dock_other_app">Autre application…</string>
@@ -313,13 +323,11 @@
     <string name="dock_slot_wifi">Réglages Wi-Fi</string>
     <string name="dock_slot_wifi_short">Wi-Fi</string>
     <string name="st_cap_car">Lue sur la voiture : %1$s kWh.</string>
-    <string name="st_cap_none" formatted="false">La voiture ne la fournit pas : MG4Dash la mesurera après 15 % de baisse depuis la dernière recharge.</string>
+    <string name="st_cap_none" formatted="false">La voiture ne la fournit pas : MG4Dash la mesurera en roulant, après 15 % de baisse (cumulée sur plusieurs trajets).</string>
     <string name="st_cap_manual">Réglée à la main (Auto : revenir à la valeur de la voiture ou mesurée).</string>
     <string name="st_cap_auto">Auto</string>
     <string name="st_cap_est">Mesurée par MG4Dash : %1$s kWh (%2$d mesure(s) entre deux recharges, lissées sur 30 jours).</string>
-    <string name="st_cap_est_current">Mesurée par MG4Dash sur la charge en cours : %1$s kWh (provisoire).</string>
-    <string name="st_soh">Santé batterie (estimée) : %1$d %% sur 30 jours, %2$d %% depuis la première mesure (%3$d mesures, comparé à une batterie %4$d kWh neuve).</string>
-    <string name="st_soh_none">Santé batterie : mesurée à partir de la prochaine recharge (il faut 15 %% de baisse), comparée à une batterie %1$d kWh neuve. Choisissez votre modèle :</string>
+    <string name="st_cap_est_current">En cours de mesure par MG4Dash : %1$s kWh (provisoire).</string>
     <string name="sw_batt_temp">Batterie %1$d °C</string>
     <string name="st_map_vdock">Barre verticale à gauche (tous les écrans et Radio Dash) : %1$s</string>
     <string name="st_map_titles">Masquer les titres des widgets (tous les styles) : %1$s</string>
@@ -363,10 +371,23 @@
     <string name="st_map_theme_app">Comme l\'appli</string>
     <string name="st_use_location">Utiliser ma position</string>
     <string name="st_no_location">Position pas encore disponible</string>
-    <string name="esc_off_title">Désactiver l\'ESC ?</string>
-    <string name="esc_off_msg">Désactiver le contrôle de stabilité peut faire perdre de la stabilité au véhicule. Un nouvel appui long sur le bouton Véhicule le réactive.</string>
-    <string name="esc_off_confirm">Désactiver</string>
-    <string name="esc_on_done">ESC réactivé</string>
+    <string name="st_heated">Sièges et volant chauffants</string>
+    <string name="doors_locked">Portes verrouillées</string>
+    <string name="doors_unlocked">Portes déverrouillées</string>
+    <string name="doors_unknown">Verrouillage indisponible</string>
+    <string name="en_gun_unlock">DÉVERROUILLER LE PISTOLET</string>
+    <string name="en_gun_lock">VERROUILLER LE PISTOLET</string>
+    <string name="power_off_driving">Pas en roulant</string>
+    <string name="st_power_fx">Animation pleine puissance (widget Puissance en direct) :</string>
+    <string name="st_power_fx_desc" formatted="false">Se joue au-delà de 80 % de la puissance maximale de la voiture, puis affiche le pic atteint (kW et ch) pendant 10 secondes.</string>
+    <string name="fx_none">Aucune</string>
+    <string name="fx_rocket">Fusée</string>
+    <string name="fx_lightning">Éclair</string>
+    <string name="fx_flames">Flammes</string>
+    <string name="fx_preview">Aperçu</string>
+    <string name="fx_peak">Pic %1$s kW · %2$s ch</string>
+    <string name="st_xpower">MG4 XPower (320 kW)</string>
+    <string name="st_xpower_desc" formatted="false">Reconnue d\'elle-même dès que plus de 350 ch sont mesurés : la voiture ne donne pas sa version. Règle l\'échelle de puissance et le seuil de 80 % de l\'animation.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Téléphone connecté · Appuyer pour ouvrir</string>
     <string name="aa_waiting">Branchez votre téléphone en USB</string>

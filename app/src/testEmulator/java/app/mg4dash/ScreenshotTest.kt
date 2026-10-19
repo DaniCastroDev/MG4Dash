@@ -145,13 +145,13 @@ class ScreenshotTest {
         shoot(MainActivity::class.java, "home_map_layout_shortcuts.png")
     }
 
-    @Test fun settingsSoh() {
+    @Test fun vehicleSoh() {
         val now = System.currentTimeMillis()
         org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
-            .putString("cap_samples", "[{\"t\":${now - 86400000L * 40},\"k\":48.6,\"d\":40},{\"t\":${now - 86400000L * 10},\"k\":47.9,\"d\":55},{\"t\":${now - 86400000L * 2},\"k\":48.2,\"d\":30}]")
+            .putString("cap_samples", "[{\"t\":${now - 86400000L * 40},\"k\":48.6,\"d\":40,\"m\":260},{\"t\":${now - 86400000L * 10},\"k\":47.9,\"d\":55,\"m\":350},{\"t\":${now - 86400000L * 2},\"k\":48.2,\"d\":30,\"m\":190}]")
             .putBoolean("battery_kwh_manual", false).apply()
         app.mg4dash.energy.BatteryCapacity.apply(org.robolectric.RuntimeEnvironment.getApplication())
-        shoot(SettingsActivity::class.java, "settings_soh.png")
+        shoot(app.mg4dash.pages.VehicleActivity::class.java, "vehicle_soh.png")
     }
 
     @Test fun homeMapLayoutVertical() {
@@ -188,6 +188,18 @@ class ScreenshotTest {
         val saved = flow.value
         flow.value = null
         try { shoot(MainActivity::class.java, "home_map_layout_offline.png") } finally { flow.value = saved }
+    }
+
+    @Test fun homeHeatedSeats() {
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
+            .putInt("heated_seats", 1).putBoolean("vertical_dock", true).apply()
+        shoot(MainActivity::class.java, "home_heated_seats.png")
+    }
+
+    @Test fun homeSimpleHeatedSeats() {
+        org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE).edit()
+            .putInt("heated_seats", 1).putInt("home_style", 1).apply()
+        shoot(MainActivity::class.java, "home_simple_heated_seats.png")
     }
 
     @Test fun homeVerticalFull() {
@@ -288,6 +300,52 @@ class ScreenshotTest {
         root.draw(Canvas(bmp))
         val dir = File("build/screenshots").apply { mkdirs() }
         File(dir, "climate_icons_preview.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    /** Icône Véhicule de la barre : normale et en dérive (ESC coupé), en rouge. */
+    @Test fun carDriftIcon() {
+        val ctx = org.robolectric.RuntimeEnvironment.getApplication()
+        val bmp = Bitmap.createBitmap(260, 120, Bitmap.Config.ARGB_8888); bmp.eraseColor(0xFF0B0F17.toInt())
+        val c = Canvas(bmp)
+        listOf(R.drawable.ic_car to 0xFFA0AEC0.toInt(), R.drawable.ic_car_drift to 0xFFFF5252.toInt()).forEachIndexed { i, (res, col) ->
+            val dr = androidx.core.content.ContextCompat.getDrawable(ctx, res)!!.mutate()
+            dr.setTint(col); dr.setBounds(20 + i * 130, 10, 120 + i * 130, 110); dr.draw(c)
+        }
+        File(File("build/screenshots").apply { mkdirs() }, "car_drift_icon.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    /** Animation pleine puissance : images successives de l'aperçu des réglages, une planche par style. */
+    @Test fun powerFx() {
+        val sp = org.robolectric.RuntimeEnvironment.getApplication().getSharedPreferences("mg4launcher", android.content.Context.MODE_PRIVATE)
+        sp.edit().putInt("theme_mode", 1).commit()
+        val act = Robolectric.buildActivity(SettingsActivity::class.java).setup().get()
+        val names = mapOf(1 to "rocket", 2 to "lightning", 3 to "flames")
+        val times = longArrayOf(150, 300, 500, 900, 1300, 2500, 2800, 3200, 4200)
+        for ((style, name) in names) {
+            val root = android.widget.FrameLayout(act)
+            val pv = app.mg4dash.ui.PowerFxPreview(act)
+            root.addView(pv, android.widget.FrameLayout.LayoutParams(-1, -2))
+            act.setContentView(root)
+            val w = 900; val h = 190
+            fun lay() {
+                root.measure(View.MeasureSpec.makeMeasureSpec(w, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(h, View.MeasureSpec.EXACTLY))
+                root.layout(0, 0, w, h)
+            }
+            lay()
+            pv.play(style)
+            val sheet = Bitmap.createBitmap(w, h * times.size, Bitmap.Config.ARGB_8888)
+            val c = Canvas(sheet)
+            var t = 0L
+            times.forEachIndexed { i, at ->
+                while (t < at) { shadowOf(Looper.getMainLooper()).idleFor(16, TimeUnit.MILLISECONDS); t += 16; lay(); root.draw(Canvas(Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888))) }
+                val bmp = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
+                bmp.eraseColor(0xFF0B0F17.toInt())
+                root.draw(Canvas(bmp))
+                c.drawBitmap(bmp, 0f, (i * h).toFloat(), null)
+            }
+            val dir = File("build/screenshots").apply { mkdirs() }
+            File(dir, "powerfx_$name.png").outputStream().use { sheet.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        }
     }
 
     private fun <T : Activity> shoot(cls: Class<T>, name: String) {

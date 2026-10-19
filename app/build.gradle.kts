@@ -13,8 +13,9 @@ android {
         // Cible Android 9 comme le reste du système : pas de restrictions d'arrière-plan
         // ni de permissions d'exécution à gérer pour une appli au uid système.
         targetSdk = 28
-        versionCode = 84
-        versionName = "1.0.16-cockpit.2"
+        // Au-dessus de la dernière version du dépôt d'origine : s'installe par-dessus sans désinstaller
+        versionCode = 103
+        versionName = "1.1.12-cockpit.3"
     }
 
     flavorDimensions += "target"

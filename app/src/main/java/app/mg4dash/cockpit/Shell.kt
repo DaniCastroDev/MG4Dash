@@ -194,9 +194,9 @@ class ClimateBar(c: Context, private val onMore: () -> Unit) : LinearLayout(c) {
         recirc.on = s.recirc == 0 || s.recirc == 2
         val heat = CarBridge.heatControl
         for (v in listOf(seatL, wheel, seatR)) v.visibility = if (heat) VISIBLE else GONE
-        seatL.on = (s.seatHeatLeft ?: 0) > 0; seatLBars.level = s.seatHeatLeft ?: 0
-        seatR.on = (s.seatHeatRight ?: 0) > 0; seatRBars.level = s.seatHeatRight ?: 0
-        wheel.on = s.steeringHeat == true
+        seatL.on = (s.seatHeatL ?: 0) > 0; seatLBars.level = s.seatHeatL ?: 0
+        seatR.on = (s.seatHeatR ?: 0) > 0; seatRBars.level = s.seatHeatR ?: 0
+        wheel.on = s.wheelHeat == 1
         defF.on = s.defrostFront == true
         defR.on = s.defrostRear == true
     }

@@ -130,10 +130,10 @@ class ClimateScreen(host: Host) : Screen(host) {
         air.select(airValues.indexOf(s.fanDirection).takeIf { it >= 0 })
         rec.select(when (s.recirc) { 1 -> 0; 0 -> 1; 2 -> 2; else -> null })
         heatCard.alpha = if (CarBridge.heatControl) 1f else 0.4f
-        seatL.select(s.seatHeatLeft); seatR.select(s.seatHeatRight)
-        if (s.seatHeatLeft == 0) seatL.lookFor(0, Look.SELECTED)
-        if (s.seatHeatRight == 0) seatR.lookFor(0, Look.SELECTED)
-        wheel.on = s.steeringHeat == true
+        seatL.select(s.seatHeatL); seatR.select(s.seatHeatR)
+        if (s.seatHeatL == 0) seatL.lookFor(0, Look.SELECTED)
+        if (s.seatHeatR == 0) seatR.lookFor(0, Look.SELECTED)
+        wheel.on = s.wheelHeat == 1
         defF.on = s.defrostFront == true
         defR.on = s.defrostRear == true
     }

@@ -51,7 +51,10 @@ class ClimateActivity : PageActivity() {
 
         // ── Température ──
         val tPanel = kit.panel(getString(R.string.cl_driver_temp))
-        temp = kit.text("—", 120f, light = true).apply { gravity = Gravity.CENTER }
+        temp = kit.text("—", 120f, light = true).apply {
+            gravity = Gravity.CENTER
+            setOnLongClickListener { app.mg4dash.ui.TempCalibration.show(this@ClimateActivity) { render(app.mg4dash.car.CarBridge.state.value) }; true }
+        }
         val tRow = kit.row().apply { gravity = Gravity.CENTER }
         val down = kit.roundButton(R.drawable.ic_minus, 96, R.color.accent_cold) {}
         val up = kit.roundButton(R.drawable.ic_plus, 96, R.color.accent_heat) {}
@@ -189,13 +192,13 @@ class ClimateActivity : PageActivity() {
         defFront.isSelected = s.defrostFront == true
         defRear.isSelected = s.defrostRear == true
         heatRow.visibility = if (CarBridge.heatControl) View.VISIBLE else View.GONE
-        seatLeft.text = seatLabel(R.string.cl_seat_left, s.seatHeatLeft)
-        seatLeft.isSelected = (s.seatHeatLeft ?: 0) > 0
-        seatRight.text = seatLabel(R.string.cl_seat_right, s.seatHeatRight)
-        seatRight.isSelected = (s.seatHeatRight ?: 0) > 0
-        wheel.isSelected = s.steeringHeat == true
+        seatLeft.text = seatLabel(R.string.cl_seat_left, s.seatHeatL)
+        seatLeft.isSelected = (s.seatHeatL ?: 0) > 0
+        seatRight.text = seatLabel(R.string.cl_seat_right, s.seatHeatR)
+        seatRight.isSelected = (s.seatHeatR ?: 0) > 0
+        wheel.isSelected = s.wheelHeat == 1
         listOf(seatLeft, seatRight).forEach { it.isEnabled = s.connected }
-        wheel.isEnabled = s.connected && s.steeringHeat != null
+        wheel.isEnabled = s.connected && s.wheelHeat != null
     }
 
     /** « SIÈGE G. » puis le niveau en points : ●●○ = niveau 2 sur 3. */

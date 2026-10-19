@@ -115,7 +115,6 @@
     <string name="en_stock">Stock Energy app  ›</string>
     <string name="en_charging">CHARGING</string>
     <string name="en_limit">CHARGE LIMIT</string>
-    <string name="en_auto_stop">AUTO STOP</string>
     <string name="en_ac_current">AC CHARGING CURRENT</string>
     <string name="en_max">Max</string>
     <string name="en_scheduled">SCHEDULED CHARGING</string>
@@ -135,8 +134,6 @@
     <string name="en_power">Power %1$s kW</string>
     <string name="en_ends_in">ends in %1$d h %2$02d</string>
     <string name="en_no_limit" formatted="false">No limit: charges to 100 %.</string>
-    <string name="en_enforced">MG4Dash stops charging at %1$d %% (screen on).</string>
-    <string name="en_car_limit">" Car: %1$d %%."</string>
     <string name="en_car_only">Limit sent to the car only</string>
     <string name="en_drive">Driving</string>
     <string name="en_climate">Climate control</string>
@@ -171,6 +168,10 @@
     <string name="vh_speed">Speed</string>
     <string name="vh_outside">Outside temperature</string>
     <string name="vh_charge">Charging</string>
+    <string name="vh_soh">Battery health (estimated)</string>
+    <string name="vh_soh_detail">Estimated over about %1$s driven.</string>
+    <string name="vh_soh_progress">Measuring: %1$s %% of 15 %%, %2$s so far.</string>
+    <string name="vh_soh_disclaimer">MG4Dash estimate, not official. Being tested.</string>
     <string name="st_home">HOME SCREEN</string>
     <string name="st_home_desc">\"Replace SAIC home\" disables only the original home screen (its service keeps running). Maintenance mode re-enables it, e.g. before a dealer service.</string>
     <string name="st_replace">Replace SAIC home</string>
@@ -178,6 +179,7 @@
     <string name="st_adb">ADB recovery if MG4Dash no longer starts: adb shell cmd package compile -m speed -f app.mg4dash</string>
     <string name="st_capacity">Usable battery capacity: %1$s kWh</string>
     <string name="st_capacity_desc">Used for the kWh/100 estimate (MG4 Standard 51 kWh: about 49 kWh usable).</string>
+    <string name="st_battery_model">Battery model (reference for the estimated health on the Vehicle page):</string>
     <string name="st_city">Fallback city: %1$s (if the car provides no position)</string>
     <string name="st_change_city">Change city</string>
     <string name="st_startup">STARTUP</string>
@@ -196,6 +198,9 @@
     <string name="st_replace_msg">The SAIC home screen will be disabled and MG4Dash will become the home screen. Maintenance mode restores it at any time. Continue?</string>
     <string name="st_replace_btn">Replace</string>
     <string name="cancel">Cancel</string>
+    <string name="temp_cal_title">Temperature calibration</string>
+    <string name="temp_cal_preview">Displayed: %1$s</string>
+    <string name="temp_cal_reset">Reset</string>
     <string name="st_valet_msg">The original SAIC launcher will become the default home screen again. Continue?</string>
     <string name="activate">Activate</string>
     <string name="st_home_changed">Home screen changed</string>
@@ -214,6 +219,7 @@
     <string name="cd_recenter">Recenter</string>
     <string name="cd_zoom_in">Zoom in</string>
     <string name="cd_zoom_out">Zoom out</string>
+    <string name="cd_map_fullscreen">Full screen map</string>
     <string name="cardinals">N,NE,E,SE,S,SW,W,NW</string>
     <string name="cd_widget_toggle">Map or shortcuts</string>
     <string name="title_shortcuts">SHORTCUTS</string>
@@ -301,7 +307,11 @@
     <string name="st_compat_scan">Scan with your phone to open a pre-filled GitHub issue. Nothing is sent automatically, and the report contains no personal data.</string>
     <string name="st_compat_open">Open in browser</string>
     <string name="st_compat_no_browser">No browser on this head unit: scan the QR code with your phone.</string>
-    <string name="st_update_beta">Include beta versions: %1$s</string>
+    <string name="st_update_beta">Include beta versions (MG4Dash and Radio Dash): %1$s</string>
+    <string name="upd_title">NEW VERSION AVAILABLE</string>
+    <string name="upd_skip">Don\'t notify me again for this release</string>
+    <string name="upd_later">Later</string>
+    <string name="upd_now">Update</string>
     <string name="dock_cp">CarPlay</string>
     <string name="dock_cp_stock">CarPlay (original)</string>
     <string name="dock_other_app">Another app…</string>
@@ -313,13 +323,11 @@
     <string name="dock_slot_wifi">Wi-Fi settings</string>
     <string name="dock_slot_wifi_short">Wi-Fi</string>
     <string name="st_cap_car">Read from the car: %1$s kWh.</string>
-    <string name="st_cap_none" formatted="false">The car does not report it: MG4Dash will measure it after a 15 % drop since the last charge.</string>
+    <string name="st_cap_none" formatted="false">The car does not report it: MG4Dash will measure it while driving, after a 15 % drop (added up over several trips).</string>
     <string name="st_cap_manual">Set by hand (Auto: back to the car\'s or the measured value).</string>
     <string name="st_cap_auto">Auto</string>
     <string name="st_cap_est">Measured by MG4Dash: %1$s kWh (%2$d charge-to-charge measurement(s), smoothed over 30 days).</string>
-    <string name="st_cap_est_current">Measured by MG4Dash on the current charge: %1$s kWh (provisional).</string>
-    <string name="st_soh">Battery health (estimated): %1$d %% over 30 days, %2$d %% since the first measurement (%3$d measurements, compared with a new %4$d kWh battery).</string>
-    <string name="st_soh_none">Battery health: measured from the next charge (a 15 %% drop is needed), compared with a new %1$d kWh battery. Choose your model:</string>
+    <string name="st_cap_est_current">Being measured by MG4Dash: %1$s kWh (provisional).</string>
     <string name="sw_batt_temp">Battery %1$d °C</string>
     <string name="st_map_vdock">Vertical bar on the left (all screens and Radio Dash): %1$s</string>
     <string name="st_map_titles">Hide widget titles (all layouts): %1$s</string>
@@ -363,10 +371,23 @@
     <string name="st_map_theme_app">Like the app</string>
     <string name="st_use_location">Use my position</string>
     <string name="st_no_location">Position not available yet</string>
-    <string name="esc_off_title">Turn off ESC?</string>
-    <string name="esc_off_msg">Turning off the stability control can make the car lose stability. Long press the Vehicle button again to turn it back on.</string>
-    <string name="esc_off_confirm">Turn off</string>
-    <string name="esc_on_done">ESC turned back on</string>
+    <string name="st_heated">Heated seats and steering wheel</string>
+    <string name="doors_locked">Doors locked</string>
+    <string name="doors_unlocked">Doors unlocked</string>
+    <string name="doors_unknown">Door lock not available</string>
+    <string name="en_gun_unlock">UNLOCK CABLE</string>
+    <string name="en_gun_lock">LOCK CABLE</string>
+    <string name="power_off_driving">Not while driving</string>
+    <string name="st_power_fx">Full-power animation (Live power widget):</string>
+    <string name="st_power_fx_desc" formatted="false">Plays above 80 % of the car\'s maximum power, then shows the peak reached (kW and hp) for 10 seconds.</string>
+    <string name="fx_none">None</string>
+    <string name="fx_rocket">Rocket</string>
+    <string name="fx_lightning">Lightning</string>
+    <string name="fx_flames">Flames</string>
+    <string name="fx_preview">Preview</string>
+    <string name="fx_peak">Peak %1$s kW · %2$s hp</string>
+    <string name="st_xpower">MG4 XPower (320 kW)</string>
+    <string name="st_xpower_desc" formatted="false">Recognised by itself as soon as more than 350 hp is measured: the car does not report its version. Sets the power scale and the 80 % threshold of the animation.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Phone connected · Tap to open</string>
     <string name="aa_waiting">Connect your phone via USB</string>

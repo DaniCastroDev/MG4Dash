@@ -143,9 +143,6 @@ object LegacyCar {
             outsideTemp = float("getOutCarTemp")?.takeIf { !it.isNaN() && it > -60f && it < 70f } ?: s.outsideTemp,
             defrostFront = b(int("getFrontWindowDefroster")),
             defrostRear = b(int("getBackWindowDefroster")),
-            seatHeatLeft = int("getDrvSeatHeatLevel")?.takeIf { it in 0..3 },
-            seatHeatRight = int("getPsgSeatHeatLevel")?.takeIf { it in 0..3 },
-            steeringHeat = int("getSteeringWheelHeatLevel")?.takeIf { it >= 0 }?.let { it > 0 },
         )
     }
 
@@ -194,15 +191,15 @@ object LegacyCar {
         if (charging != null || chargingInit) return
         val ctx = appContext ?: return
         chargingInit = true
-        charging = sdkManager(ctx, CHARGING_CLASS, { charging = it })
+        charging = sdkManager(ctx, CHARGING_CLASS) { charging = it }
     }
 
     /** Charge un gestionnaire du SDK SAIC depuis le launcher d'origine et l'initialise (écouteur factice). */
     internal fun sdkManager(
         ctx: Context,
         className: String,
-        onConnected: (Any?) -> Unit,
         packages: List<String> = listOf(Firmware.LEGACY_LAUNCHER, "com.saicmotor.launcher"),
+        onConnected: (Any?) -> Unit,
     ): Any? {
         val launcher = packages.firstNotNullOfOrNull { pkg ->
             try { ctx.createPackageContext(pkg, Context.CONTEXT_INCLUDE_CODE or Context.CONTEXT_IGNORE_SECURITY) } catch (_: Exception) { null }
@@ -242,6 +239,34 @@ object LegacyCar {
                 }
             }
         } catch (_: Exception) { null }
+    }
+
+    // ── ESC : VehicleControlManager du même SDK (SWI68/165, méthodes relevées par MG4Control) ──
+    // Lecture 1 = actif, 0 ou 2 = coupé ; l'écriture est une bascule (1), comme l'interrupteur d'origine.
+    private const val CONTROL_CLASS = "com.saicmotor.sdk.vehiclesettings.manager.VehicleControlManager"
+    @Volatile private var control: Any? = null
+    @Volatile private var controlInit = false
+
+    private fun connectControl() {
+        if (control != null || controlInit) return
+        val ctx = appContext ?: return
+        controlInit = true
+        control = sdkManager(ctx, CONTROL_CLASS) { control = it }
+    }
+
+    /** ESC actif (true), coupé (false), ou null si ce SDK ne répond pas. */
+    fun escActive(): Boolean? {
+        connectControl()
+        val c = control ?: return null
+        val v = try { Refl.m(c, "getEspSwitch").invoke(c) as? Int } catch (_: Exception) { null } ?: return null
+        return when (v) { 1 -> true; 0, 2 -> false; else -> null }
+    }
+
+    fun toggleEsc(): Boolean {
+        connectControl()
+        val c = control ?: return false
+        return try { Refl.m(c, "setEspSwitch", Int::class.javaPrimitiveType).invoke(c, 1); true }
+        catch (e: Exception) { Log.w(TAG, "setEspSwitch : ${(e.cause ?: e).message}"); false }
     }
 
     private fun chInt(name: String): Int? {
@@ -295,7 +320,7 @@ object LegacyCar {
     private fun connectSetting() {
         if (setting != null) return
         val ctx = appContext ?: return
-        setting = sdkManager(ctx, SETTING_CLASS, { setting = it })
+        setting = sdkManager(ctx, SETTING_CLASS) { setting = it }
     }
 
     /** Mode de conduite écrit par le service véhicule ; false si le SDK ne répond pas. */
@@ -304,46 +329,6 @@ object LegacyCar {
         val m = setting ?: return false
         return try { Refl.m(m, "setDriveMode", Int::class.javaPrimitiveType).invoke(m, v); true }
         catch (e: Exception) { Log.w(TAG, "setDriveMode($v) : ${(e.cause ?: e).message}"); false }
-    }
-
-    // ── Sièges et volant chauffants (AirConditionManager) ──
-    // Le service d'origine écrit le niveau tel quel (0..3) sur HVAC 0x15402513 / 0x15402514 / 0x1540253a.
-    // evhardware (MG4ABRP) a relevé que la voiture peut le traiter comme un appui qui avance d'un cran :
-    // on écrit le niveau voulu, puis, s'il n'est pas atteint, on avance cran par cran en relisant.
-
-    private fun waitFor(ms: Long, ok: () -> Boolean): Boolean {
-        val end = System.currentTimeMillis() + ms
-        while (System.currentTimeMillis() < end) {
-            if (ok()) return true
-            Thread.sleep(250)
-        }
-        return ok()
-    }
-
-    fun seatHeat(left: Boolean, level: Int): Boolean {
-        val getter = if (left) "getDrvSeatHeatLevel" else "getPsgSeatHeatLevel"
-        val setter = if (left) "setDrvSeatHeatLevel" else "setPsgSeatHeatLevel"
-        val target = level.coerceIn(0, 3)
-        fun cur() = int(getter)?.takeIf { it in 0..3 }
-        if (cur() == target) return true
-        if (!set(setter, target)) return false
-        if (waitFor(1500) { cur() == target }) return true
-        repeat(4) {
-            val before = cur() ?: return false
-            if (before == target) return true
-            set(setter, 1)
-            waitFor(1500) { cur() != before }
-        }
-        return cur() == target
-    }
-
-    fun steeringHeat(on: Boolean): Boolean {
-        fun cur() = int("getSteeringWheelHeatLevel")?.takeIf { it >= 0 }?.let { it > 0 }
-        if (cur() == on) return true
-        if (!set("setSteeringWheelHeat", if (on) 1 else 0)) return false
-        if (waitFor(2000) { cur() == on }) return true
-        set("setSteeringWheelHeat", 1)   // un appui de plus si l'écriture a été lue comme une bascule
-        return waitFor(2000) { cur() == on }
     }
 
     /** Pour l'écran Compatibilité. */

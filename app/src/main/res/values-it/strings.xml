@@ -115,7 +115,6 @@
     <string name="en_stock">App Energia originale  ›</string>
     <string name="en_charging">RICARICA</string>
     <string name="en_limit">LIMITE DI RICARICA</string>
-    <string name="en_auto_stop">STOP AUTO</string>
     <string name="en_ac_current">CORRENTE DI RICARICA AC</string>
     <string name="en_max">Max</string>
     <string name="en_scheduled">RICARICA PROGRAMMATA</string>
@@ -135,8 +134,6 @@
     <string name="en_power">Potenza %1$s kW</string>
     <string name="en_ends_in">termina tra %1$d h %2$02d</string>
     <string name="en_no_limit" formatted="false">Nessun limite: ricarica fino al 100 %.</string>
-    <string name="en_enforced">MG4Dash interrompe la ricarica al %1$d %% (schermo acceso).</string>
-    <string name="en_car_limit">" Auto: %1$d %%."</string>
     <string name="en_car_only">Limite inviato solo all\'auto</string>
     <string name="en_drive">Guida</string>
     <string name="en_climate">Climatizzazione</string>
@@ -171,6 +168,10 @@
     <string name="vh_speed">Velocità</string>
     <string name="vh_outside">Temperatura esterna</string>
     <string name="vh_charge">Ricarica</string>
+    <string name="vh_soh">Salute batteria (stimata)</string>
+    <string name="vh_soh_detail">Stimata su circa %1$s percorsi.</string>
+    <string name="vh_soh_progress">In misura: %1$s %% di 15 %%, finora %2$s.</string>
+    <string name="vh_soh_disclaimer">Stima MG4Dash, non ufficiale. In prova.</string>
     <string name="st_home">SCHERMATA HOME</string>
     <string name="st_home_desc">«Sostituisci home SAIC» disattiva solo la schermata home originale (il suo servizio resta attivo). La modalità manutenzione la riattiva, ad esempio prima di un tagliando.</string>
     <string name="st_replace">Sostituisci home SAIC</string>
@@ -178,6 +179,7 @@
     <string name="st_adb">Ripristino ADB se MG4Dash non si avvia più: adb shell cmd package compile -m speed -f app.mg4dash</string>
     <string name="st_capacity">Capacità utile della batteria: %1$s kWh</string>
     <string name="st_capacity_desc">Per la stima kWh/100 (MG4 Standard 51 kWh: circa 49 kWh utili).</string>
+    <string name="st_battery_model">Modello di batteria (riferimento della salute stimata, pagina Veicolo):</string>
     <string name="st_city">Città di riserva: %1$s (se l\'auto non fornisce la posizione)</string>
     <string name="st_change_city">Cambia città</string>
     <string name="st_startup">AVVIO</string>
@@ -196,6 +198,9 @@
     <string name="st_replace_msg">La schermata home SAIC verrà disattivata e MG4Dash diventerà la home. La modalità manutenzione la ripristina in qualsiasi momento. Continuare?</string>
     <string name="st_replace_btn">Sostituisci</string>
     <string name="cancel">Annulla</string>
+    <string name="temp_cal_title">Calibrazione della temperatura</string>
+    <string name="temp_cal_preview">Visualizzato: %1$s</string>
+    <string name="temp_cal_reset">Azzera</string>
     <string name="st_valet_msg">Il launcher SAIC originale tornerà la schermata home predefinita. Continuare?</string>
     <string name="activate">Attiva</string>
     <string name="st_home_changed">Home modificata</string>
@@ -214,6 +219,7 @@
     <string name="cd_recenter">Ricentra</string>
     <string name="cd_zoom_in">Ingrandisci</string>
     <string name="cd_zoom_out">Riduci</string>
+    <string name="cd_map_fullscreen">Mappa a schermo intero</string>
     <string name="cardinals">N,NE,E,SE,S,SO,O,NO</string>
     <string name="cd_widget_toggle">Mappa o scorciatoie</string>
     <string name="title_shortcuts">SCORCIATOIE</string>
@@ -301,7 +307,11 @@
     <string name="st_compat_scan">Scansiona con il telefono per aprire una issue GitHub precompilata. Nulla viene inviato automaticamente e il rapporto non contiene dati personali.</string>
     <string name="st_compat_open">Apri nel browser</string>
     <string name="st_compat_no_browser">Nessun browser su questa unità: scansiona il codice QR con il telefono.</string>
-    <string name="st_update_beta">Includi versioni beta: %1$s</string>
+    <string name="st_update_beta">Includi versioni beta (MG4Dash e Radio Dash): %1$s</string>
+    <string name="upd_title">NUOVA VERSIONE DISPONIBILE</string>
+    <string name="upd_skip">Non avvisare più per questa versione</string>
+    <string name="upd_later">Più tardi</string>
+    <string name="upd_now">Aggiorna</string>
     <string name="dock_cp">CarPlay</string>
     <string name="dock_cp_stock">CarPlay (originale)</string>
     <string name="dock_other_app">Altra app…</string>
@@ -313,13 +323,11 @@
     <string name="dock_slot_wifi">Impostazioni Wi-Fi</string>
     <string name="dock_slot_wifi_short">Wi-Fi</string>
     <string name="st_cap_car">Letta dall\'auto: %1$s kWh.</string>
-    <string name="st_cap_none" formatted="false">L\'auto non la fornisce: MG4Dash la misurerà dopo un calo del 15 % dall\'ultima ricarica.</string>
+    <string name="st_cap_none" formatted="false">L\'auto non la fornisce: MG4Dash la misurerà guidando, dopo un calo del 15 % (sommato su più viaggi).</string>
     <string name="st_cap_manual">Impostata a mano (Auto: torna al valore dell\'auto o misurato).</string>
     <string name="st_cap_auto">Auto</string>
     <string name="st_cap_est">Misurata da MG4Dash: %1$s kWh (%2$d misura/e tra due ricariche, livellate su 30 giorni).</string>
-    <string name="st_cap_est_current">Misurata da MG4Dash sulla carica attuale: %1$s kWh (provvisoria).</string>
-    <string name="st_soh">Salute batteria (stimata): %1$d %% su 30 giorni, %2$d %% dalla prima misura (%3$d misure, rispetto a una batteria nuova da %4$d kWh).</string>
-    <string name="st_soh_none">Salute batteria: misurata dalla prossima ricarica (serve un calo del 15 %%), rispetto a una batteria nuova da %1$d kWh. Scegli il modello:</string>
+    <string name="st_cap_est_current">In misurazione da MG4Dash: %1$s kWh (provvisoria).</string>
     <string name="sw_batt_temp">Batteria %1$d °C</string>
     <string name="st_map_vdock">Barra verticale a sinistra (tutte le schermate e Radio Dash): %1$s</string>
     <string name="st_map_titles">Nascondi i titoli dei widget (tutti gli stili): %1$s</string>
@@ -363,10 +371,23 @@
     <string name="st_map_theme_app">Come l\'app</string>
     <string name="st_use_location">Usa la mia posizione</string>
     <string name="st_no_location">Posizione non ancora disponibile</string>
-    <string name="esc_off_title">Disattivare l\'ESC?</string>
-    <string name="esc_off_msg">Disattivare il controllo di stabilità può far perdere stabilità al veicolo. Tieni premuto di nuovo il pulsante Veicolo per riattivarlo.</string>
-    <string name="esc_off_confirm">Disattiva</string>
-    <string name="esc_on_done">ESC riattivato</string>
+    <string name="st_heated">Sedili e volante riscaldati</string>
+    <string name="doors_locked">Porte bloccate</string>
+    <string name="doors_unlocked">Porte sbloccate</string>
+    <string name="doors_unknown">Blocco non disponibile</string>
+    <string name="en_gun_unlock">SBLOCCA CAVO</string>
+    <string name="en_gun_lock">BLOCCA CAVO</string>
+    <string name="power_off_driving">Non durante la guida</string>
+    <string name="st_power_fx">Animazione a piena potenza (widget Potenza in tempo reale):</string>
+    <string name="st_power_fx_desc" formatted="false">Parte oltre l\'80 % della potenza massima dell\'auto, poi mostra il picco raggiunto (kW e CV) per 10 secondi.</string>
+    <string name="fx_none">Nessuna</string>
+    <string name="fx_rocket">Razzo</string>
+    <string name="fx_lightning">Fulmine</string>
+    <string name="fx_flames">Fiamme</string>
+    <string name="fx_preview">Anteprima</string>
+    <string name="fx_peak">Picco %1$s kW · %2$s CV</string>
+    <string name="st_xpower">MG4 XPower (320 kW)</string>
+    <string name="st_xpower_desc" formatted="false">Riconosciuta da sola appena si misurano più di 350 CV: l\'auto non indica la sua versione. Imposta la scala di potenza e la soglia dell\'80 % dell\'animazione.</string>
     <string name="aa_title">ANDROID AUTO</string>
     <string name="aa_ready">Telefono connesso · Tocca per aprire</string>
     <string name="aa_waiting">Collega il telefono via USB</string>

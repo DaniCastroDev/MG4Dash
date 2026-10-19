@@ -34,6 +34,11 @@ class Prefs(context: Context) {
         get() = sp.getInt("pressure_unit", 0)
         set(v) = sp.edit().putInt("pressure_unit", v).apply()
 
+    /** Calibration de la consigne affichée, en degrés (−5 à +5) : affichage seulement, la voiture reçoit sa valeur. */
+    var tempOffset: Int
+        get() = sp.getInt("temp_offset", 0).coerceIn(-5, 5)
+        set(v) = sp.edit().putInt("temp_offset", v.coerceIn(-5, 5)).apply()
+
     /** Carte : zoom par défaut (14 à 18) et thème (0 = comme l'appli, 1 = clair, 2 = sombre). */
     var mapZoom: Int
         get() = sp.getInt("map_zoom", 16)
@@ -41,6 +46,11 @@ class Prefs(context: Context) {
     var mapTheme: Int
         get() = sp.getInt("map_theme", 0)
         set(v) = sp.edit().putInt("map_theme", v).apply()
+
+    /** Sièges / volant chauffants : 0 = auto (batterie 64 / 77 kWh), 1 = afficher, 2 = masquer. */
+    var heatedSeats: Int
+        get() = sp.getInt("heated_seats", 0)
+        set(v) = sp.edit().putInt("heated_seats", v).apply()
 
     /** Unités : 0 = comme la voiture, 1 = km, 2 = miles. */
     var units: Int
@@ -71,6 +81,16 @@ class Prefs(context: Context) {
         get() = sp.getString("weather_city", "Paris") ?: "Paris"
         set(v) = sp.edit().putString("weather_city", v).apply()
 
+    /** MG4 XPower (320 kW) : reconnue d'elle-même au-delà de 350 ch mesurés, ou choisie dans les réglages. */
+    var xpower: Boolean
+        get() = sp.getBoolean("xpower", false)
+        set(v) = sp.edit().putBoolean("xpower", v).apply()
+
+    /** Animation pleine puissance du widget Puissance : 0 = aucune, 1 = fusée, 2 = éclair, 3 = flammes. */
+    var powerFx: Int
+        get() = sp.getInt("power_fx", 1)
+        set(v) = sp.edit().putInt("power_fx", v).apply()
+
     /** Widget secondaire de la colonne droite : 0 = trajet, 1 = statut, 2 = météo compacte. */
     var secondaryWidget: Int
         get() = sp.getInt("secondary_widget", 0)
@@ -91,15 +111,10 @@ class Prefs(context: Context) {
         get() = sp.getBoolean("valet_mode", false)
         set(v) = sp.edit().putBoolean("valet_mode", v).commit().let { }
 
-    /** Limite de charge voulue (%), appliquée par MG4Dash si la voiture l'ignore. */
+    /** Limite de charge voulue (%), envoyée à la voiture. */
     var chargeLimit: Int
         get() = sp.getInt("charge_limit", 100)
         set(v) = sp.edit().putInt("charge_limit", v).apply()
-
-    /** Arrêt automatique de la charge par MG4Dash quand la limite est atteinte. */
-    var enforceChargeLimit: Boolean
-        get() = sp.getBoolean("enforce_charge_limit", true)
-        set(v) = sp.edit().putBoolean("enforce_charge_limit", v).apply()
 
     /** Masque la barre latérale et le bandeau SAIC (mode immersif). */
     var fullscreen: Boolean
@@ -149,6 +164,11 @@ class Prefs(context: Context) {
     var updateBeta: Boolean
         get() = sp.getBoolean("update_beta", true)
         set(v) = sp.edit().putBoolean("update_beta", v).apply()
+
+    /** Release non bêta pour laquelle l'utilisateur a choisi « ne plus notifier » au démarrage (version, ex. 1.1.0). */
+    var updateSkipped: String?
+        get() = sp.getString("update_skipped", null)
+        set(v) = sp.edit().putString("update_skipped", v).apply()
 
     var energyLog: Boolean
         get() = sp.getBoolean("energy_log", true)
