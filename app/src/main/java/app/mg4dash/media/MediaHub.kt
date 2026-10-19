@@ -78,6 +78,7 @@ object MediaHub {
         // on se connecte directement à leurs MediaBrowserService pour obtenir leur contrôleur.
         BROWSERS.forEach { connectBrowser(it) }
         if (legacyRadio) {
+            SaicMedia.connect(context)
             SaicRadio.connect(context)
             // Pas de rappel côté radio : relecture de la station toutes les 2 s.
             main.postDelayed(object : Runnable {
@@ -649,6 +650,15 @@ object MediaHub {
         if (legacyRadio && SaicRadio.ready && SaicRadio.last?.playing == true) {
             Log.i(TAG, "ancien SDK : radio en pause avant la bascule vers $pkg")
             radioCommand { SaicRadio.pause() }
+        }
+        // Ancien SDK : Bluetooth et USB par le lecteur média SAIC, exactement comme le menu de sources
+        // du launcher d'origine (la commande 0x8001 ci-dessous ne change pas la source sur SWI68).
+        if (legacyRadio) {
+            val player = when (pkg) { "com.android.bluetooth" -> SaicMedia.BT; "com.saicmotor.media" -> SaicMedia.USB; else -> null }
+            if (player != null) {
+                if (!SaicMedia.ready) SaicMedia.connect(ctx)
+                if (SaicMedia.play(player)) return true
+            }
         }
         val (target, type) = when (pkg) {
             "com.android.bluetooth" -> ComponentName("com.saicmotor.media", "com.saicmotor.media.service.MediaService") to 2

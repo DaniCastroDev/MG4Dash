@@ -59,6 +59,7 @@ object Compat {
             appendLine("Old SDK: " + sdkClasses(a))
             appendLine("Media: " + listOf("com.saicmotor.service.media", "com.saicmotor.service.radio", "com.saicmotor.media", "com.saicmotor.radio",
                 "com.saicmotor.hmi.media", "com.saicmotor.hmi.radio").joinToString(" ") { "${it.removePrefix("com.saicmotor.")}=${pkg(it)}" })
+            appendLine("SAIC media player (old SDK): ${app.mg4dash.media.SaicMedia.probe()}")
             append("Apps: " + saicApps(a))
         }
     }
