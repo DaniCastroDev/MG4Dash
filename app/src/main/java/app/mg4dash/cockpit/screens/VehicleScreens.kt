@@ -29,6 +29,7 @@ import app.mg4dash.cockpit.put
 import app.mg4dash.cockpit.rounded
 import app.mg4dash.cockpit.row
 import app.mg4dash.cockpit.text
+import app.mg4dash.cockpit.w
 
 /** Vehículo (lienzo : Vehicle.dc.html). */
 class VehicleScreen(host: Host) : Screen(host) {
@@ -50,7 +51,7 @@ class VehicleScreen(host: Host) : Screen(host) {
             addView(c.label("Neumáticos"))
             tyres = TyreView(c); addView(tyres, lp(MATCH, 0, 1f))
             odo = c.text("—", Ty.LABEL, Pal.text2); addView(odo)
-        }, lp(560, MATCH))
+        }, w(560))
         addView(c.card().apply {
             addView(c.label("Modo de conducción"))
             modes = Segmented(c, listOf("Eco", "Normal", "Sport", "Nieve")) { i ->
@@ -68,7 +69,7 @@ class VehicleScreen(host: Host) : Screen(host) {
                 addView(IconView(c, Icons.lock, 22, 3f).apply { color = Pal.text2 })
                 addView(c.text("Solo con el coche parado", Ty.CAPTION, Pal.text2))
             })
-        }, lp(640, MATCH))
+        }, w(640))
         addView(c.col(Dim.GAP).apply {
             addView(c.card().apply {
                 addView(c.label("Seguridad"))
@@ -96,7 +97,7 @@ class VehicleScreen(host: Host) : Screen(host) {
                     addView(Btn(c, "Apps", Icons.apps, 32, textSize = Ty.CAPTION).apply { setOnClickListener { c.startActivity(android.content.Intent(c, app.mg4dash.apps.AppsActivity::class.java)) } }, lp(0, MATCH, 1f))
                 }, lp(MATCH, 0, 1f))
             }, lp(MATCH, 0, 1f))
-        }, lp(0, MATCH, 1f))
+        }, w(528))
     }
 
     override fun bind(s: VehicleState) {
@@ -145,7 +146,7 @@ class AdasScreen(host: Host) : Screen(host) {
                     addView(seg, lp(620, Dim.TAP_MIN))
                 }, lp(MATCH, WRAP))
             }
-        }, lp(1300, MATCH))
+        }, w(1300))
         addView(c.card().apply {
             addView(c.label("Al arrancar"))
             addView(c.text("La normativa de la UE vuelve a activar estos asistentes en cada arranque.", Ty.LABEL, Pal.text2).apply { maxLines = 4 })
@@ -167,7 +168,7 @@ class AdasScreen(host: Host) : Screen(host) {
                 }
             }
             addView(apply, lp(MATCH, Dim.PRIMARY))
-        }, lp(0, MATCH, 1f))
+        }, w(444))
     }
 
     override fun bind(s: VehicleState) {

@@ -32,6 +32,7 @@ import app.mg4dash.cockpit.lp
 import app.mg4dash.cockpit.put
 import app.mg4dash.cockpit.row
 import app.mg4dash.cockpit.text
+import app.mg4dash.cockpit.w
 import app.mg4dash.energy.ChargeGuard
 import app.mg4dash.energy.EnergyMonitor
 import app.mg4dash.media.MediaHub
@@ -61,17 +62,17 @@ class HomeScreen(host: Host) : Screen(host) {
 
     override fun build(): View = c.row(Dim.GAP).apply {
         gravity = Gravity.TOP
-        addView(battery(), lp(368, MATCH))
+        addView(battery(), w(368))
         media = MediaCard(c, compact = false)
-        addView(media, lp(424, MATCH))
+        addView(media, w(424))
         addView(c.col(Dim.GAP).apply {
             addView(assists(), lp(MATCH, WRAP))
             addView(driving(), lp(MATCH, 0, 1f))
-        }, lp(576, MATCH))
+        }, w(576))
         addView(c.col(Dim.GAP).apply {
             addView(androidAuto(), lp(MATCH, 0, 1f))
             addView(quick(), lp(MATCH, WRAP))
-        }, lp(0, MATCH, 1f))
+        }, w(344))
     }
 
     private fun battery() = c.card().apply {
@@ -93,15 +94,15 @@ class HomeScreen(host: Host) : Screen(host) {
         addView(c.row(16).apply {
             addView(c.col(2).apply {
                 addView(c.label("Asistentes"))
-                adasState = c.text("—", Ty.TITLE, Pal.text, Ty.uiMedium); addView(adasState)
+                adasState = c.text("—", Ty.TITLE, Pal.text, Ty.uiMedium).apply { maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END }; addView(adasState)
                 adasSub = c.text("", Ty.CAPTION, Pal.text2).apply { maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END }; addView(adasSub)
             }, lp(0, WRAP, 1f))
-            adasApply = Btn(c, "Aplicar mi perfil", Icons.shield, 30, vertical = false).apply {
+            adasApply = Btn(c, "Aplicar perfil", Icons.shield, 30, vertical = false).apply {
                 look = Look.PRIMARY
                 setOnClickListener { applyAdas() }
             }
-            addView(adasApply, lp(260, Dim.TAP))
-            addView(Btn(c, null, Icons.chevronRight, 30).apply { setOnClickListener { host.go("adas") } }, lp(Dim.TAP, Dim.TAP))
+            addView(adasApply, lp(224, Dim.TAP))
+            addView(Btn(c, null, Icons.chevronRight, 30).apply { setOnClickListener { host.go("adas") } }, lp(Dim.TAP_MIN, Dim.TAP))
         })
     }
 
@@ -198,7 +199,7 @@ class HomeScreen(host: Host) : Screen(host) {
             else -> "Sin conexión"
         }
         adasApply.look = if (match == true) Look.NEUTRAL else Look.PRIMARY
-        adasApply.setLabel(if (match == true) "Perfil aplicado" else "Aplicar mi perfil")
+        adasApply.setLabel(if (match == true) "Perfil aplicado" else "Aplicar perfil")
 
         modes.select(CarBridge.driveModes.indexOf(s.driveMode).takeIf { it >= 0 })
         regen.setSub(VehicleState.regenLabel(s.regenLevel, s.onePedal))

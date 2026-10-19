@@ -104,25 +104,24 @@ class Rail(c: Context, private val onNav: (Nav) -> Unit, private val onLocked: (
 // ───────────────────────────── barre de clim ─────────────────────────────
 
 /**
- * Barre de climatisation persistante (112 px) : température, ventilation, AUTO, A/C, recyclage,
- * sièges et volant chauffants, dégivrages, « Más » et marche/arrêt. Commandes de [CarBridge].
+ * Barre de clim persistante (112 px). Disposition conduite à gauche : siège conducteur et volant
+ * côté conducteur, siège passager côté passager, consigne et ventilation au centre. Pas de
+ * marche/arrêt ni de dégivrage : les boutons physiques de la voiture suffisent (retour d'essai).
+ * Les boutons sont en relief (surface 3) pour rester bien séparés sur l'écran de la voiture.
  */
 @SuppressLint("ViewConstructor")
 class ClimateBar(c: Context, private val onMore: () -> Unit) : LinearLayout(c) {
     private val temp = ValueText(c, Ty.VALUE, Ty.LABEL)
     private val fanValue = c.text("—", Ty.TITLE, Pal.text, Ty.num)
-    private val fanBars = LevelBars(c, 7, 8, 6, rising = true, gapPx = 3).apply { color = Pal.action }
+    private val fanBars = LevelBars(c, VehicleState.FAN_MAX, 6, 6, rising = true, gapPx = 2).apply { color = Pal.action }
     private val auto = tile("AUTO", null)
     private val ac = tile("A/C", null).apply { accent = Pal.cold }
     private val recirc = tile(null, Icons.recirc)
     private val seatL = seatTile(Icons.seatLeft)
     private val wheel = tile(null, Icons.wheel).apply { accent = Pal.heat }
     private val seatR = seatTile(Icons.seatRight)
-    private val defF = tile(null, Icons.defrostFront).apply { accent = Pal.heat }
-    private val defR = tile(null, Icons.defrostRear).apply { accent = Pal.heat }
-    private val more = Btn(c, null, Icons.chevronUp, 32).apply { look = Look.NEUTRAL }
-    private val power = tile(null, Icons.power).apply { accent = Pal.energy }
-    private val dimmable = c.row(10)
+    private val more = Btn(c, null, Icons.chevronUp, 32).apply { look = Look.RAISED }
+    private val dimmable = c.row(GAP)
     private val seatLBars get() = seatL.getChildAt(seatL.childCount - 1) as LevelBars
     private val seatRBars get() = seatR.getChildAt(seatR.childCount - 1) as LevelBars
 
@@ -132,29 +131,38 @@ class ClimateBar(c: Context, private val onMore: () -> Unit) : LinearLayout(c) {
         background = rounded(Pal.surface, Dim.CARD_R)
         setPadding(12, 12, 12, 12)
 
-        val minus = Btn(c, null, Icons.minus, 36).apply { setOnClickListener { CarBridge.stepTemp(-1) } }
-        val plus = Btn(c, null, Icons.plus, 36).apply { setOnClickListener { CarBridge.stepTemp(1) } }
+        val minus = Btn(c, null, Icons.minus, 36).apply { look = Look.RAISED; setOnClickListener { CarBridge.stepTemp(-1) } }
+        val plus = Btn(c, null, Icons.plus, 36).apply { look = Look.RAISED; setOnClickListener { CarBridge.stepTemp(1) } }
         minus.iconView?.color = Pal.cold; plus.iconView?.color = Pal.heat
         temp.gravity = Gravity.CENTER or Gravity.BOTTOM
-        dimmable.addView(minus, lp(Dim.TAP, Dim.TAP))
-        dimmable.addView(temp, lp(150, WRAP))
-        dimmable.addView(plus, lp(Dim.TAP, Dim.TAP))
-        dimmable.addView(divider())
-        val fanDown = Btn(c, null, Icons.minus, 30).apply { setOnClickListener { CarBridge.stepFan(-1) } }
-        val fanUp = Btn(c, null, Icons.plus, 30).apply { setOnClickListener { CarBridge.stepFan(1) } }
+        val fanDown = Btn(c, null, Icons.minus, 30).apply { look = Look.RAISED; setOnClickListener { CarBridge.stepFan(-1) } }
+        val fanUp = Btn(c, null, Icons.plus, 30).apply { look = Look.RAISED; setOnClickListener { CarBridge.stepFan(1) } }
         val fanMid = c.col(6).apply {
             gravity = Gravity.CENTER
             addView(c.row(6).apply { gravity = Gravity.CENTER; addView(IconView(c, Icons.fan, 24, 2.8f).apply { color = Pal.text2 }); addView(fanValue) })
             addView(fanBars)
         }
+
+        // conducteur : siège + volant
+        dimmable.addView(seatL, lp(0, Dim.TAP, 1f))
+        dimmable.addView(wheel, lp(0, Dim.TAP, 1f))
+        dimmable.addView(divider())
+        // consigne
+        dimmable.addView(minus, lp(Dim.TAP, Dim.TAP))
+        dimmable.addView(temp, lp(150, WRAP))
+        dimmable.addView(plus, lp(Dim.TAP, Dim.TAP))
+        dimmable.addView(divider())
+        // ventilation (11 vitesses)
         dimmable.addView(fanDown, lp(Dim.TAP_MIN, Dim.TAP))
-        dimmable.addView(fanMid, lp(84, WRAP))
+        dimmable.addView(fanMid, lp(96, WRAP))
         dimmable.addView(fanUp, lp(Dim.TAP_MIN, Dim.TAP))
         dimmable.addView(divider())
-        for (t in listOf(auto, ac, recirc, seatL, wheel, seatR, defF, defR)) dimmable.addView(t, lp(0, Dim.TAP, 1f))
+        for (t in listOf(auto, ac, recirc)) dimmable.addView(t, lp(0, Dim.TAP, 1f))
+        dimmable.addView(more, lp(0, Dim.TAP, 1f))
+        dimmable.addView(divider())
+        // passager : siège
+        dimmable.addView(seatR, lp(0, Dim.TAP, 1f))
         addView(dimmable, lp(0, Dim.TAP, 1f))
-        addView(more, lp(Dim.TAP, Dim.TAP).apply { leftMargin = 10 })
-        addView(power, lp(Dim.TAP, Dim.TAP).apply { leftMargin = 10 })
 
         auto.setOnClickListener { CarBridge.toggleAuto() }
         ac.setOnClickListener { CarBridge.toggleAc() }
@@ -162,19 +170,18 @@ class ClimateBar(c: Context, private val onMore: () -> Unit) : LinearLayout(c) {
         seatL.setOnClickListener { CarBridge.cycleSeatHeat(left = true) }
         seatR.setOnClickListener { CarBridge.cycleSeatHeat(left = false) }
         wheel.setOnClickListener { CarBridge.toggleSteeringHeat() }
-        defF.setOnClickListener { CarBridge.toggleDefrostFront() }
-        defR.setOnClickListener { CarBridge.toggleDefrostRear() }
         more.setOnClickListener { onMore() }
-        power.setOnClickListener { CarBridge.togglePower() }
     }
 
     private fun divider() = View(context).apply { setBackgroundColor(Pal.line) }.also { it.layoutParams = lp(1, 56) }
 
     private fun tile(label: String?, icon: Icon?) = Btn(context, label, icon, 32, textSize = Ty.LABEL, led = true).apply {
+        look = Look.RAISED
         labelView?.typeface = Ty.uiMedium
     }
 
     private fun seatTile(icon: Icon) = Btn(context, null, icon, 32).apply {
+        look = Look.RAISED
         accent = Pal.heat
         addView(LevelBars(context, 3, 14, 5).also { it.color = Pal.heat }, lp(WRAP, WRAP).apply { topMargin = 8 })
     }
@@ -182,22 +189,22 @@ class ClimateBar(c: Context, private val onMore: () -> Unit) : LinearLayout(c) {
     fun bind(s: VehicleState) {
         val on = s.hvacOn != false
         dimmable.alpha = if (on) 1f else 0.55f
-        power.on = on
         val t = s.driverTemp
         Fmt.temp(t).let { (v, u) -> temp.set(v, u) }
         val fan = s.fanSpeed
         val autoOn = s.autoOn == true
-        fanValue.text = when { !on -> "OFF"; autoOn -> "A"; fan != null -> fan.toString(); else -> "—" }
+        fanValue.put(when { !on -> "OFF"; autoOn -> "A"; fan != null -> fan.toString(); else -> "—" })
         fanBars.level = if (on && !autoOn) fan ?: 0 else 0
         auto.on = autoOn
         ac.on = s.acOn == true
         recirc.on = s.recirc == 0 || s.recirc == 2
+        // sièges et volant : présents sur les versions équipées ; sinon leurs places restent vides
         val heat = CarBridge.heatControl
-        for (v in listOf(seatL, wheel, seatR)) v.visibility = if (heat) VISIBLE else GONE
+        for (v in listOf(seatL, wheel, seatR)) v.visibility = if (heat) VISIBLE else INVISIBLE
         seatL.on = (s.seatHeatL ?: 0) > 0; seatLBars.level = s.seatHeatL ?: 0
         seatR.on = (s.seatHeatR ?: 0) > 0; seatRBars.level = s.seatHeatR ?: 0
         wheel.on = s.wheelHeat == 1
-        defF.on = s.defrostFront == true
-        defR.on = s.defrostRear == true
     }
+
+    companion object { private const val GAP = 12 }
 }

@@ -82,7 +82,8 @@ class MediaCard(c: Context, compact: Boolean, private val big: Boolean = false) 
             addView(play.apply { setOnClickListener { MediaHub.playPause() } }, lp(0, tap, 1.3f))
             addView(Btn(c, null, Icons.next, 36).apply { setOnClickListener { MediaHub.next() } }, lp(0, tap, 1f))
         })
-        setOnClickListener { MediaHub.ownerComponent()?.let { comp -> try { context.startActivity(Intent().setComponent(comp).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) } catch (_: Exception) {} } }
+        // Toucher la carte n'ouvre plus l'appli d'origine (retour d'essai : la radio s'ouvrait) ;
+        // elle reste accessible depuis la page Medios (« Radio original », « Bluetooth y USB »).
     }
 
     fun bind() {

@@ -22,6 +22,11 @@ import androidx.core.graphics.PathParser
 // ───────────────────────────── mise en page ─────────────────────────────
 
 fun lp(w: Int, h: Int, weight: Float = 0f) = LinearLayout.LayoutParams(w, h, weight)
+/**
+ * Colonne d'écran proportionnelle : la largeur de la maquette (écran de 1920 px) sert de poids,
+ * pour que tout tienne si la voiture laisse un peu moins de place (barre système, police plus large).
+ */
+fun w(designPx: Int) = LinearLayout.LayoutParams(0, MATCH, designPx.toFloat())
 const val MATCH = ViewGroup.LayoutParams.MATCH_PARENT
 const val WRAP = ViewGroup.LayoutParams.WRAP_CONTENT
 
@@ -77,6 +82,27 @@ class ValueText(c: Context, size: Float, unitSize: Float, private val unitColor:
         addView(value)
         addView(unit, lp(WRAP, WRAP).apply { leftMargin = (unitSize / 4).toInt(); bottomMargin = (size * 0.08f).toInt() })
     }
+    private val baseValuePx = value.textSize
+    private val probe = android.graphics.Paint(value.paint)
+
+    /**
+     * Si la place manque (police plus large, écran plus étroit), le chiffre rétrécit jusqu'à 60 %
+     * au lieu de pousser les boutons voisins hors de la carte.
+     */
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        if (MeasureSpec.getMode(widthMeasureSpec) != MeasureSpec.UNSPECIFIED) {
+            val avail = MeasureSpec.getSize(widthMeasureSpec) - paddingLeft - paddingRight
+            probe.textSize = baseValuePx; probe.typeface = value.typeface
+            val valueW = probe.measureText(value.text.toString())
+            val unitText = unit.text.toString()
+            val unitW = if (unitText.isEmpty()) 0f else unit.paint.measureText(unitText) + (unit.layoutParams as MarginLayoutParams).leftMargin
+            val target = if (valueW > 0 && valueW + unitW > avail)
+                (baseValuePx * (avail - unitW) / valueW).coerceIn(baseValuePx * 0.6f, baseValuePx) else baseValuePx
+            if (Math.abs(value.textSize - target) > 0.5f) value.setTextSize(android.util.TypedValue.COMPLEX_UNIT_PX, target)
+        }
+        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
+    }
+
     fun set(v: String, u: String = unit.text.toString(), color: Int = Pal.text) {
         if (value.text != v) value.text = v
         if (unit.text != u) unit.text = u

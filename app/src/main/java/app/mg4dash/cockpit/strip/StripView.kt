@@ -74,19 +74,16 @@ class StripView(c: Context, private val onRight: Boolean, private val onExpand: 
     // Barra de clima
     private val temp = ValueText(c, Ty.VALUE, Ty.LABEL)
     private val fan = c.text("—", Ty.TITLE, Pal.text, Ty.num)
-    private val seatL = Btn(c, null, Icons.seatLeft, 30).apply { accent = Pal.heat }
-    private val seatR = Btn(c, null, Icons.seatRight, 30).apply { accent = Pal.heat }
+    private val seatL = Btn(c, null, Icons.seatLeft, 30).apply { look = Look.RAISED; accent = Pal.heat }
+    private val seatR = Btn(c, null, Icons.seatRight, 30).apply { look = Look.RAISED; accent = Pal.heat }
     private val seatLBars = LevelBars(c, 3, 14, 5).apply { color = Pal.heat }
     private val seatRBars = LevelBars(c, 3, 14, 5).apply { color = Pal.heat }
-    private val wheel = Btn(c, null, Icons.wheel, 30, led = true).apply { accent = Pal.heat }
-    private val defF = Btn(c, null, Icons.defrostFront, 30, led = true).apply { accent = Pal.heat }
-    private val ac = Btn(c, "A/C", null, textSize = Ty.LABEL, led = true).apply { accent = Pal.cold }
+    private val wheel = Btn(c, null, Icons.wheel, 30, led = true).apply { look = Look.RAISED; accent = Pal.heat }
+    private val ac = Btn(c, "A/C", null, textSize = Ty.LABEL, led = true).apply { look = Look.RAISED; accent = Pal.cold }
 
     // pages Clima / Energía / Vehículo (déclarées avant init : elles y sont remplies)
     private var recSeg: Segmented? = null
     private var autoBtn: Btn? = null
-    private var defRBtn: Btn? = null
-    private var powerBtn: Btn? = null
     private val chargeText = c.text("", Ty.LABEL, Pal.text, Ty.uiMedium)
     private val vehText = c.text("", Ty.LABEL, Pal.text)
     // puissance en direct et heure (déclarées avant init : live() y est appelé)
@@ -154,8 +151,7 @@ class StripView(c: Context, private val onRight: Boolean, private val onExpand: 
         addView(Segmented(context, listOf("Exterior", "Interior", "Auto"), height = Dim.TAP_MIN, textSize = Ty.CAPTION, gap = 8) { i -> CarBridge.setRecirc(listOf(1, 0, 2)[i]) }.also { recSeg = it }, lp(MATCH, Dim.TAP_MIN))
         addView(context.row(12).apply {
             addView(Btn(context, "AUTO", null, textSize = Ty.LABEL, led = true).also { autoBtn = it }.apply { setOnClickListener { CarBridge.toggleAuto() } }, lp(0, Dim.TAP_MIN, 1f))
-            addView(Btn(context, "Luneta", Icons.defrostRear, 26, led = true).also { defRBtn = it }.apply { accent = Pal.heat; setOnClickListener { CarBridge.toggleDefrostRear() } }, lp(0, Dim.TAP_MIN, 1f))
-            addView(Btn(context, null, Icons.power, 28, led = true).also { powerBtn = it }.apply { accent = Pal.energy; setOnClickListener { CarBridge.togglePower() } }, lp(Dim.TAP_MIN, Dim.TAP_MIN))
+            addView(Btn(context, "Más clima", Icons.chevronRight, 26, vertical = false, iconEnd = true).apply { setOnClickListener { toggleSheet() } }, lp(0, Dim.TAP_MIN, 1f))
         })
     }
 
@@ -178,22 +174,23 @@ class StripView(c: Context, private val onRight: Boolean, private val onExpand: 
     private fun climateBar(): View = context.col(12).apply {
         setPadding(0, 12, 0, 0)
         addView(context.row(10).apply {
-            addView(Btn(context, null, Icons.minus, 36).apply { iconView?.color = Pal.cold; setOnClickListener { CarBridge.stepTemp(-1) } }, lp(96, 70))
+            addView(Btn(context, null, Icons.minus, 36).apply { look = Look.RAISED; iconView?.color = Pal.cold; setOnClickListener { CarBridge.stepTemp(-1) } }, lp(96, 70))
             temp.gravity = Gravity.CENTER or Gravity.BOTTOM
             addView(temp, lp(0, WRAP, 1f))
-            addView(Btn(context, null, Icons.plus, 36).apply { iconView?.color = Pal.heat; setOnClickListener { CarBridge.stepTemp(1) } }, lp(96, 70))
-            addView(Btn(context, null, Icons.minus, 30).apply { setOnClickListener { CarBridge.stepFan(-1) } }, lp(76, 70))
+            addView(Btn(context, null, Icons.plus, 36).apply { look = Look.RAISED; iconView?.color = Pal.heat; setOnClickListener { CarBridge.stepTemp(1) } }, lp(96, 70))
+            addView(Btn(context, null, Icons.minus, 30).apply { look = Look.RAISED; setOnClickListener { CarBridge.stepFan(-1) } }, lp(76, 70))
             addView(context.row(4).apply { gravity = Gravity.CENTER; addView(IconView(context, Icons.fan, 22, 2.8f).apply { color = Pal.text2 }); addView(fan) }, lp(70, WRAP))
-            addView(Btn(context, null, Icons.plus, 30).apply { setOnClickListener { CarBridge.stepFan(1) } }, lp(76, 70))
+            addView(Btn(context, null, Icons.plus, 30).apply { look = Look.RAISED; setOnClickListener { CarBridge.stepFan(1) } }, lp(76, 70))
         })
+        // conducteur à gauche (siège + volant), passager à droite ; pas de marche/arrêt ni de dégivrage
         addView(context.row(10).apply {
             seatL.addView(seatLBars, lp(WRAP, WRAP).apply { topMargin = 6 }); seatL.setOnClickListener { CarBridge.cycleSeatHeat(true) }
             seatR.addView(seatRBars, lp(WRAP, WRAP).apply { topMargin = 6 }); seatR.setOnClickListener { CarBridge.cycleSeatHeat(false) }
             wheel.setOnClickListener { CarBridge.toggleSteeringHeat() }
-            defF.setOnClickListener { CarBridge.toggleDefrostFront() }
             ac.setOnClickListener { CarBridge.toggleAc() }
-            for (b in listOf(seatL, wheel, seatR, defF, ac)) addView(b, lp(0, 70, 1f))
+            for (b in listOf(seatL, wheel, ac)) addView(b, lp(0, 70, 1f))
             addView(Btn(context, "Más", Icons.chevronRight, 26).apply { look = Look.RAISED; setOnClickListener { toggleSheet() } }, lp(0, 70, 1f))
+            addView(seatR, lp(0, 70, 1f))
         })
     }
 
@@ -239,7 +236,7 @@ class StripView(c: Context, private val onRight: Boolean, private val onExpand: 
         driving = (s.speedKmh?.let { Math.abs(it) } ?: 0f) > 2f
         for (k in 2..4) tabs[k].alpha = if (driving && k != 4) 0.55f else 1f
 
-        soc.set(s.batteryPercent?.toString() ?: "—", "%")
+        soc.set(s.socPrecise?.let { Fmt.dec(it) } ?: s.batteryPercent?.toString() ?: "—", "%")
         range.set(s.rangeKm?.toString() ?: "—", "km")
         bar.set(s.socPrecise ?: s.batteryPercent?.toFloat() ?: 0f, (CarProps.targetSocPercent(CarProps.getInt(CarProps.CHRG_TRGT_SOC)) ?: -1).toFloat())
         modes.select(CarBridge.driveModes.indexOf(s.driveMode).takeIf { it >= 0 })
@@ -252,8 +249,6 @@ class StripView(c: Context, private val onRight: Boolean, private val onExpand: 
 
         recSeg?.select(when (s.recirc) { 1 -> 0; 0 -> 1; 2 -> 2; else -> null })
         autoBtn?.on = s.autoOn == true
-        defRBtn?.on = s.defrostRear == true
-        powerBtn?.on = s.hvacOn != false
 
         val plugged = VehicleState.isPlugged(s.chargeStatus)
         chargeText.put(if (plugged) VehicleState.chargeStatusLabel(s.chargeStatus) + (s.chargeRemainMin?.takeIf { it in 1..6000 }?.let { " · " + Fmt.hm(it) } ?: "") else "Sin enchufar")
@@ -267,7 +262,6 @@ class StripView(c: Context, private val onRight: Boolean, private val onExpand: 
         seatL.on = (s.seatHeatL ?: 0) > 0; seatLBars.level = s.seatHeatL ?: 0
         seatR.on = (s.seatHeatR ?: 0) > 0; seatRBars.level = s.seatHeatR ?: 0
         wheel.on = s.wheelHeat == 1
-        defF.on = s.defrostFront == true
         ac.on = s.acOn == true
         (sheet as? ClimateSheet)?.bind(s)
     }
@@ -279,7 +273,7 @@ class StripView(c: Context, private val onRight: Boolean, private val onExpand: 
 @SuppressLint("ViewConstructor")
 class ClimateSheet(c: Context, onClose: () -> Unit) : LinearLayout(c) {
     private val temp = ValueText(c, Ty.HERO, Ty.TITLE)
-    private val fan = Segmented(c, (1..7).map { it.toString() }, height = Dim.TAP, gap = 8) { i -> CarBridge.stepFan(i + 1 - (CarBridge.state.value.fanSpeed ?: 1)) }
+    private val fan = Segmented(c, (VehicleState.FAN_MIN..VehicleState.FAN_MAX).map { it.toString() }, height = Dim.TAP, textSize = Ty.LABEL, gap = 6) { i -> CarBridge.stepFan(i + 1 - (CarBridge.state.value.fanSpeed ?: 1)) }
     private val air = Segmented(c, listOf("Cara", "Cara y\npies", "Pies", "Pies y\nparabrisas", "Parabrisas"), height = 112, textSize = Ty.CAPTION) { i -> CarBridge.setFanDirection(i) }
     private val seatL = Segmented(c, listOf("Off", "1", "2", "3"), height = Dim.TAP, selectedLook = Look.HEAT) { i -> CarBridge.setSeatHeat(true, i) }
     private val seatR = Segmented(c, listOf("Off", "1", "2", "3"), height = Dim.TAP, selectedLook = Look.HEAT) { i -> CarBridge.setSeatHeat(false, i) }
@@ -304,8 +298,8 @@ class ClimateSheet(c: Context, onClose: () -> Unit) : LinearLayout(c) {
         addView(fan, lp(MATCH, Dim.TAP))
         addView(air, lp(MATCH, 112))
         addView(c.row(Dim.GAP).apply {
-            addView(c.col(8).apply { addView(c.label("Asiento izquierdo")); addView(seatL, lp(MATCH, Dim.TAP)) }, lp(0, WRAP, 1f))
-            addView(c.col(8).apply { addView(c.label("Asiento derecho")); addView(seatR, lp(MATCH, Dim.TAP)) }, lp(0, WRAP, 1f))
+            addView(c.col(8).apply { addView(c.label("Conductor")); addView(seatL, lp(MATCH, Dim.TAP)) }, lp(0, WRAP, 1f))
+            addView(c.col(8).apply { addView(c.label("Acompañante")); addView(seatR, lp(MATCH, Dim.TAP)) }, lp(0, WRAP, 1f))
         })
     }
 

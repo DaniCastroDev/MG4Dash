@@ -30,6 +30,7 @@ import app.mg4dash.cockpit.lp
 import app.mg4dash.cockpit.put
 import app.mg4dash.cockpit.row
 import app.mg4dash.cockpit.text
+import app.mg4dash.cockpit.w
 import app.mg4dash.energy.ChargeGuard
 import app.mg4dash.media.MediaHub
 
@@ -54,7 +55,7 @@ class DrivingScreen(host: Host) : Screen(host) {
     override fun build(): View = c.row(Dim.GAP).apply {
         gravity = Gravity.TOP
         media = MediaCard(c, compact = true, big = true)
-        addView(media, lp(640, MATCH))
+        addView(media, w(640))
         addView(c.card().apply {
             addView(c.row().apply {
                 addView(c.label("Energía"), lp(0, WRAP, 1f))
@@ -72,7 +73,7 @@ class DrivingScreen(host: Host) : Screen(host) {
             addView(View(c), lp(MATCH, 0, 1f))
             addView(c.label("Consumo · últimos 10 km"))
             cons = BarChart(c); addView(cons, lp(MATCH, 120))
-        }, lp(560, MATCH))
+        }, w(560))
         addView(c.col(Dim.GAP).apply {
             addView(locked("Modo de conducción").also { mode = it.second }.first, lp(MATCH, 0, 1f))
             addView(locked("Regeneración").also { regen = it.second }.first, lp(MATCH, 0, 1f))
@@ -82,7 +83,7 @@ class DrivingScreen(host: Host) : Screen(host) {
                 addView(aa, lp(0, 44, 1f).apply { leftMargin = 12 })
                 setOnClickListener { host.go("aa") }
             }, lp(MATCH, Dim.TAP))
-        }, lp(0, MATCH, 1f))
+        }, w(528))
     }
 
     /** Carte en lecture seule avec cadenas : « Solo con el coche parado ». */
@@ -112,7 +113,7 @@ class DrivingScreen(host: Host) : Screen(host) {
 
     override fun bind(s: VehicleState) {
         media.bind()
-        soc.set(s.batteryPercent?.toString() ?: "—", "%")
+        soc.set(s.socPrecise?.let { Fmt.dec(it) } ?: s.batteryPercent?.toString() ?: "—", "%")
         range.set(s.rangeKm?.toString() ?: "—", "km")
         val h = ChargeGuard.history.value.takeLast(10)
         cons.set(h, emptyList(), h.takeIf { it.isNotEmpty() }?.average()?.toFloat())

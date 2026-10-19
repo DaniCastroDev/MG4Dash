@@ -37,6 +37,7 @@ import app.mg4dash.cockpit.lp
 import app.mg4dash.cockpit.rounded
 import app.mg4dash.cockpit.row
 import app.mg4dash.cockpit.text
+import app.mg4dash.cockpit.w
 import app.mg4dash.energy.ChargeGuard
 import app.mg4dash.energy.EnergyMonitor
 import app.mg4dash.system.Prefs
@@ -118,7 +119,7 @@ class EnergyScreen(host: Host) : Screen(host) {
             })
             addView(c.label("Consumo por km · últimos 50 km"))
             perKm = BarChart(c); addView(perKm, lp(MATCH, 0, 1f))
-        }, lp(760, MATCH))
+        }, w(760))
         addView(c.card().apply {
             addView(c.label("Reparto de la energía"))
             periodSel = Segmented(c, listOf("Desde la carga", "Desde el arranque"), height = Dim.TAP_MIN, textSize = Ty.CAPTION) { i -> period = i; periodSel.select(i) }
@@ -128,7 +129,7 @@ class EnergyScreen(host: Host) : Screen(host) {
             addView(split, lp(MATCH, 44))
             splitText = c.text("", Ty.LABEL, Pal.text2).apply { maxLines = 4 }; addView(splitText)
             regenText = c.text("", Ty.LABEL, Pal.energy); addView(regenText)
-        }, lp(520, MATCH))
+        }, w(520))
         addView(c.card().apply {
             addView(c.label("Batería ahora"))
             packV = c.text("—", Ty.TITLE, Pal.text, Ty.num); addView(c.statRow("Tensión", packV)); packV.fixedWidth(180)
@@ -137,7 +138,7 @@ class EnergyScreen(host: Host) : Screen(host) {
             addView(View(c), lp(MATCH, 0, 1f))
             addView(c.label("kWh/100 km por mes"))
             months = BarChart(c); addView(months, lp(MATCH, 140))
-        }, lp(0, MATCH, 1f))
+        }, w(448))
     }
 
     private fun bindConsumo(s: VehicleState) {
@@ -190,7 +191,7 @@ class EnergyScreen(host: Host) : Screen(host) {
                 cableBtn = Btn(c, "Desbloquear cable", Icons.unlock, 30, vertical = false, sub = "La tapa se abre a mano").apply { setOnClickListener { CarBridge.toggleCableLock() } }
                 addView(primary, lp(0, Dim.TAP, 1f)); addView(cableBtn, lp(0, Dim.TAP, 1f))
             })
-        }, lp(652, MATCH))
+        }, w(652))
         addView(c.card().apply {
             addView(c.label("Sesión de carga"))
             addView(c.row(24).apply {
@@ -200,7 +201,7 @@ class EnergyScreen(host: Host) : Screen(host) {
                 cost = c.text("", Ty.LABEL, Pal.text2, Ty.num); addView(cost)
             })
             curve = ChargeCurve(c); addView(curve, lp(MATCH, 0, 1f))
-        }, lp(628, MATCH))
+        }, w(628))
         addView(c.card().apply {
             reasonCard = c.row(14).apply {
                 background = rounded(Pal.surface2, 16f); setPadding(18, 14, 18, 14)
@@ -224,7 +225,7 @@ class EnergyScreen(host: Host) : Screen(host) {
             addView(v2lCard)
             addView(View(c), lp(MATCH, 0, 1f))
             addView(Btn(c, "Programar carga", Icons.calendar, 30, vertical = false).apply { setOnClickListener { show(2) } }, lp(MATCH, Dim.TAP))
-        }, lp(0, MATCH, 1f))
+        }, w(448))
     }
 
     private fun onPrimary() {
@@ -312,14 +313,14 @@ class EnergyScreen(host: Host) : Screen(host) {
                 addView(stepper("Termina") { d -> shift(false, d) }.also { end = it.second }.first, lp(0, WRAP, 1f))
             })
             addView(c.text("La carga empieza sola en el horario elegido. Los días de la semana no se pueden programar en este coche.", Ty.LABEL, Pal.text2).apply { maxLines = 3 })
-        }, lp(1080, MATCH))
+        }, w(1080))
         addView(c.card().apply {
             addView(c.label("Ahora"))
             addView(c.text("¿Necesitas batería ya?", Ty.TITLE, Pal.text, Ty.uiMedium))
             addView(c.text("Empieza a cargar sin esperar al horario.", Ty.LABEL, Pal.text2))
             addView(View(c), lp(MATCH, 0, 1f))
             addView(Btn(c, "Cargar ahora", Icons.energy, 30, vertical = false, textSize = Ty.BODY).apply { look = Look.PRIMARY; setOnClickListener { CarBridge.startCharge(); show(1) } }, lp(MATCH, Dim.PRIMARY))
-        }, lp(0, MATCH, 1f))
+        }, w(664))
     }
 
     private fun stepper(title: String, onStep: (Int) -> Unit): Pair<View, TextView> {

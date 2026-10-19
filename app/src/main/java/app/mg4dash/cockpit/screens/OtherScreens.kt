@@ -29,6 +29,7 @@ import app.mg4dash.cockpit.put
 import app.mg4dash.cockpit.row
 import app.mg4dash.cockpit.strip.StripService
 import app.mg4dash.cockpit.text
+import app.mg4dash.cockpit.w
 import app.mg4dash.media.MediaHub
 import app.mg4dash.system.HomeSwitcher
 import app.mg4dash.system.Prefs
@@ -42,7 +43,7 @@ class MediaScreen(host: Host) : Screen(host) {
     override fun build(): View = c.row(Dim.GAP).apply {
         gravity = Gravity.TOP
         card = MediaCard(c, compact = false, big = true)
-        addView(card, lp(1080, MATCH))
+        addView(card, w(1080))
         addView(c.card(gap = 12).apply {
             addView(c.label("Apps de audio"))
             addView(Btn(c, "Radio original", Icons.radio, 30, vertical = false).apply { setOnClickListener { Launch.open(c, Launch.RADIO) } }, lp(MATCH, Dim.TAP))
@@ -51,7 +52,7 @@ class MediaScreen(host: Host) : Screen(host) {
             }, lp(MATCH, Dim.TAP))
             addView(View(c), lp(MATCH, 0, 1f))
             addView(c.text("FM, AM y DAB se controlan desde aquí; las favoritas se guardan en la radio original.", Ty.LABEL, Pal.text2).apply { maxLines = 4 })
-        }, lp(0, MATCH, 1f))
+        }, w(664))
     }
 
     override fun bind(s: VehicleState) = card.bind()
@@ -80,14 +81,14 @@ class AaScreen(host: Host) : Screen(host) {
                 }, lp(0, Dim.PRIMARY, 1f))
                 addView(Btn(c, "Usar sin Android Auto", Icons.fullscreen, 30, vertical = false).apply { setOnClickListener { host.go("home") } }, lp(0, Dim.PRIMARY, 1f))
             })
-        }, lp(1000, MATCH))
+        }, w(1000))
         addView(c.card().apply {
             addView(c.label("Franja con Android Auto"))
             addView(c.text("Con Android Auto conectado, el launcher muestra una franja de 640 px junto a la proyección.", Ty.LABEL, Pal.text2).apply { maxLines = 4 })
             addView(c.text("En DiAuto › Ajustes › Márgenes, pon 640 px en el lado de la franja (izquierdo por defecto).", Ty.LABEL, Pal.text).apply { maxLines = 4 })
             addView(View(c), lp(MATCH, 0, 1f))
             addView(Btn(c, "Ajustes de la franja", Icons.settings, 30, vertical = false).apply { setOnClickListener { host.go("settings") } }, lp(MATCH, Dim.TAP))
-        }, lp(0, MATCH, 1f))
+        }, w(744))
     }
 
     private fun step(n: String, t: String) = c.row(16).apply {
@@ -130,7 +131,7 @@ class SettingsScreen(host: Host) : Screen(host) {
             })
             addView(c.label("Clima"))
             addView(switch("Ocultar el panel de clima del sistema", "Se cierra al encender el aire", { prefs.hideStockHvac }) { prefs.hideStockHvac = it })
-        }, lp(860, MATCH))
+        }, w(860))
         addView(c.card(gap = 12).apply {
             addView(c.label("Energía"))
             priceHome = c.text("", Ty.TITLE, Pal.text, Ty.num)
@@ -143,7 +144,22 @@ class SettingsScreen(host: Host) : Screen(host) {
             addView(Btn(c, "Interfaz clásica de MG4Dash", Icons.apps, 30, vertical = false).apply { setOnClickListener { c.startActivity(Intent(c, ClassicActivity::class.java)) } }, lp(MATCH, Dim.TAP_MIN))
             addView(View(c), lp(MATCH, 0, 1f))
             addView(c.text("Versión " + app.mg4dash.BuildConfig.VERSION_NAME, Ty.CAPTION, Pal.text2))
-        }, lp(0, MATCH, 1f))
+            // Diagnóstico de espacio : pantalla real, ventana disponible y fuente condensada presente
+            addView(c.text("", Ty.CAPTION, Pal.text3).apply { maxLines = 2; post { text = screenInfo(this) } })
+        }, w(884))
+    }
+
+    private fun screenInfo(v: View): String {
+        val real = android.util.DisplayMetrics()
+        @Suppress("DEPRECATION")
+        (c.getSystemService(android.content.Context.WINDOW_SERVICE) as android.view.WindowManager).defaultDisplay.getRealMetrics(real)
+        val root = v.rootView
+        // Sans police condensée, Android retombe sur la police normale, plus large : mêmes largeurs = absente
+        val sample = "0123456789"
+        val cond = android.graphics.Paint().apply { typeface = Ty.num; textSize = 40f }.measureText(sample)
+        val plain = android.graphics.Paint().apply { typeface = android.graphics.Typeface.create("sans-serif", android.graphics.Typeface.BOLD); textSize = 40f }.measureText(sample)
+        return "Pantalla ${real.widthPixels}×${real.heightPixels} · ${real.densityDpi} dpi · ventana ${root.width}×${root.height}" +
+            " · fuente condensada ${if (cond < plain * 0.97f) "sí" else "no"}"
     }
 
     private fun switch(title: String, sub: String, get: () -> Boolean, set: (Boolean) -> Unit) =

@@ -25,6 +25,7 @@ import app.mg4dash.cockpit.lp
 import app.mg4dash.cockpit.put
 import app.mg4dash.cockpit.row
 import app.mg4dash.cockpit.text
+import app.mg4dash.cockpit.w
 
 /**
  * Clima · pantalla completa (lienzo : Climate.dc.html). Sans barre de clim : l'écran entier l'est.
@@ -36,7 +37,6 @@ class ClimateScreen(host: Host) : Screen(host) {
 
     private lateinit var temp: ValueText
     private lateinit var outside: android.widget.TextView
-    private lateinit var power: Btn
     private lateinit var ac: Btn
     private lateinit var auto: Btn
     private lateinit var fan: Segmented
@@ -46,21 +46,16 @@ class ClimateScreen(host: Host) : Screen(host) {
     private lateinit var seatL: Segmented
     private lateinit var seatR: Segmented
     private lateinit var wheel: Btn
-    private lateinit var defF: Btn
-    private lateinit var defR: Btn
     private lateinit var heatCard: View
     private val airValues = listOf(0, 1, 2, 3, 4)
 
     override fun build(): View = c.row(Dim.GAP).apply {
         gravity = Gravity.TOP
         addView(c.card().apply {
-            addView(c.row().apply {
-                addView(c.col().apply {
-                    addView(c.label("Conductor"))
-                    outside = c.text("", Ty.LABEL, Pal.text2); addView(outside)
-                }, lp(0, WRAP, 1f))
-                power = Btn(c, null, Icons.power, 34, led = true).apply { accent = Pal.energy; setOnClickListener { CarBridge.togglePower() } }
-                addView(power, lp(Dim.TAP, Dim.TAP))
+            // marche / arrêt et dégivrage : boutons physiques de la voiture (retour d'essai)
+            addView(c.col().apply {
+                addView(c.label("Conductor"))
+                outside = c.text("", Ty.LABEL, Pal.text2); addView(outside)
             })
             addView(View(c), lp(MATCH, 0, 1f))
             addView(c.row(16).apply {
@@ -77,11 +72,11 @@ class ClimateScreen(host: Host) : Screen(host) {
                 auto = Btn(c, "AUTO", null, textSize = Ty.TITLE, led = true).apply { setOnClickListener { CarBridge.toggleAuto() } }
                 addView(ac, lp(0, Dim.PRIMARY, 1f)); addView(auto, lp(0, Dim.PRIMARY, 1f))
             })
-        }, lp(560, MATCH))
+        }, w(560))
 
         addView(c.card(gap = 24).apply {
             fanTitle = c.label("Ventilador"); addView(fanTitle)
-            fan = Segmented(c, (1..7).map { it.toString() }, gap = 8) { i ->
+            fan = Segmented(c, (VehicleState.FAN_MIN..VehicleState.FAN_MAX).map { it.toString() }, textSize = Ty.LABEL, gap = 6) { i ->
                 val cur = CarBridge.state.value.fanSpeed ?: 1
                 CarBridge.stepFan(i + 1 - cur)
             }
@@ -92,34 +87,29 @@ class ClimateScreen(host: Host) : Screen(host) {
             addView(c.label("Recirculación"))
             rec = Segmented(c, listOf("Exterior", "Interior", "Auto")) { i -> CarBridge.setRecirc(listOf(1, 0, 2)[i]) }
             addView(rec, lp(MATCH, Dim.TAP))
-        }, lp(640, MATCH))
+        }, w(640))
 
         heatCard = c.card().apply {
-            addView(c.label("Asiento izquierdo"))
+            // conducteur : siège + volant ensemble ; passager à part
+            addView(c.label("Conductor"))
             seatL = Segmented(c, listOf("Off", "1", "2", "3"), selectedLook = Look.HEAT) { i -> stepSeat(true, i) }
             addView(seatL, lp(MATCH, Dim.TAP))
-            addView(c.label("Asiento derecho"))
+            wheel = Btn(c, "Volante", Icons.wheel, 34, vertical = false, led = true).apply { accent = Pal.heat; setOnClickListener { CarBridge.toggleSteeringHeat() } }
+            addView(wheel, lp(MATCH, Dim.TAP))
+            addView(c.label("Acompañante"))
             seatR = Segmented(c, listOf("Off", "1", "2", "3"), selectedLook = Look.HEAT) { i -> stepSeat(false, i) }
             addView(seatR, lp(MATCH, Dim.TAP))
-            addView(c.row(12).apply {
-                wheel = Btn(c, "Volante", Icons.wheel, 36, led = true).apply { accent = Pal.heat; setOnClickListener { CarBridge.toggleSteeringHeat() } }
-                defF = Btn(c, "Parabrisas", Icons.defrostFront, 36, led = true).apply { accent = Pal.heat; setOnClickListener { CarBridge.toggleDefrostFront() } }
-                defR = Btn(c, "Luneta", Icons.defrostRear, 36, led = true).apply { accent = Pal.heat; setOnClickListener { CarBridge.toggleDefrostRear() } }
-                addView(wheel, lp(0, 120, 1f)); addView(defF, lp(0, 120, 1f)); addView(defR, lp(0, 120, 1f))
-            })
             addView(View(c), lp(MATCH, 0, 1f))
             addView(Btn(c, "App de clima original", Icons.chevronRight, 28, vertical = false, iconEnd = true).apply {
                 setOnClickListener { Launch.open(c, Launch.HVAC) }
             }, lp(MATCH, Dim.TAP_MIN))
         }
-        addView(heatCard, lp(0, MATCH, 1f))
+        addView(heatCard, w(528))
     }
 
     private fun stepSeat(left: Boolean, target: Int) = CarBridge.setSeatHeat(left, target)
 
     override fun bind(s: VehicleState) {
-        val on = s.hvacOn != false
-        power.on = on
         val t = s.driverTemp
         Fmt.temp(t).let { (v, u) -> temp.set(v, if (u.isEmpty()) "" else "°") }
         outside.put(s.outsideTemp?.let { "Fuera ${Math.round(it)} °C" } ?: "")
@@ -134,7 +124,5 @@ class ClimateScreen(host: Host) : Screen(host) {
         if (s.seatHeatL == 0) seatL.lookFor(0, Look.SELECTED)
         if (s.seatHeatR == 0) seatR.lookFor(0, Look.SELECTED)
         wheel.on = s.wheelHeat == 1
-        defF.on = s.defrostFront == true
-        defR.on = s.defrostRear == true
     }
 }
