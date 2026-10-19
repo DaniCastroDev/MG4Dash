@@ -16,6 +16,17 @@ object MockCar {
             odometerKm = 18342, speedKmh = 0f, ecoOn = false, steeringMode = 2, brakePedalMode = 0,
             enduranceMode = 0, lasMode = 3, fcwState = 2, fcwBrakeMode = 2, overSpeedSound = 1, speedLimitSound = 0,
         )
+        // Puissance simulée : ~12 kW à l'arrêt (clim), oscillation −40…+60 kW en roulant (relance / régénération)
+        scope.launch {
+            var t = 0
+            while (true) {
+                delay(200)
+                t++
+                val moving = (state.value.speedKmh ?: 0f) > 1f
+                val kw = if (moving) 10f + 50f * kotlin.math.sin(t / 15f) else 12f
+                CarProps.mockSet(CarProps.BMS_PACK_CRNT, kw * 1000f / 352.4f)
+            }
+        }
         scope.launch {
             var n = 0
             while (true) {

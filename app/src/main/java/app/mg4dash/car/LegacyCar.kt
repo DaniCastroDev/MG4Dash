@@ -30,6 +30,7 @@ object LegacyCar {
 
     @Volatile private var ac: Any? = null
     @Volatile private var initDone = false
+    @Volatile private var lastConnectTry = 0L
     private var appContext: Context? = null
 
     val ready: Boolean get() = ac != null
@@ -94,29 +95,29 @@ object LegacyCar {
 
     private fun onHvacEvent(bean: Any?) {
         bean ?: return
-        fun get(name: String) = try { bean.javaClass.getMethod(name).invoke(bean) as? Int } catch (_: Exception) { null }
+        fun get(name: String) = try { Refl.m(bean, name).invoke(bean) as? Int } catch (_: Exception) { null }
         if (get("getMarkedSignalId") == SIGNAL_HVAC_POWER && get("getHvacPowerStatus") == 1) HvacOverlay.suppress("rappel")
     }
 
     private fun int(name: String): Int? {
         val a = ac ?: return null
-        return try { a.javaClass.getMethod(name).invoke(a) as? Int } catch (_: Exception) { null }
+        return try { Refl.m(a, name).invoke(a) as? Int } catch (_: Exception) { null }
     }
 
     private fun float(name: String): Float? {
         val a = ac ?: return null
-        return try { a.javaClass.getMethod(name).invoke(a) as? Float } catch (_: Exception) { null }
+        return try { Refl.m(a, name).invoke(a) as? Float } catch (_: Exception) { null }
     }
 
     private fun set(name: String, v: Int): Boolean {
         val a = ac ?: return false
-        return try { a.javaClass.getMethod(name, Int::class.javaPrimitiveType).invoke(a, v); true }
+        return try { Refl.m(a, name, Int::class.javaPrimitiveType).invoke(a, v); true }
         catch (e: Exception) { Log.w(TAG, "$name($v) : ${(e.cause ?: e).message}"); false }
     }
 
     private fun call(name: String): Boolean {
         val a = ac ?: return false
-        return try { a.javaClass.getMethod(name).invoke(a); true }
+        return try { Refl.m(a, name).invoke(a); true }
         catch (e: Exception) { Log.w(TAG, "$name() : ${(e.cause ?: e).message}"); false }
     }
 
@@ -124,8 +125,11 @@ object LegacyCar {
 
     /** Lecture de la clim dans l'état véhicule ; inchangé si le service ne répond pas. */
     fun readHvac(s: VehicleState): VehicleState {
-        if (ac == null) { initDone = false; connect() }
-        if (ac == null) return s
+        if (ac == null) {
+            val now = android.os.SystemClock.elapsedRealtime()
+            if (now - lastConnectTry >= 5_000) { lastConnectTry = now; initDone = false; connect() }
+            if (ac == null) return s
+        }
         fun b(v: Int?) = v?.takeIf { it >= 0 }?.let { it == 1 }
         return s.copy(
             connected = true,
@@ -242,12 +246,12 @@ object LegacyCar {
 
     private fun chInt(name: String): Int? {
         val c = charging ?: return null
-        return try { c.javaClass.getMethod(name).invoke(c) as? Int } catch (_: Exception) { null }
+        return try { Refl.m(c, name).invoke(c) as? Int } catch (_: Exception) { null }
     }
 
     private fun chSet(name: String, v: Int): Boolean {
         val c = charging ?: return false
-        return try { c.javaClass.getMethod(name, Int::class.javaPrimitiveType).invoke(c, v); true }
+        return try { Refl.m(c, name, Int::class.javaPrimitiveType).invoke(c, v); true }
         catch (e: Exception) { Log.w(TAG, "$name($v) : ${(e.cause ?: e).message}"); false }
     }
 
@@ -298,7 +302,7 @@ object LegacyCar {
     fun driveMode(v: Int): Boolean {
         if (setting == null && retryDue(::lastSettingTry)) connectSetting()
         val m = setting ?: return false
-        return try { m.javaClass.getMethod("setDriveMode", Int::class.javaPrimitiveType).invoke(m, v); true }
+        return try { Refl.m(m, "setDriveMode", Int::class.javaPrimitiveType).invoke(m, v); true }
         catch (e: Exception) { Log.w(TAG, "setDriveMode($v) : ${(e.cause ?: e).message}"); false }
     }
 

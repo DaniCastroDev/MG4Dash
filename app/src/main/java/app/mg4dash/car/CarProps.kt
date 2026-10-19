@@ -115,7 +115,7 @@ object CarProps {
         if (BuildConfig.MOCK) return mock[id]?.toInt()
         val m = cpm ?: return null
         return try {
-            m.javaClass.getMethod("getIntProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType).invoke(m, id, 0) as? Int
+            Refl.m(m, "getIntProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType).invoke(m, id, 0) as? Int
         } catch (_: Throwable) { null }
     }
 
@@ -123,7 +123,7 @@ object CarProps {
         if (BuildConfig.MOCK) return mock[id]?.toFloat()
         val m = cpm ?: return null
         return try {
-            (m.javaClass.getMethod("getFloatProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType).invoke(m, id, 0) as? Float)
+            (Refl.m(m, "getFloatProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType).invoke(m, id, 0) as? Float)
                 ?.takeIf { !it.isNaN() }
         } catch (_: Throwable) { null }
     }
@@ -137,7 +137,7 @@ object CarProps {
         if (BuildConfig.MOCK) return null
         val m = cpm ?: return null
         return try {
-            m.javaClass.getMethod("getIntProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType).invoke(m, id, area) as? Int
+            Refl.m(m, "getIntProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType).invoke(m, id, area) as? Int
         } catch (_: Throwable) { null }
     }
 
@@ -146,7 +146,7 @@ object CarProps {
         if (BuildConfig.MOCK) return null
         val m = cpm ?: return null
         return try {
-            m.javaClass.getMethod("getFloatProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType).invoke(m, id, area) as? Float
+            Refl.m(m, "getFloatProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType).invoke(m, id, area) as? Float
         } catch (_: Throwable) { null }
     }
 
@@ -160,9 +160,9 @@ object CarProps {
         for (area in areas) {
             try {
                 val v = when (type) {
-                    0x00200000 -> m.javaClass.getMethod("getBooleanProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType).invoke(m, id, area)
-                    0x00600000 -> m.javaClass.getMethod("getFloatProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType).invoke(m, id, area)
-                    else -> m.javaClass.getMethod("getIntProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType).invoke(m, id, area)
+                    0x00200000 -> Refl.m(m, "getBooleanProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType).invoke(m, id, area)
+                    0x00600000 -> Refl.m(m, "getFloatProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType).invoke(m, id, area)
+                    else -> Refl.m(m, "getIntProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType).invoke(m, id, area)
                 }
                 if (v != null) { areaCache[id] = area; return v.toString() }
             } catch (_: Throwable) { }
@@ -175,7 +175,7 @@ object CarProps {
         if (BuildConfig.MOCK) { mock[id] = value; return true }
         val m = cpm ?: run { Log.w(TAG, "SET $label ignoré : service non prêt"); return false }
         return try {
-            m.javaClass.getMethod("setIntProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Int::class.javaPrimitiveType)
+            Refl.m(m, "setIntProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Int::class.javaPrimitiveType)
                 .invoke(m, id, area, value)
             Log.i(TAG, "SET $label = $value (0x${Integer.toHexString(id)}, zone 0x${Integer.toHexString(area)})")
             true
@@ -190,7 +190,7 @@ object CarProps {
         if (BuildConfig.MOCK) { mock[id] = value; return true }
         val m = cpm ?: run { Log.w(TAG, "SET $label ignoré : service non prêt"); return false }
         return try {
-            m.javaClass.getMethod("setIntProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Int::class.javaPrimitiveType)
+            Refl.m(m, "setIntProperty", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, Int::class.javaPrimitiveType)
                 .invoke(m, id, 0, value)
             Log.i(TAG, "SET $label = $value (0x${Integer.toHexString(id)})")
             true
@@ -199,6 +199,9 @@ object CarProps {
             false
         }
     }
+
+    /** Émulateur : valeur simulée (MockCar fait varier la puissance en roulant). */
+    fun mockSet(id: Int, v: Number) { if (BuildConfig.MOCK) mock[id] = v }
 
     private fun seedMock() {
         mock[CHRG_TRGT_SOC] = 7; mock[RESER_CTRL] = 2; mock[RESER_ST_HOUR] = 22; mock[RESER_ST_MIN] = 30

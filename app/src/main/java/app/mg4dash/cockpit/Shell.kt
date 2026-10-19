@@ -29,6 +29,9 @@ abstract class Screen(protected val host: Host) {
     open val parkedOnly: Boolean = false
     abstract fun build(): View
     open fun bind(s: VehicleState) {}
+    /** Écran qui affiche la puissance en direct : [onLive] est appelé toutes les 0,2 s tant qu'il est visible. */
+    open val liveRefresh: Boolean = false
+    open fun onLive() {}
     open fun onShow() {}
     open fun onHide() {}
     val view: View by lazy { build() }

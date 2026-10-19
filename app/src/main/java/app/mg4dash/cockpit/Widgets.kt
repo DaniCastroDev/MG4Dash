@@ -316,13 +316,51 @@ class BatteryBar(c: Context) : View(c) {
     }
 }
 
+/**
+ * Puissance batterie en direct (tension × courant du pack, kW ; négatif = régénération), lue toutes
+ * les 0,2 s par les vues qui l'affichent. La jauge suit chaque lecture en lissant ; le chiffre ne
+ * change que deux fois par seconde pour rester lisible.
+ */
+class LivePower {
+    /** Valeur lissée pour la jauge. */
+    var gauge = 0f; private set
+    /** Dernière valeur brute (null : pas de mesure). */
+    var kw: Float? = null; private set
+    private var lastText = 0L
+
+    /** Une lecture ; renvoie true quand le chiffre doit être réaffiché. */
+    fun sample(): Boolean {
+        val v = app.mg4dash.car.CarProps.getFloat(app.mg4dash.car.CarProps.BMS_PACK_VOL)
+        val a = app.mg4dash.car.CarProps.getFloat(app.mg4dash.car.CarProps.BMS_PACK_CRNT)
+        val now = if (v != null && a != null) v * a / 1000f else null
+        kw = now
+        val target = now ?: 0f
+        gauge = if (Math.abs(target - gauge) < 0.05f) target else gauge + (target - gauge) * 0.5f
+        val t = android.os.SystemClock.uptimeMillis()
+        if (t - lastText < TEXT_MS) return false
+        lastText = t
+        return true
+    }
+
+    companion object {
+        const val SAMPLE_MS = 200L
+        const val TEXT_MS = 500L
+    }
+}
+
 /** Puissance instantanée : −60 kW (régénération, vert) … +150 kW (consommation). */
 class PowerGauge(c: Context, private val minKw: Float = -60f, private val maxKw: Float = 150f) : View(c) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val r = RectF()
+    private var drawnKw = 0f
+    /** Ne redessine que si la barre bouge d'au moins 1 px (lue 5 fois par seconde). */
     var kw = 0f
-        set(v) { if (field != v) { field = v; invalidate() } }
+        set(v) {
+            field = v
+            if (width == 0 || Math.abs(v - drawnKw) * width / (maxKw - minKw) >= 1f) invalidate()
+        }
     override fun onDraw(canvas: Canvas) {
+        drawnKw = kw
         val w = width.toFloat(); val h = height.toFloat()
         val zero = w * (-minKw) / (maxKw - minKw)
         val top = h * 0.3f; val bottom = h * 0.7f

@@ -31,6 +31,7 @@ import app.mg4dash.cockpit.card
 import app.mg4dash.cockpit.col
 import app.mg4dash.cockpit.label
 import app.mg4dash.cockpit.lp
+import app.mg4dash.cockpit.fixedWidth
 import app.mg4dash.cockpit.put
 import app.mg4dash.cockpit.rounded
 import app.mg4dash.cockpit.row
@@ -88,6 +89,9 @@ class StripView(c: Context, private val onRight: Boolean, private val onExpand: 
     private var powerBtn: Btn? = null
     private val chargeText = c.text("", Ty.LABEL, Pal.text, Ty.uiMedium)
     private val vehText = c.text("", Ty.LABEL, Pal.text)
+    // puissance en direct et heure (déclarées avant init : live() y est appelé)
+    private val live = app.mg4dash.cockpit.LivePower()
+    private var lastMinute = -1L
 
     init {
         // ligne d'état : 80 px laissés libres côté gauche pour le bouton antibrouillard MG
@@ -112,6 +116,7 @@ class StripView(c: Context, private val onRight: Boolean, private val onExpand: 
         addView(strip, LayoutParams(Dim.STRIP, MATCH, if (onRight) Gravity.END else Gravity.START))
         select(0)
         tick()
+        live()
     }
 
     private fun select(i: Int) {
@@ -123,7 +128,7 @@ class StripView(c: Context, private val onRight: Boolean, private val onExpand: 
 
     private fun inicio(): View = context.col(12).apply {
         addView(context.card(pad = 14, gap = 6).apply {
-            addView(context.row(16).apply { addView(soc); addView(range); addView(View(context), lp(0, 1, 1f)); addView(powerText) })
+            addView(context.row(16).apply { addView(soc); addView(range); addView(View(context), lp(0, 1, 1f)); addView(powerText); powerText.fixedWidth(220) })
             addView(power, lp(MATCH, 24))
             addView(bar, lp(MATCH, 24))
         })
@@ -210,11 +215,25 @@ class StripView(c: Context, private val onRight: Boolean, private val onExpand: 
         tick()
     }
 
-    /** Relecture (chaque seconde, depuis le service). */
+    /** Toutes les 0,2 s (service) : jauge de puissance, chiffre deux fois par seconde, heure. */
+    fun live() {
+        val text = live.sample()
+        power.kw = live.gauge
+        val minute = System.currentTimeMillis() / 60_000L
+        if (minute != lastMinute) {
+            lastMinute = minute
+            val cal = Calendar.getInstance()
+            clock.put(Fmt.clock(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE)))
+        }
+        if (!text) return
+        val kw = live.kw ?: 0f
+        powerText.put((if (kw < -0.05f) "Regenerando " else "") + Fmt.dec(Math.abs(kw), 0) + " kW")
+        powerText.setTextColor(if (kw < -0.05f) Pal.energy else Pal.text2)
+    }
+
+    /** Relecture complète : à chaque changement de l'état du véhicule, des médias ou des asistentes. */
     fun tick() {
         val s = CarBridge.state.value
-        val cal = Calendar.getInstance()
-        clock.put(Fmt.clock(cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE)))
         outside.put(s.outsideTemp?.let { "${Math.round(it)} °C" } ?: "")
         socTop.put(s.socPrecise?.let { Fmt.dec(it) + " %" } ?: s.batteryPercent?.let { "$it %" } ?: "—")
         driving = (s.speedKmh?.let { Math.abs(it) } ?: 0f) > 2f
@@ -222,11 +241,6 @@ class StripView(c: Context, private val onRight: Boolean, private val onExpand: 
 
         soc.set(s.batteryPercent?.toString() ?: "—", "%")
         range.set(s.rangeKm?.toString() ?: "—", "km")
-        val v = CarProps.getFloat(CarProps.BMS_PACK_VOL); val a = CarProps.getFloat(CarProps.BMS_PACK_CRNT)
-        val kw = if (v != null && a != null) v * a / 1000f else 0f
-        power.kw = kw
-        powerText.put((if (kw < -0.05f) "Regenerando " else "") + Fmt.dec(Math.abs(kw), 0) + " kW")
-        powerText.setTextColor(if (kw < -0.05f) Pal.energy else Pal.text2)
         bar.set(s.socPrecise ?: s.batteryPercent?.toFloat() ?: 0f, (CarProps.targetSocPercent(CarProps.getInt(CarProps.CHRG_TRGT_SOC)) ?: -1).toFloat())
         modes.select(CarBridge.driveModes.indexOf(s.driveMode).takeIf { it >= 0 })
         modes.alpha = if (driving) 0.55f else 1f

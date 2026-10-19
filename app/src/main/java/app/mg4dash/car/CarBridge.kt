@@ -49,7 +49,8 @@ object CarBridge {
     @Volatile private var bound = false
 
     private var appContext: Context? = null
-    @Volatile private var fastPoll = true
+    /** Vues du cockpit à l'écran (activité, franja sur Android Auto) ; vide → relecture lente. */
+    private val visible: MutableSet<String> = java.util.concurrent.ConcurrentHashMap.newKeySet()
 
     /** Émulateur : commande simulée (adb : --es mock drive|unplug|startCharge…). */
     fun mock(label: String) { if (BuildConfig.MOCK) MockCar.command(label, _state) }
@@ -84,10 +85,14 @@ object CarBridge {
         "VehicleChargingManager" to LegacyCar.probeCharging(),
     )
 
-    /** Ralentit l'interrogation quand l'accueil n'est pas visible. */
-    fun setForeground(foreground: Boolean) {
-        fastPoll = foreground
-    }
+    /** Une activité du launcher passe au premier plan ou le quitte. */
+    fun setForeground(foreground: Boolean) = setVisible("activity", foreground)
+
+    /**
+     * Une vue du cockpit est à l'écran : l'accueil, une page ou la franja posée sur Android Auto
+     * (avant, Android Auto au premier plan faisait passer toute la relecture au rythme lent).
+     */
+    fun setVisible(who: String, on: Boolean) { if (on) visible.add(who) else visible.remove(who) }
 
     private fun bind() {
         val ctx = appContext ?: return
@@ -128,29 +133,40 @@ object CarBridge {
         if (general?.alive != true) general = query(CODE_GENERAL)?.let { GeneralService(it) }
     }
 
+    // Rythme de relecture. Cockpit à l'écran : clim 0,25 s ; batterie, autonomie, charge, vitesse 3 s.
+    // Rien du cockpit à l'écran : clim 5 s, le reste 15 s. Une valeur inchangée ne réveille pas l'écran
+    // (le StateFlow ne publie que les changements). La puissance instantanée est lue à part, 0,2 s,
+    // par les vues qui l'affichent.
+    private const val HVAC_FAST_MS = 250L
+    private const val HVAC_SLOW_MS = 5_000L
+    private const val ENERGY_FAST_MS = 3_000L
+    private const val ENERGY_SLOW_MS = 15_000L
+    private const val RESOLVE_MS = 5_000L
+
     private suspend fun pollLoop() {
-        var tick = 0L
+        var lastHvac = 0L; var lastEnergy = 0L; var lastResolve = -RESOLVE_MS
         while (scope.isActive) {
+            val fast = visible.isNotEmpty()
+            val now = android.os.SystemClock.elapsedRealtime()
             try {
-                if (adapter == null) {
-                    if (tick % 5 == 0L && Firmware.family != Firmware.Family.LEGACY) bind()
-                } else if (tick % 5 == 0L) {
-                    resolveClients()
+                if (now - lastResolve >= RESOLVE_MS) {
+                    lastResolve = now
+                    if (adapter == null) { if (Firmware.family != Firmware.Family.LEGACY) bind() } else resolveClients()
                 }
-                refreshHvac()
-                if (tick % 3 == 0L) refreshEnergy()
+                if (now - lastHvac >= if (fast) HVAC_FAST_MS else HVAC_SLOW_MS) { lastHvac = now; refreshHvac() }
+                if (now - lastEnergy >= if (fast) ENERGY_FAST_MS else ENERGY_SLOW_MS) { lastEnergy = now; refreshEnergy() }
             } catch (e: Exception) {
                 Log.w(TAG, "poll : ${e.message}")
             }
-            tick++
-            delay(if (fastPoll) 1000L else 5000L)
+            // Au rythme lent on se réveille quand même chaque seconde : le retour à l'écran est pris en compte vite.
+            delay(if (fast) HVAC_FAST_MS else 1_000L)
         }
     }
 
     private inline fun <T> safe(block: () -> T): T? = try { block() } catch (_: Exception) { null }
 
     // Valeur réglée à l'instant : la voiture met un moment à l'appliquer, et la relecture (chaque
-    // seconde) réaffichait l'ancienne valeur entre-temps (« la valeur hésite », issue #6). On garde
+    // fraction de seconde) réaffichait l'ancienne valeur entre-temps (« la valeur hésite », issue #6). On garde
     // l'affichage sur la nouvelle valeur jusqu'à ce que la voiture la confirme, 3 s au plus.
     @Volatile private var holdTemp: Pair<Float, Long>? = null
     @Volatile private var holdFan: Pair<Int, Long>? = null

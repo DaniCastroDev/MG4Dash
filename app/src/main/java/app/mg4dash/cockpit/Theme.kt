@@ -82,6 +82,12 @@ fun Context.pxf(v: Float): Float = v * resources.displayMetrics.density
 /** N'affecte le texte que s'il change : évite une remise en page à chaque trame du véhicule. */
 fun TextView.put(s: CharSequence) { if (text.toString() != s.toString()) text = s }
 
+/** Largeur fixe (après ajout au parent) : changer le texte ne relance plus la mise en page de l'écran. */
+fun TextView.fixedWidth(px: Int, g: Int = android.view.Gravity.END) {
+    layoutParams = layoutParams.apply { width = px }
+    gravity = g
+}
+
 fun TextView.style(sizePx: Float, color: Int, face: Typeface = Ty.ui, upper: Boolean = false): TextView {
     setTextSize(TypedValue.COMPLEX_UNIT_PX, context.pxf(sizePx))
     setTextColor(color)

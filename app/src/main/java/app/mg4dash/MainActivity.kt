@@ -128,6 +128,23 @@ class MainActivity : AppCompatActivity(), Host {
         rail.select(next.nav)
         next.onShow()
         next.bind(last)
+        syncLive()
+    }
+
+    private var resumed = false
+
+    /** Puissance en direct : seulement si l'écran courant l'affiche et que l'activité est visible. */
+    private val liveTick = object : Runnable {
+        override fun run() {
+            val s = current?.takeIf { it.liveRefresh } ?: return
+            try { s.onLive() } catch (e: Exception) { app.mg4dash.system.Log.w("Cockpit", "onLive : ${e.message}") }
+            main.postDelayed(this, app.mg4dash.cockpit.LivePower.SAMPLE_MS)
+        }
+    }
+
+    private fun syncLive() {
+        main.removeCallbacks(liveTick)
+        if (resumed && current?.liveRefresh == true) main.post(liveTick)
     }
 
     private fun onState(s: VehicleState) {
@@ -169,11 +186,15 @@ class MainActivity : AppCompatActivity(), Host {
         Fullscreen.apply(this)
         CarBridge.setForeground(true)
         main.post(clockTick)
+        resumed = true
+        syncLive()
     }
 
     override fun onPause() {
         super.onPause()
         CarBridge.setForeground(false)
+        resumed = false
+        main.removeCallbacks(liveTick)
         main.removeCallbacks(clockTick)
         main.removeCallbacks(recheck)
     }

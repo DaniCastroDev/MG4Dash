@@ -10,10 +10,21 @@ import android.os.IBinder
 import android.os.Looper
 import android.view.Gravity
 import android.view.WindowManager
+import app.mg4dash.car.CarBridge
+import app.mg4dash.cockpit.Adas
 import app.mg4dash.cockpit.Dim
+import app.mg4dash.cockpit.LivePower
 import app.mg4dash.cockpit.Pal
+import app.mg4dash.media.MediaHub
 import app.mg4dash.system.Log
 import app.mg4dash.system.Prefs
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.launch
 
 /**
  * Franja del cockpit sobre Android Auto (lienzo : AA-Parked, AA-Driving, AA-Climate…).
@@ -22,6 +33,9 @@ import app.mg4dash.system.Prefs
  * ce service pose par-dessus une fenêtre superposée (uid système) de 640 × 720 dans cette marge,
  * seulement quand la projection de DiAuto est au premier plan. La feuille de clim élargit la fenêtre
  * à 1600 px le temps de l'afficher.
+ *
+ * Tant qu'elle est affichée, la franja compte comme une vue du cockpit à l'écran (relecture rapide
+ * du véhicule) ; elle se redessine à chaque changement d'état et lit la puissance toutes les 0,2 s.
  */
 class StripService : Service() {
     private val main = Handler(Looper.getMainLooper())
@@ -29,6 +43,8 @@ class StripService : Service() {
     private var params: WindowManager.LayoutParams? = null
     /** Une erreur de la franja ne doit jamais faire tomber l'accueil : on la coupe jusqu'au prochain démarrage. */
     private var broken = false
+    private val ui = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private var updates: Job? = null
     private val wm by lazy { getSystemService(WINDOW_SERVICE) as WindowManager }
     private val am by lazy { getSystemService(ACTIVITY_SERVICE) as ActivityManager }
 
@@ -42,7 +58,23 @@ class StripService : Service() {
     override fun onDestroy() {
         main.removeCallbacks(poll)
         hide()
+        ui.cancel()
         super.onDestroy()
+    }
+
+    /** Erreur dans la franja : on la retire et on la laisse coupée (l'accueil continue). */
+    private fun fail(where: String, t: Throwable) {
+        Log.e(TAG, "franja desactivada tras un error ($where)", t)
+        broken = true
+        hide()
+    }
+
+    private val liveTick = object : Runnable {
+        override fun run() {
+            val v = view ?: return
+            try { v.live() } catch (t: Throwable) { fail("live", t); return }
+            main.postDelayed(this, LivePower.SAMPLE_MS)
+        }
     }
 
     private val poll = object : Runnable {
@@ -52,13 +84,8 @@ class StripService : Service() {
                 (projectionOnTop() || (app.mg4dash.BuildConfig.MOCK && sp.getBoolean("mock_strip", false)))
             try {
                 if (show && view == null && !broken) show() else if (!show && view != null) hide()
-                view?.tick()
-            } catch (t: Throwable) {
-                Log.e(TAG, "franja desactivada tras un error", t)
-                broken = true
-                hide()
-            }
-            main.postDelayed(this, if (view != null) 1000 else 1500)
+            } catch (t: Throwable) { fail("poll", t) }
+            main.postDelayed(this, VISIBILITY_MS)
         }
     }
 
@@ -80,7 +107,15 @@ class StripService : Service() {
             PixelFormat.OPAQUE,
         ).apply { gravity = Gravity.TOP or (if (right) Gravity.END else Gravity.START); title = "MG4 cockpit strip" }
         try { wm.addView(v, p); view = v; params = p; Log.i(TAG, "franja visible") }
-        catch (e: Exception) { Log.w(TAG, "franja : ${e.message}") }
+        catch (e: Exception) { Log.w(TAG, "franja : ${e.message}"); return }
+        CarBridge.setVisible("strip", true)
+        // redessin à chaque changement (véhicule, médias, asistentes) ; puissance et heure à part, 0,2 s
+        updates = ui.launch {
+            merge(CarBridge.state, MediaHub.now, Adas.state).collect {
+                try { view?.tick() } catch (t: Throwable) { fail("tick", t) }
+            }
+        }
+        main.post(liveTick)
     }
 
     private fun resize(expanded: Boolean) {
@@ -91,6 +126,9 @@ class StripService : Service() {
     }
 
     private fun hide() {
+        updates?.cancel(); updates = null
+        main.removeCallbacks(liveTick)
+        CarBridge.setVisible("strip", false)
         view?.let { try { wm.removeView(it) } catch (_: Exception) {} }
         view?.dispose()
         view = null; params = null
@@ -100,6 +138,8 @@ class StripService : Service() {
         private const val TAG = "Strip"
         const val DIAUTO_PKG = "com.drivehub.diauto.mg4"
         private const val PROJECTION = ".aap.AapProjectionActivity"
+        /** Apparition / disparition de la franja quand DiAuto passe au premier plan ou le quitte. */
+        private const val VISIBILITY_MS = 500L
 
         /** Arranque ou arrêt selon le réglage (appelé au démarrage et depuis Ajustes). */
         fun sync(c: Context) {

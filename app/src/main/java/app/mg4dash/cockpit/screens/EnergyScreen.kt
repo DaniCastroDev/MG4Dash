@@ -15,6 +15,9 @@ import app.mg4dash.cockpit.ChargeCurve
 import app.mg4dash.cockpit.ChargeLog
 import app.mg4dash.cockpit.Dim
 import app.mg4dash.cockpit.Fmt
+import app.mg4dash.cockpit.put
+import app.mg4dash.cockpit.fixedWidth
+import app.mg4dash.cockpit.LivePower
 import app.mg4dash.cockpit.Host
 import app.mg4dash.cockpit.Icons
 import app.mg4dash.cockpit.Look
@@ -128,9 +131,9 @@ class EnergyScreen(host: Host) : Screen(host) {
         }, lp(520, MATCH))
         addView(c.card().apply {
             addView(c.label("Batería ahora"))
-            packV = c.text("—", Ty.TITLE, Pal.text, Ty.num); addView(c.statRow("Tensión", packV))
-            packA = c.text("—", Ty.TITLE, Pal.text, Ty.num); addView(c.statRow("Corriente", packA))
-            packKw = c.text("—", Ty.TITLE, Pal.text, Ty.num); addView(c.statRow("Potencia", packKw))
+            packV = c.text("—", Ty.TITLE, Pal.text, Ty.num); addView(c.statRow("Tensión", packV)); packV.fixedWidth(180)
+            packA = c.text("—", Ty.TITLE, Pal.text, Ty.num); addView(c.statRow("Corriente", packA)); packA.fixedWidth(180)
+            packKw = c.text("—", Ty.TITLE, Pal.text, Ty.num); addView(c.statRow("Potencia", packKw)); packKw.fixedWidth(180)
             addView(View(c), lp(MATCH, 0, 1f))
             addView(c.label("kWh/100 km por mes"))
             months = BarChart(c); addView(months, lp(MATCH, 140))
@@ -153,10 +156,6 @@ class EnergyScreen(host: Host) : Screen(host) {
         }
         splitText.text = "Conducción ${Fmt.dec(t.driveKwh)} kWh\nClimatización ${Fmt.dec(t.climKwh)} kWh\nAccesorios ${Fmt.dec(t.accKwh)} kWh · ${t.km} km"
         regenText.text = "Regenerado ${Fmt.dec(t.regenKwh)} kWh"
-        val v = CarProps.getFloat(CarProps.BMS_PACK_VOL); val a = CarProps.getFloat(CarProps.BMS_PACK_CRNT)
-        packV.text = v?.let { "${Math.round(it)} V" } ?: "—"
-        packA.text = a?.let { "${Fmt.dec(it)} A" } ?: "—"
-        packKw.text = if (v != null && a != null) "${Fmt.dec(v * a / 1000f)} kW" else "—"
         months.set(EnergyMonitor.monthlyPer100().takeLast(12), emptyList(), null)
     }
 
@@ -192,8 +191,8 @@ class EnergyScreen(host: Host) : Screen(host) {
         addView(c.card().apply {
             addView(c.label("Sesión de carga"))
             addView(c.row(24).apply {
-                kw = ValueText(c, Ty.VALUE, Ty.LABEL); addView(kw)
-                va = c.text("", Ty.LABEL, Pal.text2, Ty.num); addView(va)
+                kw = ValueText(c, Ty.VALUE, Ty.LABEL); addView(kw); kw.value.fixedWidth(110)
+                va = c.text("", Ty.LABEL, Pal.text2, Ty.num); addView(va); va.fixedWidth(150, android.view.Gravity.START)
                 added = c.text("", Ty.LABEL, Pal.text2, Ty.num); addView(added)
                 cost = c.text("", Ty.LABEL, Pal.text2, Ty.num); addView(cost)
             })
@@ -276,10 +275,6 @@ class EnergyScreen(host: Host) : Screen(host) {
         cableBtn.look = when { !CarBridge.cableLockControl -> Look.DISABLED; done && locked -> Look.PRIMARY; else -> Look.NEUTRAL }
         cableBtn.iconView?.icon = if (locked) Icons.unlock else Icons.lock
 
-        val p = ChargeLog.powerKw()?.takeIf { charging || v2l } ?: 0f
-        kw.set(Fmt.dec(p), "kW")
-        val acV = CarProps.getFloat(CarProps.ONBD_CHRG_AC_VOL); val acA = CarProps.getFloat(CarProps.ONBD_CHRG_AC_CRNT)
-        va.text = if (acV != null && acA != null && acV > 50f) "${Math.round(acV)} V · ${Math.round(acA)} A" else ""
         val sess = ChargeLog.session.value
         val kwh = sess.addedKwh
         added.text = "${Fmt.dec(kwh)} kWh"
@@ -357,6 +352,29 @@ class EnergyScreen(host: Host) : Screen(host) {
             CarProps.setInt(CarProps.RESER_SP_HOUR, spH, "fin (h)"); CarProps.setInt(CarProps.RESER_SP_MIN, spM, "fin (min)")
         }
         start.text = Fmt.clock(stH, stM); end.text = Fmt.clock(spH, spM)
+    }
+
+    // Puissance en direct (0,2 s ; chiffres deux fois par seconde) : pack sur Consumo, charge sur Carga.
+    override val liveRefresh = true
+    private var lastLiveText = 0L
+
+    override fun onLive() {
+        if (tab == 2) return
+        val t = android.os.SystemClock.uptimeMillis()
+        if (t - lastLiveText < LivePower.TEXT_MS) return
+        lastLiveText = t
+        if (tab == 0) {
+            val v = CarProps.getFloat(CarProps.BMS_PACK_VOL); val a = CarProps.getFloat(CarProps.BMS_PACK_CRNT)
+            packV.put(v?.let { "${Math.round(it)} V" } ?: "—")
+            packA.put(a?.let { "${Fmt.dec(it)} A" } ?: "—")
+            packKw.put(if (v != null && a != null) "${Fmt.dec(v * a / 1000f)} kW" else "—")
+        } else {
+            val s = CarBridge.state.value
+            val active = VehicleState.isCharging(s.chargeStatus) || s.chargeCtrl == 1 || VehicleState.isDischargeMode(s.chargeStatus)
+            kw.set(Fmt.dec(ChargeLog.powerKw()?.takeIf { active } ?: 0f), "kW")
+            val acV = CarProps.getFloat(CarProps.ONBD_CHRG_AC_VOL); val acA = CarProps.getFloat(CarProps.ONBD_CHRG_AC_CRNT)
+            va.put(if (acV != null && acA != null && acV > 50f) "${Math.round(acV)} V · ${Math.round(acA)} A" else "")
+        }
     }
 
     override fun bind(s: VehicleState) {

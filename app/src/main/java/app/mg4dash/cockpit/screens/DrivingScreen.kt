@@ -9,6 +9,8 @@ import app.mg4dash.cockpit.BarChart
 import app.mg4dash.cockpit.Btn
 import app.mg4dash.cockpit.Dim
 import app.mg4dash.cockpit.Fmt
+import app.mg4dash.cockpit.fixedWidth
+import app.mg4dash.cockpit.LivePower
 import app.mg4dash.cockpit.Host
 import app.mg4dash.cockpit.IconView
 import app.mg4dash.cockpit.Icons
@@ -56,7 +58,7 @@ class DrivingScreen(host: Host) : Screen(host) {
         addView(c.card().apply {
             addView(c.row().apply {
                 addView(c.label("Energía"), lp(0, WRAP, 1f))
-                powerValue = ValueText(c, Ty.VALUE, Ty.LABEL); addView(powerValue)
+                powerValue = ValueText(c, Ty.VALUE, Ty.LABEL); addView(powerValue); powerValue.value.fixedWidth(110)
             })
             power = PowerGauge(c); addView(power, lp(MATCH, 48))
             addView(c.row().apply {
@@ -97,12 +99,19 @@ class DrivingScreen(host: Host) : Screen(host) {
         return card to value
     }
 
+    private val live = LivePower()
+    override val liveRefresh = true
+
+    override fun onLive() {
+        val text = live.sample()
+        power.kw = live.gauge
+        if (!text) return
+        val kw = live.kw ?: 0f
+        powerValue.set((if (kw > 0.05f) "+" else if (kw < -0.05f) "−" else "") + Fmt.dec(Math.abs(kw), 0), "kW", if (kw < -0.05f) Pal.energy else Pal.text)
+    }
+
     override fun bind(s: VehicleState) {
         media.bind()
-        val v = CarProps.getFloat(CarProps.BMS_PACK_VOL); val a = CarProps.getFloat(CarProps.BMS_PACK_CRNT)
-        val kw = if (v != null && a != null) v * a / 1000f else 0f
-        power.kw = kw
-        powerValue.set((if (kw > 0.05f) "+" else if (kw < -0.05f) "−" else "") + Fmt.dec(Math.abs(kw), 0), "kW", if (kw < -0.05f) Pal.energy else Pal.text)
         soc.set(s.batteryPercent?.toString() ?: "—", "%")
         range.set(s.rangeKm?.toString() ?: "—", "km")
         val h = ChargeGuard.history.value.takeLast(10)
