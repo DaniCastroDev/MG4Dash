@@ -444,7 +444,10 @@ class BarChart(c: Context) : View(c) {
     }
 }
 
-/** Courbe de charge : batterie (%) en haut, puissance (kW) en bas, sur le même axe de temps. */
+/**
+ * Courbe de charge : batterie (%) et puissance (kW) dans le même graphique, sur le même axe de temps.
+ * Axe de gauche en kW (couleur de la puissance), axe de droite en % (couleur de la batterie).
+ */
 class ChargeCurve(c: Context) : View(c) {
     private val line = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 3f; strokeJoin = Paint.Join.ROUND; strokeCap = Paint.Cap.ROUND }
     private val area = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -460,30 +463,42 @@ class ChargeCurve(c: Context) : View(c) {
         this.samples = samples; this.spanMin = spanMin; this.startLabel = startLabel; this.endLabel = endLabel; this.maxKw = maxKw; invalidate()
     }
     override fun onDraw(canvas: Canvas) {
-        val left = 70f; val right = width - 8f; val w = right - left
-        val socTop = 20f; val socBot = height * 0.48f
-        val kwTop = height * 0.58f; val kwBot = height - 34f
-        grid.color = Pal.line; txt.color = Pal.text2
-        for ((y, l) in listOf(socTop to "100 %", (socTop + socBot) / 2 to "50 %", socBot to "0 %", kwTop to "${maxKw.toInt()} kW", kwBot to "0 kW")) {
-            canvas.drawLine(left, y, right, y, grid)
-            canvas.drawText(l, left - 10f - txt.measureText(l), y + 7f, txt)
+        val left = 76f; val right = width - 76f; val w = right - left
+        val top = 14f; val bot = height - 38f; val h = bot - top
+        fun kwLabel(v: Float) = (if (v % 1f == 0f) v.toInt().toString() else Fmt.dec(v)) + " kW"
+        // quadrillage commun : 0, ½ et max
+        for (f in listOf(0f, 0.5f, 1f)) {
+            val y = bot - h * f
+            grid.color = Pal.line; canvas.drawLine(left, y, right, y, grid)
+            txt.color = Pal.energy
+            val kl = kwLabel(maxKw * f); canvas.drawText(kl, left - 12f - txt.measureText(kl), y + 7f, txt)
+            txt.color = Pal.text2
+            canvas.drawText("${(100 * f).toInt()} %", right + 12f, y + 7f, txt)
         }
-        canvas.drawText(startLabel, left, height - 4f, txt)
-        canvas.drawText(endLabel, right - txt.measureText(endLabel), height - 4f, txt)
+        txt.color = Pal.text2
+        canvas.drawText(startLabel, left, height - 6f, txt)
+        canvas.drawText(endLabel, right - txt.measureText(endLabel), height - 6f, txt)
         if (samples.size < 2) return
         fun x(t: Float) = left + w * (t / spanMin).coerceIn(0f, 1f)
+        fun yKw(k: Float) = bot - h * (k / maxKw).coerceIn(0f, 1f)
+        fun ySoc(s: Float) = bot - h * (s / 100f).coerceIn(0f, 1f)
         // puissance (aire + ligne)
-        path.reset(); path.moveTo(x(samples[0].first), kwBot)
-        samples.forEach { (t, _, k) -> path.lineTo(x(t), kwBot - (kwBot - kwTop) * (k / maxKw).coerceIn(0f, 1f)) }
-        path.lineTo(x(samples.last().first), kwBot); path.close()
+        path.reset(); path.moveTo(x(samples[0].first), bot)
+        samples.forEach { (t, _, k) -> path.lineTo(x(t), yKw(k)) }
+        path.lineTo(x(samples.last().first), bot); path.close()
         area.color = Pal.energy; area.alpha = 36; canvas.drawPath(path, area)
         path.reset()
-        samples.forEachIndexed { i, (t, _, k) -> val y = kwBot - (kwBot - kwTop) * (k / maxKw).coerceIn(0f, 1f); if (i == 0) path.moveTo(x(t), y) else path.lineTo(x(t), y) }
+        samples.forEachIndexed { i, (t, _, k) -> if (i == 0) path.moveTo(x(t), yKw(k)) else path.lineTo(x(t), yKw(k)) }
         line.color = Pal.energy; canvas.drawPath(path, line)
-        // batterie
+        // batterie par-dessus
         path.reset()
-        samples.forEachIndexed { i, (t, soc, _) -> val y = socBot - (socBot - socTop) * soc / 100f; if (i == 0) path.moveTo(x(t), y) else path.lineTo(x(t), y) }
+        samples.forEachIndexed { i, (t, soc, _) -> if (i == 0) path.moveTo(x(t), ySoc(soc)) else path.lineTo(x(t), ySoc(soc)) }
         line.color = Pal.text; canvas.drawPath(path, line)
+        // points finaux
+        val last = samples.last()
+        area.alpha = 255
+        area.color = Pal.energy; canvas.drawCircle(x(last.first), yKw(last.third), 6f, area)
+        area.color = Pal.text; canvas.drawCircle(x(last.first), ySoc(last.second), 6f, area)
     }
 }
 
