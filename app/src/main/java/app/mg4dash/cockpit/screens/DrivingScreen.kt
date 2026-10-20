@@ -47,8 +47,8 @@ class DrivingScreen(host: Host) : Screen(host) {
     private lateinit var soc: ValueText
     private lateinit var range: ValueText
     private lateinit var cons: BarChart
-    private lateinit var mode: android.widget.TextView
-    private lateinit var regen: android.widget.TextView
+    private lateinit var trip: Pair<ValueText, android.widget.TextView>
+    private lateinit var sinceCharge: Pair<ValueText, android.widget.TextView>
     private lateinit var adas: android.widget.TextView
     private lateinit var aa: Pill
 
@@ -75,8 +75,9 @@ class DrivingScreen(host: Host) : Screen(host) {
             cons = BarChart(c); addView(cons, lp(MATCH, 120))
         }, w(560))
         addView(c.col(Dim.GAP).apply {
-            addView(profileCard("Modo de conducción").also { mode = it.second }.first, lp(MATCH, 0, 1f))
-            addView(profileCard("Regeneración").also { regen = it.second }.first, lp(MATCH, 0, 1f))
+            // énergie consommée : depuis le démarrage et depuis la dernière charge (EnergyMonitor)
+            addView(energyCard("Este viaje").also { trip = it.second }.first, lp(MATCH, 0, 1f))
+            addView(energyCard("Desde la última carga").also { sinceCharge = it.second }.first, lp(MATCH, 0, 1f))
             addView(profileCard("Asistentes").also { adas = it.second }.first, lp(MATCH, 0, 1f))
             aa = Pill(c, "Android Auto: buscando teléfono…", Pal.heat)
             addView(Btn(c, null, Icons.phone, 30, vertical = false).apply {
@@ -84,6 +85,26 @@ class DrivingScreen(host: Host) : Screen(host) {
                 setOnClickListener { host.go("aa") }
             }, lp(MATCH, Dim.TAP))
         }, w(528))
+    }
+
+    /** kWh nets consommés (sortie − régénération) et km parcourus sur la période. */
+    private fun energyCard(title: String): Pair<View, Pair<ValueText, android.widget.TextView>> {
+        val value = ValueText(c, Ty.VALUE, Ty.LABEL)
+        val sub = c.text("", Ty.LABEL, Pal.text2).apply { maxLines = 2; gravity = Gravity.END }
+        val card = c.card(gap = 4).apply {
+            addView(c.label(title))
+            addView(c.row(16).apply {
+                gravity = Gravity.BOTTOM
+                addView(value); addView(sub, lp(0, WRAP, 1f))
+            })
+        }
+        return card to (value to sub)
+    }
+
+    private fun showTotals(v: Pair<ValueText, android.widget.TextView>, t: app.mg4dash.energy.EnergyMonitor.Totals) {
+        v.first.set(Fmt.dec(t.netKwh), "kWh")
+        v.second.put("${t.km} km" + (t.per100?.let { " · " + Fmt.dec(it) + " kWh/100" } ?: "") +
+            (if (t.regenKwh >= 0.05f) "\nrecuperados " + Fmt.dec(t.regenKwh) + " kWh" else ""))
     }
 
     /** Carte d'état ; la toucher ouvre « Mi perfil », où se règlent conduite et asistentes. */
@@ -118,8 +139,8 @@ class DrivingScreen(host: Host) : Screen(host) {
         range.set(s.rangeKm?.toString() ?: "—", "km")
         val h = ChargeGuard.history.value.takeLast(10)
         cons.set(h, emptyList(), h.takeIf { it.isNotEmpty() }?.average()?.toFloat())
-        mode.put(VehicleState.driveModeLabel(s.driveMode))
-        regen.put(VehicleState.regenLabel(s.regenLevel, s.onePedal))
+        showTotals(trip, app.mg4dash.energy.EnergyMonitor.sinceStart.value)
+        showTotals(sinceCharge, app.mg4dash.energy.EnergyMonitor.sinceCharge.value)
         adas.put(when (Adas.matches(c)) { true -> "Mi perfil"; false -> "De serie"; null -> "—" })
         val connected = MediaHub.androidAutoAvailable()
         aa.set(if (connected) "Android Auto: conectado" else "Android Auto: buscando teléfono…", if (connected) Pal.energy else Pal.heat)

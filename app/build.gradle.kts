@@ -14,8 +14,8 @@ android {
         // ni de permissions d'exécution à gérer pour une appli au uid système.
         targetSdk = 28
         // Au-dessus de la dernière version du dépôt d'origine : s'installe par-dessus sans désinstaller
-        versionCode = 111
-        versionName = "1.1.12-cockpit.11"
+        versionCode = 112
+        versionName = "1.1.12-cockpit.12"
     }
 
     flavorDimensions += "target"
