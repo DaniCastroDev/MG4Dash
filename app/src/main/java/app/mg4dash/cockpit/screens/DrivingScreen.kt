@@ -27,6 +27,8 @@ import app.mg4dash.cockpit.card
 import app.mg4dash.cockpit.col
 import app.mg4dash.cockpit.label
 import app.mg4dash.cockpit.lp
+import app.mg4dash.cockpit.rounded
+import app.mg4dash.cockpit.Segmented
 import app.mg4dash.cockpit.put
 import app.mg4dash.cockpit.row
 import app.mg4dash.cockpit.text
@@ -47,8 +49,16 @@ class DrivingScreen(host: Host) : Screen(host) {
     private lateinit var soc: ValueText
     private lateinit var range: ValueText
     private lateinit var cons: BarChart
-    private lateinit var trip: Pair<ValueText, android.widget.TextView>
-    private lateinit var sinceCharge: Pair<ValueText, android.widget.TextView>
+    private var period = 0   // 0 = desde la última carga, 1 = desde el arranque
+    private lateinit var periods: Segmented
+    private lateinit var usedTotal: ValueText
+    private lateinit var usedKm: ValueText
+    private lateinit var split: android.widget.LinearLayout
+    private lateinit var driveV: ValueText
+    private lateinit var climV: ValueText
+    private lateinit var accV: ValueText
+    private lateinit var regenV: ValueText
+    private lateinit var regenKm: android.widget.TextView
     private lateinit var adas: android.widget.TextView
     private lateinit var aa: Pill
 
@@ -75,36 +85,77 @@ class DrivingScreen(host: Host) : Screen(host) {
             cons = BarChart(c); addView(cons, lp(MATCH, 120))
         }, w(560))
         addView(c.col(Dim.GAP).apply {
-            // énergie consommée : depuis le démarrage et depuis la dernière charge (EnergyMonitor)
-            addView(energyCard("Este viaje").also { trip = it.second }.first, lp(MATCH, 0, 1f))
-            addView(energyCard("Desde la última carga").also { sinceCharge = it.second }.first, lp(MATCH, 0, 1f))
-            addView(profileCard("Asistentes").also { adas = it.second }.first, lp(MATCH, 0, 1f))
-            aa = Pill(c, "Android Auto: buscando teléfono…", Pal.heat)
-            addView(Btn(c, null, Icons.phone, 30, vertical = false).apply {
-                addView(aa, lp(0, 44, 1f).apply { leftMargin = 12 })
-                setOnClickListener { host.go("aa") }
+            // « Energía usada » du lienzo (Energy.dc.html) : par période, répartition et régénération
+            addView(usedCard(), lp(MATCH, 0, 1f))
+            addView(c.row(Dim.GAP).apply {
+                adas = c.text("—", Ty.CAPTION, Pal.text2).apply { maxLines = 1 }
+                addView(Btn(c, "Asistentes", Icons.shield, 28, vertical = false, iconEnd = false).apply {
+                    addView(adas, lp(WRAP, WRAP).apply { leftMargin = 10 })
+                    setOnClickListener { host.go("adas") }
+                }, lp(0, Dim.TAP, 1f))
+                aa = Pill(c, "Buscando", Pal.heat)
+                addView(Btn(c, null, Icons.phone, 28, vertical = false).apply {
+                    addView(aa, lp(0, 44, 1f).apply { leftMargin = 10 })
+                    setOnClickListener { host.go("aa") }
+                }, lp(0, Dim.TAP, 1f))
             }, lp(MATCH, Dim.TAP))
         }, w(528))
     }
 
-    /** kWh nets consommés (sortie − régénération) et km parcourus sur la période. */
-    private fun energyCard(title: String): Pair<View, Pair<ValueText, android.widget.TextView>> {
-        val value = ValueText(c, Ty.VALUE, Ty.LABEL)
-        val sub = c.text("", Ty.LABEL, Pal.text2).apply { maxLines = 2; gravity = Gravity.END }
-        val card = c.card(gap = 4).apply {
-            addView(c.label(title))
-            addView(c.row(16).apply {
-                gravity = Gravity.BOTTOM
-                addView(value); addView(sub, lp(0, WRAP, 1f))
-            })
-        }
-        return card to (value to sub)
+    private fun usedCard() = c.card(gap = 14).apply {
+        periods = Segmented(c, listOf("Desde la carga", "Desde el arranque"), height = 56, textSize = Ty.CAPTION, gap = 10) { i -> period = i; bindUsed() }
+        addView(periods, lp(MATCH, 56))
+        addView(c.row(10).apply {
+            gravity = Gravity.BOTTOM
+            usedTotal = ValueText(c, Ty.VALUE, Ty.LABEL); addView(usedTotal)
+            usedKm = ValueText(c, Ty.TITLE, Ty.LABEL); addView(usedKm)
+        })
+        split = c.row(3); addView(split, lp(MATCH, 32))
+        addView(c.row(12).apply {
+            driveV = part(this, "Conducción", Pal.text)
+            climV = part(this, "Climatización", Pal.cold)
+            accV = part(this, "Accesorios", Pal.text3)
+        })
+        addView(View(c), lp(MATCH, 0, 1f))
+        addView(c.row(12).apply {
+            background = rounded(Pal.surface2, Dim.BTN_R)
+            setPadding(18, 0, 18, 0)
+            addView(c.text("Regenerado", Ty.LABEL, Pal.text2))
+            regenV = ValueText(c, Ty.TITLE, Ty.CAPTION); addView(regenV)
+            addView(View(c), lp(0, 1, 1f))
+            regenKm = c.text("", Ty.TITLE, Pal.energy, Ty.num); addView(regenKm)
+        }, lp(MATCH, 56))
     }
 
-    private fun showTotals(v: Pair<ValueText, android.widget.TextView>, t: app.mg4dash.energy.EnergyMonitor.Totals) {
-        v.first.set(Fmt.dec(t.netKwh), "kWh")
-        v.second.put("${t.km} km" + (t.per100?.let { " · " + Fmt.dec(it) + " kWh/100" } ?: "") +
-            (if (t.regenKwh >= 0.05f) "\nrecuperados " + Fmt.dec(t.regenKwh) + " kWh" else ""))
+    private fun part(row: android.widget.LinearLayout, title: String, color: Int): ValueText {
+        val v = ValueText(c, Ty.TITLE, Ty.CAPTION)
+        row.addView(c.col(2).apply {
+            addView(c.row(6).apply {
+                addView(View(c).apply { background = rounded(color, 4f) }, lp(14, 14))
+                addView(c.text(title, Ty.CAPTION, Pal.text2).apply { maxLines = 1 })
+            })
+            addView(v)
+        }, lp(0, WRAP, 1f))
+        return v
+    }
+
+    private fun bindUsed() {
+        if (!::periods.isInitialized) return
+        periods.select(period)
+        val t = if (period == 0) app.mg4dash.energy.EnergyMonitor.sinceCharge.value else app.mg4dash.energy.EnergyMonitor.sinceStart.value
+        val used = t.driveKwh + t.climKwh + t.accKwh
+        usedTotal.set(Fmt.dec(used), "kWh usados en")
+        usedKm.set(t.km.toString(), "km")
+        driveV.set(Fmt.dec(t.driveKwh), "kWh"); climV.set(Fmt.dec(t.climKwh), "kWh"); accV.set(Fmt.dec(t.accKwh), "kWh")
+        regenV.set(Fmt.dec(t.regenKwh), "kWh")
+        // autonomie récupérée : kWh régénérés au rythme de consommation de la période
+        regenKm.put(t.per100?.takeIf { it > 0.5f }?.let { "+" + Math.round(t.regenKwh / it * 100f) + " km" } ?: "")
+        split.removeAllViews()
+        val total = used.coerceAtLeast(0.001f)
+        for ((v, col) in listOf(t.driveKwh to Pal.text, t.climKwh to Pal.cold, t.accKwh to Pal.text3)) {
+            if (v <= 0f) continue
+            split.addView(View(c).apply { background = rounded(col, 6f) }, lp(0, MATCH, v / total))
+        }
     }
 
     /** Carte d'état ; la toucher ouvre « Mi perfil », où se règlent conduite et asistentes. */
@@ -139,10 +190,9 @@ class DrivingScreen(host: Host) : Screen(host) {
         range.set(s.rangeKm?.toString() ?: "—", "km")
         val h = ChargeGuard.history.value.takeLast(10)
         cons.set(h, emptyList(), h.takeIf { it.isNotEmpty() }?.average()?.toFloat())
-        showTotals(trip, app.mg4dash.energy.EnergyMonitor.sinceStart.value)
-        showTotals(sinceCharge, app.mg4dash.energy.EnergyMonitor.sinceCharge.value)
+        bindUsed()
         adas.put(when (Adas.matches(c)) { true -> "Mi perfil"; false -> "De serie"; null -> "—" })
         val connected = MediaHub.androidAutoAvailable()
-        aa.set(if (connected) "Android Auto: conectado" else "Android Auto: buscando teléfono…", if (connected) Pal.energy else Pal.heat)
+        aa.set(if (connected) "Conectado" else "Buscando", if (connected) Pal.energy else Pal.heat)
     }
 }
