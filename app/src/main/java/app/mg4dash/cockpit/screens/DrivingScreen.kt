@@ -36,6 +36,9 @@ import app.mg4dash.cockpit.text
 import app.mg4dash.cockpit.w
 import app.mg4dash.energy.ChargeGuard
 import app.mg4dash.media.MediaHub
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import kotlinx.coroutines.launch
 
 /**
  * En marcha · sin Android Auto (lienzo : Driving.dc.html). Moins d'éléments, plus grands :
@@ -65,7 +68,7 @@ class DrivingScreen(host: Host) : Screen(host) {
 
     override fun build(): View = c.row(Dim.GAP).apply {
         gravity = Gravity.TOP
-        media = MediaCard(c, compact = true, big = true)
+        media = MediaCard(c, compact = true, big = true, favourites = true)
         addView(media, w(640))
         addView(c.card().apply {
             addView(c.row().apply {
@@ -192,7 +195,28 @@ class DrivingScreen(host: Host) : Screen(host) {
         powerValue.set((if (kw > 0.05f) "+" else if (kw < -0.05f) "−" else "") + Fmt.dec(Math.abs(kw), 0), "kW", if (kw < -0.05f) Pal.energy else Pal.text)
     }
 
+    // Radio : relue toutes les 3 s tant que l'écran est visible et que la radio est la source
+    private var radioJob: kotlinx.coroutines.Job? = null
+    private var shown = false
+
+    override fun onShow() { shown = true; syncRadio() }
+    override fun onHide() { shown = false; syncRadio() }
+
+    private fun syncRadio() {
+        val want = shown && MediaHub.radioActive
+        if (want == (radioJob != null)) return
+        if (!want) { radioJob?.cancel(); radioJob = null; app.mg4dash.media.Radio.stop(); return }
+        val owner = c as? androidx.lifecycle.LifecycleOwner ?: return
+        radioJob = owner.lifecycleScope.launch {
+            owner.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
+                app.mg4dash.media.Radio.start(c, 3_000L)
+                try { app.mg4dash.media.Radio.state.collect { media.bind() } } finally { app.mg4dash.media.Radio.stop() }
+            }
+        }
+    }
+
     override fun bind(s: VehicleState) {
+        syncRadio()
         media.bind()
         soc.set(s.socPrecise?.let { Fmt.dec(it) } ?: s.batteryPercent?.toString() ?: "—", "%")
         range.set(s.rangeKm?.toString() ?: "—", "km")

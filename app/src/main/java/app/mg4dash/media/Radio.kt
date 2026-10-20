@@ -97,16 +97,24 @@ object Radio {
 
     // ───────── cycle de vie ─────────
 
-    /** Écran visible : liaison au service et relecture rapide. */
-    fun start(context: Context) {
+    /** Rythme de la boucle en cours. */
+    private var pollMs = POLL_MS
+
+    /**
+     * Écran visible : liaison au service et relecture. Medios relit chaque seconde ; la carte de
+     * l'accueil se contente d'un rythme plus lent ([periodMs]), le plus rapide l'emporte.
+     */
+    fun start(context: Context, periodMs: Long = POLL_MS) {
         if (!BuildConfig.MOCK) SaicRadio.connect(context.applicationContext)
-        if (poll?.isActive == true) return
+        if (poll?.isActive == true && pollMs == periodMs) return
+        poll?.cancel()
+        pollMs = periodMs
         poll = scope.launch {
             var tick = 0
             while (isActive) {
                 reload(full = tick % FULL_EVERY == 0 || searchKind != NO_SEARCH)
                 tick++
-                delay(POLL_MS)
+                delay(periodMs)
             }
         }
     }

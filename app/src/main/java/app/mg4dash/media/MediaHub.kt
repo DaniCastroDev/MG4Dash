@@ -503,6 +503,8 @@ object MediaHub {
     /** Radio de l'ancien SDK (SWI68…) : service SAIC au lieu d'un MediaBrowserService. */
     private val legacyRadio: Boolean get() = app.mg4dash.system.Firmware.family == app.mg4dash.system.Firmware.Family.LEGACY
     @Volatile private var radioShown = false
+    /** La carte « lecture en cours » affiche la radio de la voiture (service SAIC). */
+    val radioActive: Boolean get() = radioShown || app.mg4dash.BuildConfig.MOCK   // émulateur : radio simulée
 
     private fun publishRadio() {
         val st = SaicRadio.last

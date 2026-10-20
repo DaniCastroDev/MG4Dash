@@ -18,6 +18,7 @@ import app.mg4dash.cockpit.Segmented
 import app.mg4dash.cockpit.Ty
 import app.mg4dash.cockpit.WRAP
 import app.mg4dash.cockpit.card
+import app.mg4dash.cockpit.col
 import app.mg4dash.cockpit.label
 import app.mg4dash.cockpit.lp
 import app.mg4dash.cockpit.put
@@ -58,7 +59,7 @@ fun sourceName(pkg: String): String = when {
  * Partagée par l'accueil, la conduite et la page Medios.
  */
 @SuppressLint("ViewConstructor")
-class MediaCard(c: Context, compact: Boolean, private val big: Boolean = false) : LinearLayout(c) {
+class MediaCard(c: Context, compact: Boolean, private val big: Boolean = false, favourites: Boolean = false) : LinearLayout(c) {
     private val source = Pill(c, "—", Pal.action)
     private var sourceKeys: List<String> = emptyList()
     private var sources: Segmented? = null
@@ -67,6 +68,11 @@ class MediaCard(c: Context, compact: Boolean, private val big: Boolean = false) 
     private val subtitle = c.text("", Ty.LABEL, Pal.text2).apply { maxLines = 2 }
     private val play = Btn(c, null, Icons.play, 40).apply { look = Look.RAISED }
     private val tap = if (big) Dim.PRIMARY else Dim.TAP
+    /** Favoritas de la bande en cours (radio de la voiture), un toque pour sintonizar. */
+    private val favBox: LinearLayout? = if (favourites) c.col(8) else null
+    private val favRow = c.row(10)
+    private val favHint = c.text("", Ty.CAPTION, Pal.text2).apply { maxLines = 1 }
+    private var favKey: List<String> = emptyList()
 
     init {
         orientation = VERTICAL
@@ -77,6 +83,16 @@ class MediaCard(c: Context, compact: Boolean, private val big: Boolean = false) 
         addView(title, lp(MATCH, WRAP).apply { topMargin = Dim.GAP })
         addView(subtitle, lp(MATCH, WRAP).apply { topMargin = 6 })
         addView(View(c), lp(MATCH, 0, 1f))
+        favBox?.let { box ->
+            box.addView(favHint)
+            box.addView(android.widget.HorizontalScrollView(c).apply {
+                isHorizontalScrollBarEnabled = false
+                overScrollMode = OVER_SCROLL_NEVER
+                addView(favRow, android.widget.FrameLayout.LayoutParams(WRAP, Dim.TAP_MIN))
+            }, lp(MATCH, Dim.TAP_MIN))
+            box.visibility = GONE
+            addView(box, lp(MATCH, WRAP).apply { bottomMargin = Dim.GAP })
+        }
         addView(c.row(12).apply {
             addView(Btn(c, null, Icons.prev, 36).apply { setOnClickListener { MediaHub.previous() } }, lp(0, tap, 1f))
             addView(play.apply { setOnClickListener { MediaHub.playPause() } }, lp(0, tap, 1.3f))
@@ -100,6 +116,42 @@ class MediaCard(c: Context, compact: Boolean, private val big: Boolean = false) 
             sourceRow.addView(sources, lp(MATCH, Dim.TAP_MIN))
         }
         sources?.select(keys.indexOf(MediaHub.currentSource()).takeIf { it >= 0 })
+        bindFavourites()
+    }
+
+    private fun bindFavourites() {
+        val box = favBox ?: return
+        val r = app.mg4dash.media.Radio.state.value
+        val show = MediaHub.radioActive && (r.available || app.mg4dash.BuildConfig.MOCK)
+        box.visibility = if (show) VISIBLE else GONE
+        if (!show) return
+        val band = when (r.band) { app.mg4dash.media.Radio.AM -> "AM"; app.mg4dash.media.Radio.DAB -> "DAB"; else -> "FM" }
+        favHint.put(if (r.favourites.isEmpty()) "Sin favoritas en $band · guárdalas con la estrella en Medios" else "Favoritas · $band")
+        val key = r.favourites.map { "${it.band}/${it.frequencyKhz}/${it.serviceId}/${it.name}" }
+        if (key != favKey) {
+            favKey = key
+            favRow.removeAllViews()
+            for (e in r.favourites) {
+                val freq = favFreq(e)
+                val name = e.name.trim()
+                // FM / AM : fréquence en grand, nom dessous ; DAB : nom seul
+                val b = Btn(context, if (freq.isNotEmpty()) freq else name.ifEmpty { "—" }, null, textSize = Ty.LABEL,
+                    sub = if (freq.isNotEmpty() && name.isNotEmpty()) name else null)
+                b.labelView?.maxLines = 1
+                b.setOnClickListener { app.mg4dash.media.Radio.tune(e) }
+                favRow.addView(b, lp(if (freq.isNotEmpty()) 150 else 200, Dim.TAP_MIN))
+            }
+        }
+        r.favourites.forEachIndexed { i, e ->
+            val on = e.band == r.band && (if (e.band == app.mg4dash.media.Radio.DAB) e.name.trim().equals(r.name.trim(), true) else e.frequencyKhz == r.frequencyKhz)
+            (favRow.getChildAt(i) as? Btn)?.let { b -> val lk = if (on) Look.SELECTED else Look.NEUTRAL; if (b.look != lk) b.look = lk }
+        }
+    }
+
+    private fun favFreq(e: app.mg4dash.media.SaicRadio.Entry): String = when (e.band) {
+        app.mg4dash.media.Radio.FM -> if (e.frequencyKhz > 0) "${e.frequencyKhz / 1000},${(e.frequencyKhz % 1000) / 100}" else ""
+        app.mg4dash.media.Radio.AM -> if (e.frequencyKhz > 0) "${e.frequencyKhz}" else ""
+        else -> ""
     }
 }
 
