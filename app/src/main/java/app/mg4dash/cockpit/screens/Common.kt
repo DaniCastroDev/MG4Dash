@@ -43,6 +43,23 @@ object Launch {
         }
         return false
     }
+
+    /**
+     * Ajustes de Android : la acción pedida (Bluetooth, punto de acceso…) y, si la voiture ne la
+     * propose pas, la page d'accueil des réglages.
+     */
+    fun androidSettings(c: Context, action: String = android.provider.Settings.ACTION_SETTINGS, component: String? = null): Boolean {
+        val tries = buildList {
+            component?.let { add(Intent().setClassName("com.android.settings", it)) }
+            add(Intent(action))
+            add(Intent(android.provider.Settings.ACTION_SETTINGS))
+        }
+        for (i in tries) {
+            try { c.startActivity(i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)); return true }
+            catch (e: Exception) { Log.w("Launch", "${i.action ?: i.component} : ${e.message}") }
+        }
+        return open(c, listOf("com.android.settings"))
+    }
 }
 
 /** Libellé court d'une source audio de [MediaHub]. */

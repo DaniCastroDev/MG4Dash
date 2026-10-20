@@ -116,8 +116,16 @@ class SettingsScreen(host: Host) : Screen(host) {
             addView(priceStepper("Precio carga rápida (€/kWh)", "price_dc", 0.49f, priceDc))
             addView(choice("Batería (kWh brutos)", listOf("51", "64", "77"), { listOf(51, 64, 77).indexOf(prefs.batteryModel).coerceAtLeast(0) }) { prefs.batteryModel = listOf(51, 64, 77)[it] })
             addView(c.label("Sistema"))
-            addView(Btn(c, "Usar este launcher como inicio", Icons.home, 30, vertical = false).apply { setOnClickListener { HomeSwitcher.replaceStock(c) } }, lp(MATCH, Dim.TAP_MIN))
-            addView(Btn(c, "Interfaz clásica de MG4Dash", Icons.apps, 30, vertical = false).apply { setOnClickListener { c.startActivity(Intent(c, ClassicActivity::class.java)) } }, lp(MATCH, Dim.TAP_MIN))
+            addView(c.row(12).apply {
+                addView(Btn(c, "Bluetooth y Wi-Fi", Icons.bluetooth, 30, vertical = false, chevron = true).apply { setOnClickListener { host.go("connections") } }, lp(0, Dim.TAP_MIN, 1f))
+                addView(Btn(c, "Ajustes de Android", Icons.settings, 30, vertical = false, chevron = true).apply {
+                    setOnClickListener { if (!Launch.androidSettings(c)) host.toast("Los ajustes de Android no están disponibles", tone = Pal.alert) }
+                }, lp(0, Dim.TAP_MIN, 1f))
+            }, lp(MATCH, Dim.TAP_MIN))
+            addView(c.row(12).apply {
+                addView(Btn(c, "Usar como inicio", Icons.home, 30, vertical = false).apply { setOnClickListener { HomeSwitcher.replaceStock(c) } }, lp(0, Dim.TAP_MIN, 1f))
+                addView(Btn(c, "Interfaz clásica", Icons.apps, 30, vertical = false).apply { setOnClickListener { c.startActivity(Intent(c, ClassicActivity::class.java)) } }, lp(0, Dim.TAP_MIN, 1f))
+            }, lp(MATCH, Dim.TAP_MIN))
             addView(View(c), lp(MATCH, 0, 1f))
             addView(c.text("Versión " + app.mg4dash.BuildConfig.VERSION_NAME, Ty.CAPTION, Pal.text2))
             // Diagnóstico de espacio : pantalla real, ventana disponible y fuente condensada presente

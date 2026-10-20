@@ -57,6 +57,7 @@ object Icons {
     val stop = Icon(listOf(Icon.Part(rect(8f, 8f, 16f, 16f, 2.5f), fill = true)))
     val radio = Icon(listOf(Icon.Part(rect(4f, 11f, 24f, 16f, 3f)), Icon.Part("M8 11 23 4.5"), Icon.Part(circle(21f, 19f, 3.5f)), Icon.Part("M8.5 16.5h5M8.5 21.5h5")))
     val bluetooth = p("M9.5 10.5 22 21.5 16 27V5l6 5.5L9.5 21.5")
+    val wifi = p("M4 12.5a17 17 0 0 1 24 0", "M8.5 17a10.5 10.5 0 0 1 15 0", "M12.8 21.4a4.6 4.6 0 0 1 6.4 0", "M16 26v.01")
     val lock = Icon(listOf(Icon.Part(rect(7f, 14f, 18f, 13f, 3f)), Icon.Part("M11 14v-4a5 5 0 0 1 10 0v4")))
     val unlock = Icon(listOf(Icon.Part(rect(7f, 14f, 18f, 13f, 3f)), Icon.Part("M11 14v-3.5a5 5 0 0 1 9.6-2")))
     val screenOff = Icon(listOf(Icon.Part(rect(4f, 6f, 24f, 16f, 2.5f)), Icon.Part("M12 27h8"), Icon.Part("M5 4l22 22")))

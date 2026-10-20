@@ -35,6 +35,7 @@ import app.mg4dash.cockpit.row
 import app.mg4dash.cockpit.screens.AaScreen
 import app.mg4dash.cockpit.screens.AdasScreen
 import app.mg4dash.cockpit.screens.ClimateScreen
+import app.mg4dash.cockpit.screens.ConnectionsScreen
 import app.mg4dash.cockpit.screens.DrivingScreen
 import app.mg4dash.cockpit.screens.EnergyScreen
 import app.mg4dash.cockpit.screens.HomeScreen
@@ -82,6 +83,7 @@ class MainActivity : AppCompatActivity(), Host {
         screens["adas"] = AdasScreen(this)
         screens["media"] = MediaScreen(this)
         screens["settings"] = SettingsScreen(this)
+        screens["connections"] = ConnectionsScreen(this)
         screens["aa"] = AaScreen(this)
 
         val root = FrameLayout(this).apply { setBackgroundColor(Pal.bg) }

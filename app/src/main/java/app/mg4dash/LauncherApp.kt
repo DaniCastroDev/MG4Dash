@@ -42,6 +42,8 @@ class LauncherApp : Application() {
         ConsumptionEstimator.start(this)
         app.mg4dash.energy.EnergyLogger.start(this)
         MediaHub.start(this)
+        app.mg4dash.system.BtControl.start(this)
+        app.mg4dash.system.Hotspot.start(this)
         app.mg4dash.map.LocationRepo.start(this)
         app.mg4dash.map.NavRepo.start(this)
         WeatherRepo.start(this)
