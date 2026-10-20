@@ -26,6 +26,9 @@ object ChargeGuard {
     /** Conso récente (kWh/100 km) relevée à chaque km, 60 derniers points. */
     val history: StateFlow<List<Float>> = _history
 
+    /** La liste vient de la voiture (ancien SDK) : l'historique maison est alors inutile. */
+    @Volatile private var fromCar = false
+
     fun start(context: Context) {
         val prefs = Prefs(context)
         val sp = prefs.raw
@@ -34,12 +37,28 @@ object ChargeGuard {
             _history.value = List(48) { i -> 15f + 3f * kotlin.math.sin(i / 5f) + (i % 7) * 0.3f }
         }
         var lastKm = sp.getInt("cons_history_km", -1)
+        // Ancien SDK : la liste de la voiture elle-même (50 derniers km), relue chaque minute
+        if (!app.mg4dash.BuildConfig.MOCK) scope.launch {
+            while (true) {
+                app.mg4dash.car.LegacyCar.consumptionPerKm()?.let { carList ->
+                    fromCar = true
+                    val list = carList.map { it.coerceIn(0f, 60f) }
+                    if (list != _history.value) {
+                        _history.value = list
+                        sp.edit().putString("cons_history", list.joinToString(",") { String.format(java.util.Locale.US, "%.1f", it) }).apply()
+                    }
+                }
+                kotlinx.coroutines.delay(60_000)
+            }
+        }
         scope.launch {
             CarBridge.state.collect { s ->
-                // Historique : un point par km
+                if (fromCar) return@collect
+                // Historique : un point par km (voie A9, sans la liste de la voiture)
                 val km = s.odometerKm ?: return@collect
                 if (km != lastKm) {
-                    val v = CarProps.getFloat(CarProps.ELEC_CSUMP_PERKM)?.takeIf { it in 3f..60f }
+                    val v = (CarProps.readFloatArea(CarProps.ELEC_CSUMP_PERKM, 0x1000000) ?: CarProps.getFloat(CarProps.ELEC_CSUMP_PERKM))
+                        ?.takeIf { it in 3f..60f && it != 82.3f }
                     if (lastKm >= 0 && v != null) {
                         val list = (_history.value + v).takeLast(60)
                         _history.value = list

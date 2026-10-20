@@ -397,7 +397,9 @@ object CarBridge {
             batteryPercent = if (noEv) soc ?: s.batteryPercent else s.batteryPercent ?: soc,
             rangeKm = if (noEv) range ?: s.rangeKm else s.rangeKm ?: range,
             chargeStatus = if (ev == null) status else s.chargeStatus,
-            odometerKm = s.odometerKm ?: i(0x21401566)?.takeIf { it > 0 },
+            // Relu à chaque passage sans service général (SWI68) : avant, la première valeur restait
+            // et l'historique de consommation n'avançait presque jamais (essai : 2 barres sur 120 km).
+            odometerKm = (if (general == null) i(0x21401566)?.takeIf { it > 0 } else null) ?: s.odometerKm ?: i(0x21401566)?.takeIf { it > 0 },
             driveMode = if (vs == null) dm ?: s.driveMode else s.driveMode ?: dm,
             // Sans service réglages (SWI68, #19), la propriété est relue à chaque passage : avant, la
             // première valeur restait affichée et un changement de régénération ne se voyait pas.

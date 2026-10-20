@@ -337,5 +337,16 @@ object LegacyCar {
         else -> "ok (temp ${int("getDrvTemp")}, fan ${int("getAirVolumeLevel")})"
     }
 
+    /**
+     * Consommation des 50 derniers km, telle que la voiture la calcule et l'affiche dans son graphique
+     * (VehicleChargingManager.getElecCsumpPerKmList, une chaîne « [15.8, 15.2, …] »), kWh/100 km.
+     */
+    fun consumptionPerKm(): List<Float>? {
+        val c = charging ?: return null
+        val raw = try { Refl.m(c, "getElecCsumpPerKmList").invoke(c)?.toString() } catch (_: Exception) { null } ?: return null
+        val list = Regex("-?\\d+(?:\\.\\d+)?").findAll(raw).mapNotNull { it.value.toFloatOrNull() }.toList()
+        return list.takeIf { it.isNotEmpty() }
+    }
+
     fun probeCharging(): String = if (charging == null) "absent" else "ok (status ${chInt("getChargingStatus")}, ctrl ${chInt("getChargingControlSwitch")})"
 }
