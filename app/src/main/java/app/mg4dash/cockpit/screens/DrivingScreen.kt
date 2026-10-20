@@ -68,7 +68,7 @@ class DrivingScreen(host: Host) : Screen(host) {
 
     override fun build(): View = c.row(Dim.GAP).apply {
         gravity = Gravity.TOP
-        media = MediaCard(c, compact = true, big = true, favourites = true)
+        media = MediaCard(c, compact = false, big = true, favourites = true)
         addView(media, w(640))
         addView(c.card().apply {
             addView(c.row().apply {
