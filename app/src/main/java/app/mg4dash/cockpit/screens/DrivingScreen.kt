@@ -75,9 +75,9 @@ class DrivingScreen(host: Host) : Screen(host) {
             cons = BarChart(c); addView(cons, lp(MATCH, 120))
         }, w(560))
         addView(c.col(Dim.GAP).apply {
-            addView(locked("Modo de conducción").also { mode = it.second }.first, lp(MATCH, 0, 1f))
-            addView(locked("Regeneración").also { regen = it.second }.first, lp(MATCH, 0, 1f))
-            addView(locked("Asistentes").also { adas = it.second }.first, lp(MATCH, 0, 1f))
+            addView(profileCard("Modo de conducción").also { mode = it.second }.first, lp(MATCH, 0, 1f))
+            addView(profileCard("Regeneración").also { regen = it.second }.first, lp(MATCH, 0, 1f))
+            addView(profileCard("Asistentes").also { adas = it.second }.first, lp(MATCH, 0, 1f))
             aa = Pill(c, "Android Auto: buscando teléfono…", Pal.heat)
             addView(Btn(c, null, Icons.phone, 30, vertical = false).apply {
                 addView(aa, lp(0, 44, 1f).apply { leftMargin = 12 })
@@ -86,16 +86,17 @@ class DrivingScreen(host: Host) : Screen(host) {
         }, w(528))
     }
 
-    /** Carte en lecture seule avec cadenas : « Solo con el coche parado ». */
-    private fun locked(title: String): Pair<View, android.widget.TextView> {
+    /** Carte d'état ; la toucher ouvre « Mi perfil », où se règlent conduite et asistentes. */
+    private fun profileCard(title: String): Pair<View, android.widget.TextView> {
         val value = c.text("—", Ty.TITLE, Pal.text, Ty.uiMedium)
-        // le cadenas suffit : « solo con el coche parado » s'affiche en avis si on touche le rail
         val card = c.card(gap = 6).apply {
             addView(c.row().apply {
                 addView(c.label(title), lp(0, WRAP, 1f))
-                addView(IconView(c, Icons.lock, 24, 3f).apply { color = Pal.text2 })
+                addView(IconView(c, Icons.chevronRight, 24, 3f).apply { color = Pal.text2 })
             })
             addView(value.apply { maxLines = 1 })
+            isClickable = true
+            setOnClickListener { host.go("adas") }
         }
         return card to value
     }

@@ -116,9 +116,10 @@ class MainActivity : AppCompatActivity(), Host {
     }
 
     override fun go(screen: String) {
-        var key = if (screen == "home" && driving) "driving" else if (screen == "driving" && !driving) "home" else screen
+        // Une seule interface, à l'arrêt comme en marche : l'accueil est l'écran « en marche »,
+        // et aucune section n'est verrouillée (retour d'essai).
+        val key = if (screen == "home") "driving" else screen
         val next = screens[key] ?: return
-        if (driving && next.parkedOnly) { toast("Disponible con el coche parado", "Detén el coche para abrir esta sección"); return }
         if (next === current) { next.bind(last); return }
         current?.onHide()
         screenFrame.removeAllViews()
@@ -160,13 +161,6 @@ class MainActivity : AppCompatActivity(), Host {
             if (now - stillSince >= 3000) driving = false
             // sans nouvelle trame du véhicule, on réévalue nous-mêmes à l'échéance des 3 s
             else if (driving) { main.removeCallbacks(recheck); main.postDelayed(recheck, 3000 - (now - stillSince) + 50) }
-        }
-        if (driving != wasDriving) {
-            rail.setLocked(driving)
-            when {
-                driving && current?.parkedOnly == true -> go("home")
-                currentKey == "home" || currentKey == "driving" -> go("home")
-            }
         }
         climateBar.bind(s)
         rail.outside.put(s.outsideTemp?.let { "${Math.round(it)} °C" } ?: "")

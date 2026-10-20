@@ -41,6 +41,29 @@ object Adas {
     /** Profil par défaut : sons et assistances gênants coupés, sécurité passive conservée. */
     private val DEFAULT = mapOf(Item.SPEED_SOUND to 0, Item.LANE to 2, Item.DRIVER_MONITOR to 2, Item.UNSTEADY to 2, Item.REAR_TRAFFIC to 1)
 
+    /**
+     * Réglages de conduite du profil (appliqués avec les aides, à l'arrêt). -1 = ne pas toucher.
+     * Mode : échelle A9 (2 éco, 3 normal, 4 sport, 6 neige) ; régénération 0–3 ; un pedal 0/1.
+     */
+    enum class Drive(val title: String, val key: String, val options: List<Pair<Int, String>>) {
+        MODE("Modo de conducción", "drive_mode", listOf(-1 to "Sin cambiar", 2 to "Eco", 3 to "Normal", 4 to "Sport", 6 to "Nieve")),
+        REGEN("Regeneración", "drive_regen", listOf(-1 to "Sin cambiar", 0 to "Baja", 1 to "Media", 2 to "Alta", 3 to "Adaptativa")),
+        ONE_PEDAL("Conducción con un pedal", "drive_one_pedal", listOf(-1 to "Sin cambiar", 1 to "Activada", 0 to "Desactivada")),
+    }
+
+    fun driveProfile(context: Context): Map<Drive, Int> {
+        val sp = Prefs(context).raw
+        return Drive.values().associateWith { sp.getInt(it.key, -1) }
+    }
+
+    fun setDrive(context: Context, d: Drive, value: Int) { Prefs(context).raw.edit().putInt(d.key, value).apply() }
+
+    /** Valeur actuelle de la voiture pour un réglage de conduite. */
+    fun driveNow(d: Drive): Int? {
+        val s = CarBridge.state.value
+        return when (d) { Drive.MODE -> s.driveMode; Drive.REGEN -> s.regenLevel?.takeIf { it in 0..3 }; Drive.ONE_PEDAL -> s.onePedal }
+    }
+
     data class State(val current: Map<Item, Int?> = emptyMap(), val appliedAt: Long = 0L, val busy: Boolean = false)
     private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state
@@ -75,8 +98,9 @@ object Adas {
     /** Le profil est-il celui de la voiture en ce moment ? (null si illisible) */
     fun matches(context: Context): Boolean? {
         val cur = _state.value.current
-        if (cur.values.all { it == null }) return null
-        return profile(context).all { (k, v) -> cur[k] == null || cur[k] == v }
+        val driveOk = driveProfile(context).all { (d, v) -> v == -1 || driveNow(d) == null || driveNow(d) == v }
+        if (cur.values.all { it == null }) return if (driveProfile(context).values.all { it == -1 }) null else driveOk
+        return driveOk && profile(context).all { (k, v) -> cur[k] == null || cur[k] == v }
     }
 
     private fun call(name: String, vararg args: Int): Int? {
@@ -97,10 +121,16 @@ object Adas {
     fun apply(context: Context): CarBridge.Write {
         val speed = CarBridge.state.value.speedKmh ?: return CarBridge.Write.SPEED_UNKNOWN
         if (Math.abs(speed) >= 0.5f) return CarBridge.Write.MOVING
-        if (manager == null) { connect(); if (manager == null) return CarBridge.Write.UNAVAILABLE }
-        val wanted = profile(context)
+        if (manager == null) connect()
+        val drive = driveProfile(context).filterValues { it != -1 }
+        if (manager == null && drive.isEmpty()) return CarBridge.Write.UNAVAILABLE
+        val wanted = if (manager != null) profile(context) else emptyMap()
         _state.value = _state.value.copy(busy = true)
         scope.launch {
+            // conduite d'abord (mode, régénération, un pedal), puis les aides
+            drive[Drive.MODE]?.let { if (driveNow(Drive.MODE) != it) { CarBridge.setDriveMode(it); delay(600) } }
+            drive[Drive.REGEN]?.let { if (driveNow(Drive.REGEN) != it) { CarBridge.setRegenLevel(it); delay(600) } }
+            drive[Drive.ONE_PEDAL]?.let { if (driveNow(Drive.ONE_PEDAL) != it) { CarBridge.toggleOnePedal(); delay(600) } }
             for ((item, v) in wanted) {
                 if (_state.value.current[item] == v) continue
                 call(item.setter, v)
@@ -117,7 +147,10 @@ object Adas {
     /** Écarts entre l'état de la voiture et le profil, pour l'accueil et la bienvenue. */
     fun changes(context: Context): List<String> {
         val cur = _state.value.current
-        return profile(context).mapNotNull { (k, v) ->
+        val drive = driveProfile(context).mapNotNull { (d, v) ->
+            if (v == -1 || driveNow(d) == v) null else "${d.title} → ${d.options.firstOrNull { it.first == v }?.second ?: v}"
+        }
+        return drive + profile(context).mapNotNull { (k, v) ->
             if (cur[k] == v) null else "${k.title} → ${k.options.firstOrNull { it.first == v }?.second ?: v}"
         }
     }

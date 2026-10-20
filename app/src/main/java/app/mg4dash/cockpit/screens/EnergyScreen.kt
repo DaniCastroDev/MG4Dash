@@ -50,7 +50,6 @@ import java.util.Calendar
  */
 class EnergyScreen(host: Host) : Screen(host) {
     override val nav = Nav.ENERGY
-    override val parkedOnly = true
 
     private lateinit var tabs: Segmented
     private lateinit var pages: FrameLayout

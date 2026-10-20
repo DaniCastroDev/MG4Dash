@@ -34,12 +34,11 @@ import app.mg4dash.cockpit.w
 /** Vehículo (lienzo : Vehicle.dc.html). */
 class VehicleScreen(host: Host) : Screen(host) {
     override val nav = Nav.VEHICLE
-    override val parkedOnly = true
 
     private lateinit var tyres: TyreView
-    private lateinit var modes: Segmented
-    private lateinit var regen: Segmented
-    private lateinit var onePedal: Btn
+    private lateinit var modeText: TextView
+    private lateinit var regenText: TextView
+    private lateinit var onePedalText: TextView
     private lateinit var esc: Btn
     private lateinit var adas: TextView
     private lateinit var odo: TextView
@@ -53,22 +52,17 @@ class VehicleScreen(host: Host) : Screen(host) {
             odo = c.text("—", Ty.LABEL, Pal.text2); addView(odo)
         }, w(560))
         addView(c.card().apply {
+            // réglages de conduite : se règlent dans « Mi perfil », appliqués avec les asistentes
             addView(c.label("Modo de conducción"))
-            modes = Segmented(c, listOf("Eco", "Normal", "Sport", "Nieve")) { i ->
-                if (CarBridge.setDriveMode(CarBridge.driveModes[i]) == CarBridge.Write.MOVING) host.toast("Detén el coche para cambiar el modo", tone = Pal.heat)
-            }
-            addView(modes, lp(MATCH, Dim.TAP))
-            addView(c.text("Personalizado: configúralo en la app original", Ty.CAPTION, Pal.text2))
+            modeText = c.text("—", Ty.TITLE, Pal.text, Ty.uiMedium); addView(modeText)
             addView(c.label("Regeneración"))
-            regen = Segmented(c, listOf("Baja", "Media", "Alta", "Adaptativa"), textSize = Ty.CAPTION) { i -> CarBridge.setRegenLevel(i) }
-            addView(regen, lp(MATCH, Dim.TAP))
-            onePedal = Btn(c, "Conducción con un pedal", Icons.car, 30, vertical = false, led = true).apply { accent = Pal.energy; setOnClickListener { CarBridge.toggleOnePedal() } }
-            addView(onePedal, lp(MATCH, Dim.TAP))
+            regenText = c.text("—", Ty.TITLE, Pal.text, Ty.uiMedium); addView(regenText)
+            addView(c.label("Conducción con un pedal"))
+            onePedalText = c.text("—", Ty.TITLE, Pal.text, Ty.uiMedium); addView(onePedalText)
             addView(View(c), lp(MATCH, 0, 1f))
-            addView(c.row(10).apply {
-                addView(IconView(c, Icons.lock, 22, 3f).apply { color = Pal.text2 })
-                addView(c.text("Solo con el coche parado", Ty.CAPTION, Pal.text2))
-            })
+            addView(Btn(c, "Cambiar en Mi perfil", Icons.chevronRight, 28, vertical = false, iconEnd = true).apply {
+                setOnClickListener { host.go("adas") }
+            }, lp(MATCH, Dim.TAP))
         }, w(640))
         addView(c.col(Dim.GAP).apply {
             addView(c.card().apply {
@@ -108,9 +102,9 @@ class VehicleScreen(host: Host) : Screen(host) {
             Triple(kpa?.div(100f), t, st != null && st != 0)
         }
         odo.put(s.odometerKm?.let { "Cuentakilómetros  " + String.format("%,d", it).replace(',', ' ') + " km" } ?: "Cuentakilómetros —")
-        modes.select(CarBridge.driveModes.indexOf(s.driveMode).takeIf { it >= 0 })
-        regen.select(s.regenLevel?.takeIf { it in 0..3 })
-        onePedal.on = s.onePedal == 1
+        modeText.put(VehicleState.driveModeLabel(s.driveMode))
+        regenText.put(Adas.Drive.REGEN.options.firstOrNull { it.first == s.regenLevel }?.second ?: "—")
+        onePedalText.put(when (s.onePedal) { 1 -> "Activada"; 0 -> "Desactivada"; else -> "—" })
         val e = CarBridge.escActive()
         esc.on = e == true
         esc.setSub(when (e) { true -> "Activado"; false -> "Desactivado"; null -> "—" })
@@ -121,36 +115,49 @@ class VehicleScreen(host: Host) : Screen(host) {
 /** Asistentes · perfil al arrancar (lienzo : ADAS.dc.html). */
 class AdasScreen(host: Host) : Screen(host) {
     override val nav = Nav.VEHICLE
-    override val parkedOnly = true
+    override val climateBar = false
+    private val driveRows = HashMap<Adas.Drive, Pair<TextView, Segmented>>()
 
     private val rows = HashMap<Adas.Item, Pair<TextView, Segmented>>()
     private lateinit var apply: Btn
 
     override fun build(): View = c.row(Dim.GAP).apply {
         gravity = Gravity.TOP
-        addView(c.card(gap = 12).apply {
+        addView(c.card(gap = 8).apply {
             addView(c.row().apply {
-                addView(c.label("Asistente"), lp(0, WRAP, 1f))
+                addView(c.label("Conducción y asistentes"), lp(0, WRAP, 1f))
                 addView(c.label("Ahora"), lp(200, WRAP))
                 addView(c.label("Mi perfil"), lp(620, WRAP))
             })
+            for (d in Adas.Drive.values()) {
+                val now = c.text("—", Ty.LABEL, Pal.text, Ty.uiMedium)
+                val seg = Segmented(c, d.options.map { it.second }, height = ROW_H, textSize = Ty.CAPTION, gap = 8) { i ->
+                    Adas.setDrive(c, d, d.options[i].first); bind(CarBridge.state.value)
+                }
+                driveRows[d] = now to seg
+                addView(c.row(16).apply {
+                    addView(c.text(d.title, Ty.LABEL, Pal.text).apply { maxLines = 2 }, lp(0, WRAP, 1f))
+                    addView(now, lp(184, WRAP))
+                    addView(seg, lp(620, ROW_H))
+                }, lp(MATCH, WRAP))
+            }
             for (item in Adas.Item.values()) {
                 val now = c.text("—", Ty.LABEL, Pal.text, Ty.uiMedium)
-                val seg = Segmented(c, item.options.map { it.second }, height = Dim.TAP_MIN, textSize = Ty.CAPTION, gap = 8) { i ->
+                val seg = Segmented(c, item.options.map { it.second }, height = ROW_H, textSize = Ty.CAPTION, gap = 8) { i ->
                     Adas.setProfile(c, item, item.options[i].first); bind(CarBridge.state.value)
                 }
                 rows[item] = now to seg
                 addView(c.row(16).apply {
                     addView(c.text(item.title, Ty.LABEL, Pal.text).apply { maxLines = 2 }, lp(0, WRAP, 1f))
                     addView(now, lp(184, WRAP))
-                    addView(seg, lp(620, Dim.TAP_MIN))
+                    addView(seg, lp(620, ROW_H))
                 }, lp(MATCH, WRAP))
             }
         }, w(1300))
         addView(c.card().apply {
             addView(c.label("Al arrancar"))
             addView(c.text("La normativa de la UE vuelve a activar estos asistentes en cada arranque.", Ty.LABEL, Pal.text2).apply { maxLines = 4 })
-            addView(c.text("Tu perfil se aplica con un toque y solo con el coche parado.", Ty.LABEL, Pal.text2).apply { maxLines = 3 })
+            addView(c.text("Tu perfil (modo, regeneración, un pedal y asistentes) se aplica con un toque, con el coche parado.", Ty.LABEL, Pal.text2).apply { maxLines = 3 })
             addView(c.row(10).apply {
                 addView(IconView(c, Icons.shield, 26).apply { color = Pal.energy })
                 addView(c.text("Frenada de emergencia y aviso de colisión: siempre activos", Ty.LABEL, Pal.text).apply { maxLines = 3 }, lp(0, WRAP, 1f))
@@ -174,6 +181,12 @@ class AdasScreen(host: Host) : Screen(host) {
     override fun bind(s: VehicleState) {
         val st = Adas.state.value
         val prof = Adas.profile(c)
+        val drive = Adas.driveProfile(c)
+        for ((d, pair) in driveRows) {
+            val cur = Adas.driveNow(d)
+            pair.first.put(d.options.firstOrNull { it.first == cur && it.first != -1 }?.second ?: "—")
+            pair.second.select(d.options.indexOfFirst { it.first == drive[d] }.takeIf { it >= 0 })
+        }
         for ((item, pair) in rows) {
             val cur = st.current[item]
             pair.first.put(item.options.firstOrNull { it.first == cur }?.second ?: "—")
@@ -182,3 +195,6 @@ class AdasScreen(host: Host) : Screen(host) {
         apply.setLabel(if (st.busy) "Aplicando…" else if (Adas.matches(c) == true) "Perfil aplicado" else "Aplicar mi perfil ahora")
     }
 }
+
+/** Rangées du profil : 8 réglages tiennent dans la page sans barre de clim. */
+private const val ROW_H = 66

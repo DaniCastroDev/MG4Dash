@@ -66,7 +66,7 @@ class StripView(c: Context, private val onRight: Boolean, private val onExpand: 
     private val powerText = c.text("", Ty.CAPTION, Pal.text2, Ty.num)
     private val bar = BatteryBar(c)
     private lateinit var modes: Segmented
-    private val modeLocked = c.text("Modo y asistentes: solo con el coche parado", Ty.LABEL, Pal.text2).apply { visibility = GONE }
+    private val modeLocked = c.text("", Ty.LABEL, Pal.text).apply { visibility = GONE; maxLines = 1 }
     private var assistsRow: View? = null
     private val adas = c.text("—", Ty.LABEL, Pal.text, Ty.uiMedium)
     private val media = MediaCard(c, compact = true)
@@ -129,14 +129,15 @@ class StripView(c: Context, private val onRight: Boolean, private val onExpand: 
             addView(bar, lp(MATCH, 24))
         })
         modes = Segmented(context, listOf("Eco", "Normal", "Sport", "Nieve"), height = Dim.TAP_MIN, textSize = Ty.CAPTION, gap = 8) { i ->
-            if (driving) return@Segmented
             CarBridge.setDriveMode(CarBridge.driveModes[i])
         }
         addView(modes, lp(MATCH, Dim.TAP_MIN))
+        // mode et régénération se règlent dans « Mi perfil » : ici, seulement l'état
+        modes.visibility = GONE
         addView(context.row(12).also { assistsRow = it }.apply {
             addView(Btn(context, null, Icons.shield, 28, vertical = false).apply {
                 addView(context.col(2).apply { addView(context.text("Asistentes", Ty.CAPTION, Pal.text2)); addView(adas) }, lp(0, WRAP, 1f).apply { leftMargin = 12 })
-                setOnClickListener { if (!driving) Adas.apply(context) }
+                setOnClickListener { Adas.apply(context) }
             }, lp(0, Dim.TAP_MIN, 1f))
             addView(Btn(context, null, Icons.fullscreen, 28).apply {
                 setOnClickListener { context.startActivity(Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
@@ -233,16 +234,14 @@ class StripView(c: Context, private val onRight: Boolean, private val onExpand: 
         outside.put(s.outsideTemp?.let { "${Math.round(it)} °C" } ?: "")
         socTop.put(s.socPrecise?.let { Fmt.dec(it) + " %" } ?: s.batteryPercent?.let { "$it %" } ?: "—")
         driving = (s.speedKmh?.let { Math.abs(it) } ?: 0f) > 2f
-        for (k in 2..4) tabs[k].alpha = if (driving && k != 4) 0.55f else 1f
 
         soc.set(s.socPrecise?.let { Fmt.dec(it) } ?: s.batteryPercent?.toString() ?: "—", "%")
         range.set(s.rangeKm?.toString() ?: "—", "km")
         bar.set(s.socPrecise ?: s.batteryPercent?.toFloat() ?: 0f, (CarProps.targetSocPercent(CarProps.getInt(CarProps.CHRG_TRGT_SOC)) ?: -1).toFloat())
         modes.select(CarBridge.driveModes.indexOf(s.driveMode).takeIf { it >= 0 })
-        modes.alpha = if (driving) 0.55f else 1f
         // en marche : le bouton « Asistentes » (refusé à l'arrêt seulement) laisse place à l'avertissement
-        modeLocked.visibility = if (driving) VISIBLE else GONE
-        assistsRow?.visibility = if (driving) GONE else VISIBLE
+        modeLocked.visibility = VISIBLE
+        modeLocked.put("Modo " + VehicleState.driveModeLabel(s.driveMode) + " · " + VehicleState.regenLabel(s.regenLevel, s.onePedal))
         adas.put(when (Adas.matches(context)) { true -> "Mi perfil"; false -> "De serie · aplicar"; null -> "—" })
         media.bind()
 

@@ -85,7 +85,6 @@ class AaScreen(host: Host) : Screen(host) {
 /** Ajustes del launcher (lienzo : Settings.dc.html). */
 class SettingsScreen(host: Host) : Screen(host) {
     override val nav = Nav.SETTINGS
-    override val parkedOnly = true
     override val climateBar = false
     private val prefs by lazy { Prefs(c) }
     private lateinit var priceHome: TextView

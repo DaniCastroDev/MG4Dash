@@ -113,7 +113,6 @@ private fun snapAm(f: Int) = (Radio.AM_MIN + (f - Radio.AM_MIN + Radio.AM_STEP /
  */
 class MediaScreen(host: Host) : Screen(host) {
     override val nav = Nav.MEDIA
-    override val parkedOnly = true
 
     private enum class Tab(val label: String, val icon: Icon) {
         FM("FM", Icons.radio), AM("AM", ICON_AM), DAB("DAB", ICON_DAB), BT("Bluetooth", Icons.bluetooth), USB("USB", ICON_USB)
