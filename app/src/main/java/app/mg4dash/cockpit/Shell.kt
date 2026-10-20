@@ -61,8 +61,8 @@ class Rail(c: Context, private val onNav: (Nav) -> Unit, private val onLocked: (
         setPadding(0, 16, 0, 12)
         addView(c.col(2).apply {
             gravity = Gravity.CENTER
-            addView(clock, lp(MATCH, WRAP)); addView(outside, lp(MATCH, WRAP))
-        }, lp(MATCH, 60).apply { bottomMargin = 14 })
+            addView(clock, lp(MATCH, 38)); addView(outside, lp(MATCH, 26))
+        }, lp(MATCH, WRAP).apply { bottomMargin = 8 })
         add(Nav.HOME, "Inicio", Icons.home, false)
         add(Nav.CLIMATE, "Clima", Icons.climate, false)
         add(Nav.ENERGY, "Energía", Icons.energy, true)
