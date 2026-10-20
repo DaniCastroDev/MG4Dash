@@ -27,6 +27,7 @@ import app.mg4dash.cockpit.card
 import app.mg4dash.cockpit.col
 import app.mg4dash.cockpit.label
 import app.mg4dash.cockpit.lp
+import app.mg4dash.cockpit.Look
 import app.mg4dash.cockpit.rounded
 import app.mg4dash.cockpit.Segmented
 import app.mg4dash.cockpit.put
@@ -59,7 +60,8 @@ class DrivingScreen(host: Host) : Screen(host) {
     private lateinit var accV: ValueText
     private lateinit var regenV: ValueText
     private lateinit var regenKm: android.widget.TextView
-    private lateinit var adas: android.widget.TextView
+    private val profileBtns = ArrayList<Btn>()
+    private var last = VehicleState()
 
     override fun build(): View = c.row(Dim.GAP).apply {
         gravity = Gravity.TOP
@@ -86,12 +88,24 @@ class DrivingScreen(host: Host) : Screen(host) {
         addView(c.col(Dim.GAP).apply {
             // « Energía usada » du lienzo (Energy.dc.html) : par période, répartition et régénération
             addView(usedCard(), lp(MATCH, 0, 1f))
+            // Perfiles : un toque activa y aplica ; mantener pulsado abre la pantalla para editarlo
             addView(c.row(Dim.GAP).apply {
-                adas = c.text("—", Ty.CAPTION, Pal.text2).apply { maxLines = 1 }
-                addView(Btn(c, "Asistentes", Icons.shield, 28, vertical = false, iconEnd = false).apply {
-                    addView(adas, lp(WRAP, WRAP).apply { leftMargin = 10 })
-                    setOnClickListener { host.go("adas") }
-                }, lp(0, Dim.TAP, 1f))
+                for (i in 0 until Adas.PROFILES) {
+                    val b = Btn(c, "Perfil ${i + 1}", Icons.shield, 28, vertical = false, sub = "", led = true).apply {
+                        accent = Pal.energy
+                        setOnClickListener {
+                            Adas.setActive(c, i)
+                            when (Adas.apply(c)) {
+                                app.mg4dash.car.CarBridge.Write.SENT -> host.toast("Aplicando perfil ${i + 1}")
+                                else -> host.toast("Ajustes del coche no disponibles", tone = Pal.alert)
+                            }
+                            bind(last)
+                        }
+                        setOnLongClickListener { Adas.setActive(c, i); host.go("adas"); true }
+                    }
+                    profileBtns += b
+                    addView(b, lp(0, Dim.TAP, 1f))
+                }
             }, lp(MATCH, Dim.TAP))
         }, w(528))
     }
@@ -185,6 +199,20 @@ class DrivingScreen(host: Host) : Screen(host) {
         val h = ChargeGuard.history.value.takeLast(10)
         cons.set(h, emptyList(), h.takeIf { it.isNotEmpty() }?.average()?.toFloat())
         bindUsed()
-        adas.put(when (Adas.matches(c)) { true -> "Mi perfil"; false -> "De serie"; null -> "—" })
+        last = s
+        val active = Adas.active(c)
+        val st = Adas.state.value
+        val match = Adas.matches(c) == true
+        profileBtns.forEachIndexed { i, b ->
+            val on = i == active
+            b.look = if (on) Look.SELECTED else Look.NEUTRAL
+            b.on = on && match
+            b.setSub(when {
+                !on -> "Aplicar"
+                st.busy -> "Aplicando…"
+                match -> "Aplicado"
+                else -> Adas.changes(c).size.let { "$it cambio" + if (it == 1) "" else "s" }
+            })
+        }
     }
 }
