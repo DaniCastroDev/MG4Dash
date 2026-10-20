@@ -21,7 +21,6 @@ import app.mg4dash.cockpit.Segmented
 import app.mg4dash.cockpit.Ty
 import app.mg4dash.cockpit.WRAP
 import app.mg4dash.cockpit.card
-import app.mg4dash.cockpit.col
 import app.mg4dash.cockpit.header
 import app.mg4dash.cockpit.label
 import app.mg4dash.cockpit.lp
@@ -34,29 +33,7 @@ import app.mg4dash.media.MediaHub
 import app.mg4dash.system.HomeSwitcher
 import app.mg4dash.system.Prefs
 
-/** Medios · radio y fuentes (lienzo : Media.dc.html). */
-class MediaScreen(host: Host) : Screen(host) {
-    override val nav = Nav.MEDIA
-    override val parkedOnly = true
-    private lateinit var card: MediaCard
-
-    override fun build(): View = c.row(Dim.GAP).apply {
-        gravity = Gravity.TOP
-        card = MediaCard(c, compact = false, big = true)
-        addView(card, w(1080))
-        addView(c.card(gap = 12).apply {
-            addView(c.label("Apps de audio"))
-            addView(Btn(c, "Radio original", Icons.radio, 30, vertical = false).apply { setOnClickListener { Launch.open(c, Launch.RADIO) } }, lp(MATCH, Dim.TAP))
-            addView(Btn(c, "Bluetooth y USB", Icons.bluetooth, 30, vertical = false).apply {
-                setOnClickListener { Launch.open(c, listOf("com.saicmotor.hmi.music", "com.saicmotor.media")) }
-            }, lp(MATCH, Dim.TAP))
-            addView(View(c), lp(MATCH, 0, 1f))
-            addView(c.text("FM, AM y DAB se controlan desde aquí; las favoritas se guardan en la radio original.", Ty.LABEL, Pal.text2).apply { maxLines = 4 })
-        }, w(664))
-    }
-
-    override fun bind(s: VehicleState) = card.bind()
-}
+// Medios (radio y fuentes) : MediaScreen.kt
 
 /** Android Auto : estado de la conexión y ayuda (lienzo : AA-Connecting, AA-Failed). */
 class AaScreen(host: Host) : Screen(host) {
