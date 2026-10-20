@@ -53,18 +53,22 @@ class ClimateScreen(host: Host) : Screen(host) {
         gravity = Gravity.TOP
         addView(c.card().apply {
             // marche / arrêt et dégivrage : boutons physiques de la voiture (retour d'essai)
-            addView(c.col().apply {
-                addView(c.label("Conductor"))
+            addView(c.row().apply {
+                gravity = Gravity.CENTER_VERTICAL
+                addView(c.label("Conductor"), lp(0, WRAP, 1f))
                 outside = c.text("", Ty.LABEL, Pal.text2); addView(outside)
             })
             addView(View(c), lp(MATCH, 0, 1f))
-            addView(c.row(16).apply {
-                gravity = Gravity.CENTER
-                addView(Btn(c, null, Icons.minus, 44).apply { iconView?.color = Pal.cold; setOnClickListener { CarBridge.stepTemp(-1) } }, lp(120, 120))
-                temp = ValueText(c, Ty.HERO, Ty.TITLE).apply { gravity = Gravity.CENTER or Gravity.BOTTOM }
-                addView(temp, lp(0, WRAP, 1f))
-                addView(Btn(c, null, Icons.plus, 44).apply { iconView?.color = Pal.heat; setOnClickListener { CarBridge.stepTemp(1) } }, lp(120, 120))
-            })
+            // Consigne en colonne (+ en haut, − en bas, à toute la largeur) : rien ne peut sortir de la
+            // carte, quelle que soit la largeur de la fenêtre (le + était coupé dans la voiture).
+            addView(Btn(c, null, Icons.plus, 44).apply {
+                iconView?.color = Pal.heat; contentDescription = "Subir temperatura"; setOnClickListener { CarBridge.stepTemp(1) }
+            }, lp(MATCH, Dim.PRIMARY))
+            temp = ValueText(c, Ty.HERO, Ty.TITLE).apply { gravity = Gravity.CENTER }
+            addView(temp, lp(MATCH, WRAP))
+            addView(Btn(c, null, Icons.minus, 44).apply {
+                iconView?.color = Pal.cold; contentDescription = "Bajar temperatura"; setOnClickListener { CarBridge.stepTemp(-1) }
+            }, lp(MATCH, Dim.PRIMARY))
             addView(c.text("LO · 17 … 32 · HI", Ty.CAPTION, Pal.text2).apply { gravity = Gravity.CENTER }, lp(MATCH, WRAP))
             addView(View(c), lp(MATCH, 0, 1f))
             addView(c.row(12).apply {
