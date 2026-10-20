@@ -60,7 +60,6 @@ class DrivingScreen(host: Host) : Screen(host) {
     private lateinit var regenV: ValueText
     private lateinit var regenKm: android.widget.TextView
     private lateinit var adas: android.widget.TextView
-    private lateinit var aa: Pill
 
     override fun build(): View = c.row(Dim.GAP).apply {
         gravity = Gravity.TOP
@@ -92,11 +91,6 @@ class DrivingScreen(host: Host) : Screen(host) {
                 addView(Btn(c, "Asistentes", Icons.shield, 28, vertical = false, iconEnd = false).apply {
                     addView(adas, lp(WRAP, WRAP).apply { leftMargin = 10 })
                     setOnClickListener { host.go("adas") }
-                }, lp(0, Dim.TAP, 1f))
-                aa = Pill(c, "Buscando", Pal.heat)
-                addView(Btn(c, null, Icons.phone, 28, vertical = false).apply {
-                    addView(aa, lp(0, 44, 1f).apply { leftMargin = 10 })
-                    setOnClickListener { host.go("aa") }
                 }, lp(0, Dim.TAP, 1f))
             }, lp(MATCH, Dim.TAP))
         }, w(528))
@@ -192,7 +186,5 @@ class DrivingScreen(host: Host) : Screen(host) {
         cons.set(h, emptyList(), h.takeIf { it.isNotEmpty() }?.average()?.toFloat())
         bindUsed()
         adas.put(when (Adas.matches(c)) { true -> "Mi perfil"; false -> "De serie"; null -> "—" })
-        val connected = MediaHub.androidAutoAvailable()
-        aa.set(if (connected) "Conectado" else "Buscando", if (connected) Pal.energy else Pal.heat)
     }
 }

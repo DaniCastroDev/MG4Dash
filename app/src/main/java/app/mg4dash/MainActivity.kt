@@ -122,8 +122,21 @@ class MainActivity : AppCompatActivity(), Host {
         val next = screens[key] ?: return
         if (next === current) { next.bind(last); return }
         current?.onHide()
-        screenFrame.removeAllViews()
+        // Transition : l'ancien écran s'efface, le nouveau apparaît en glissant un peu vers le haut
+        // (≈ 200 ms, calques matériels : léger pour le MT2712).
+        val old = current?.view
+        (next.view.parent as? android.view.ViewGroup)?.removeView(next.view)
+        next.view.animate().cancel()
+        if (old != null && old.parent === screenFrame) {
+            old.animate().cancel()
+            old.animate().alpha(0f).setDuration(120).withLayer().withEndAction {
+                screenFrame.removeView(old); old.alpha = 1f
+            }.start()
+        } else screenFrame.removeAllViews()
         screenFrame.addView(next.view, FrameLayout.LayoutParams(MATCH, MATCH))
+        next.view.alpha = 0f; next.view.translationY = 18f
+        next.view.animate().alpha(1f).translationY(0f).setDuration(200)
+            .setInterpolator(android.view.animation.DecelerateInterpolator()).withLayer().start()
         current = next
         currentKey = key
         climateBar.visibility = if (next.climateBar) View.VISIBLE else View.GONE
