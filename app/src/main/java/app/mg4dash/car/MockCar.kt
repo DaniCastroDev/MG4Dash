@@ -51,7 +51,10 @@ object MockCar {
             "defrostFront" -> s.copy(defrostFront = !(s.defrostFront ?: false))
             "defrostRear" -> s.copy(defrostRear = !(s.defrostRear ?: false))
             "eco" -> s.copy(ecoOn = !(s.ecoOn ?: false))
-            "startCharge" -> s.copy(chargeStatus = 1, chargeCtrl = 1, chargeRemainMin = 95)
+            "startCharge" -> { CarProps.mockSet(CarProps.BMS_CHRG_SP_RSN, 0); s.copy(chargeStatus = 1, chargeCtrl = 1, chargeRemainMin = 95) }
+            "chargeDone" -> { CarProps.mockSet(CarProps.CHRG_TRGT_SOC, 5); CarProps.mockSet(CarProps.BMS_CHRG_SP_RSN, 0); s.copy(chargeStatus = 8, chargeCtrl = 2, batteryPercent = 80, socPrecise = 80f, rangeKm = 281) }
+            "chargeError" -> { CarProps.mockSet(CarProps.CHRG_TRGT_SOC, 5); CarProps.mockSet(CarProps.BMS_CHRG_SP_RSN, 3); s.copy(chargeStatus = 8, chargeCtrl = 2, batteryPercent = 49, socPrecise = 49.2f, rangeKm = 172) }
+            "plug" -> { CarProps.mockSet(CarProps.BMS_CHRG_SP_RSN, 0); s.copy(chargeStatus = 7, chargeCtrl = 2, dischargeCtrl = 2) }
             "stopCharge" -> s.copy(chargeStatus = 8, chargeCtrl = 2)
             "startV2L" -> s.copy(chargeStatus = 13, dischargeCtrl = 1)
             "stopV2L" -> s.copy(chargeStatus = 14, dischargeCtrl = 2)

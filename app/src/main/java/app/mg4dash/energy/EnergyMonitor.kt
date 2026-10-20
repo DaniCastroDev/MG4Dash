@@ -60,6 +60,10 @@ object EnergyMonitor {
     /** Totaux mois par mois (« 2026-10 »), du plus ancien au plus récent : 12 au plus. */
     val months: StateFlow<List<Pair<String, Totals>>> = _months
     private const val MONTHS = 12
+    private val _days = MutableStateFlow<List<Pair<String, Float>>>(emptyList())
+    /** kWh nets (sortis − récupérés) jour par jour (« 2026-10-20 »), du plus ancien au plus récent : 7 au plus. */
+    val days: StateFlow<List<Pair<String, Float>>> = _days
+    private const val DAYS = 7
 
     /** Période choisie à l'écran : 0 = depuis la recharge, 1 = depuis le démarrage, 2 = 12 derniers mois. */
     fun totals(period: Int): Totals = when (period) { 1 -> sinceStart.value; 2 -> lastYear.value; else -> sinceCharge.value }
@@ -69,6 +73,9 @@ object EnergyMonitor {
 
     private fun monthKey(now: Long = System.currentTimeMillis()) =
         java.text.SimpleDateFormat("yyyy-MM", java.util.Locale.US).format(java.util.Date(now))
+
+    private fun dayKey(now: Long) =
+        java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date(now))
 
     private fun sum(list: Collection<Totals>) = list.fold(Totals()) { a, t ->
         Totals(a.outKwh + t.outKwh, a.regenKwh + t.regenKwh, a.climKwh + t.climKwh, a.accKwh + t.accKwh, a.km + t.km)
@@ -89,6 +96,8 @@ object EnergyMonitor {
             val demo = listOf(19.8f, 19.1f, 17.6f, 16.0f, 15.1f, 14.4f, 14.2f, 14.6f, 15.3f, 16.4f, 17.9f, 19.2f)
             _months.value = demo.mapIndexed { i, v -> "2025-%02d".format(i + 1) to Totals(v * 10f, 1.5f, 1.2f, 0.4f, 1000).let { it.copy(outKwh = v * 10f + it.regenKwh) } }
             _lastYear.value = sum(_months.value.map { it.second })
+            val day = 86_400_000L; val t0 = System.currentTimeMillis()
+            _days.value = listOf(6.8f, 9.4f, 3.1f, 12.6f, 5.2f, 0f, 12.1f).mapIndexed { i, v -> dayKey(t0 - (6 - i) * day) to v }
             return
         }
         fun load(p: String) = Totals(sp.getFloat("${p}_out", 0f), sp.getFloat("${p}_rgn", 0f), sp.getFloat("${p}_clim", 0f), sp.getFloat("${p}_acc", 0f))
@@ -110,6 +119,17 @@ object EnergyMonitor {
         fun saveMonths() = sp.edit().putString("em_months",
             months.entries.joinToString(";") { (k, t) -> "$k=${t.outKwh},${t.regenKwh},${t.climKwh},${t.accKwh},${t.km}" }).apply()
         publishMonths()
+        val days = java.util.TreeMap<String, Float>()
+        sp.getString("em_days", "")!!.split(';').filter { it.contains('=') }.forEach { e ->
+            val (k, v) = e.split('=', limit = 2)
+            v.toFloatOrNull()?.let { if (k >= "2024") days[k] = it }
+        }
+        fun publishDays() {
+            while (days.size > DAYS) days.remove(days.firstKey())
+            _days.value = days.entries.map { it.key to it.value }
+        }
+        fun saveDays() = sp.edit().putString("em_days", days.entries.joinToString(";") { (k, v) -> "$k=$v" }).apply()
+        publishDays()
 
         scope.launch {
             // Horloge interne : l'heure système de l'autoradio repart en 2019 à chaque réveil puis revient
@@ -256,6 +276,9 @@ object EnergyMonitor {
                         climKwh = m.climKwh + clim / 1000f, accKwh = m.accKwh + acc / 1000f, km = m.km + dKm,
                     )
                     publishMonths()
+                    val dk = dayKey(now)
+                    days[dk] = (days[dk] ?: 0f) + (out - regen) / 1000f
+                    publishDays()
                 }
 
                 if (++saveTick >= 30) {
@@ -267,6 +290,7 @@ object EnergyMonitor {
                         .putFloat("em_c_clim", c.climKwh).putFloat("em_c_acc", c.accKwh)
                     e.apply()
                     saveMonths()
+                    saveDays()
                     BatteryCapacity.flush(context)
                 }
             }

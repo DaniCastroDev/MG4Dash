@@ -25,6 +25,14 @@ object ChargeLog {
         val addedKwh get() = points.zipWithNext { a, b -> (b.first - a.first) / 60f * (a.third + b.third) / 2f }.sum()
     }
 
+    /** Sortie V2L en cours (ou la dernière) : un point par minute (minutes depuis le début, kW). */
+    data class V2l(val startedAt: Long = 0L, val startSoc: Float = 0f, val points: List<Pair<Float, Float>> = emptyList(), val endedAt: Long = 0L) {
+        val active get() = startedAt > 0 && endedAt == 0L
+        val deliveredKwh get() = points.zipWithNext { a, b -> (b.first - a.first) / 60f * (a.second + b.second) / 2f }.sum()
+    }
+    private val _v2l = MutableStateFlow(V2l())
+    val v2l: StateFlow<V2l> = _v2l
+
     private val _session = MutableStateFlow(Session())
     val session: StateFlow<Session> = _session
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -36,6 +44,14 @@ object ChargeLog {
         val sp = Prefs(context).raw
         var saved = sp.getString("charge_session", null)
         _session.value = load(saved)
+        if (app.mg4dash.BuildConfig.MOCK) {
+            // Démo : 2 h 30 de charge AC (31 → 58 %), puis 40 min de V2L
+            val now = System.currentTimeMillis()
+            _session.value = Session(startedAt = now - 150 * 60_000L, startSoc = 31f,
+                points = (0..150 step 5).map { t -> Triple(t.toFloat(), 31f + t * 0.18f, if (t < 3) 2f else 7.2f - (t / 150f) * 0.6f) })
+            _v2l.value = V2l(startedAt = now - 40 * 60_000L, startSoc = 66f,
+                points = (0..40).map { t -> t.toFloat() to (0.9f + 0.6f * kotlin.math.sin(t / 4f) + if (t in 18..24) 0.9f else 0f).coerceAtLeast(0.2f) })
+        }
         scope.launch {
             while (true) {
                 sample(CarBridge.state.value)
@@ -55,7 +71,18 @@ object ChargeLog {
         return if (pv != null && pa != null) Math.abs(pv * pa) / 1000f else null
     }
 
+    private fun sampleV2l(s: VehicleState) {
+        val on = VehicleState.isDischarging(s)
+        val now = System.currentTimeMillis()
+        var cur = _v2l.value
+        if (!on) { if (cur.active) _v2l.value = cur.copy(endedAt = now); return }
+        if (!cur.active) cur = V2l(startedAt = now, startSoc = s.socPrecise ?: s.batteryPercent?.toFloat() ?: 0f)
+        val kw = powerKw() ?: 0f
+        _v2l.value = cur.copy(points = (cur.points + ((now - cur.startedAt) / 60_000f to kw)).takeLast(12 * 60))
+    }
+
     private fun sample(s: VehicleState) {
+        sampleV2l(s)
         val plugged = VehicleState.isPlugged(s.chargeStatus) && !VehicleState.isDischargeMode(s.chargeStatus)
         val soc = s.socPrecise ?: s.batteryPercent?.toFloat() ?: return
         val now = System.currentTimeMillis()
