@@ -191,14 +191,20 @@ class EnergyScreen(host: Host) : Screen(host) {
         }
     })
 
-    private fun tile(title: String, sub: String, icon: Icon, onClick: () -> Unit) =
-        Btn(c, title, icon, 30, vertical = false, textSize = Ty.BODY, sub = sub).apply { setOnClickListener { onClick() } }
+    /** Acceso à une autre vue (lienzo : 96 px, titre 24 px, chevron au bout). */
+    private fun tile(title: String, sub: String?, icon: Icon, chevron: Boolean = true, onClick: () -> Unit) =
+        Btn(c, title, icon, 30, vertical = false, textSize = Ty.LABEL, sub = sub, chevron = chevron).apply { setOnClickListener { onClick() } }
 
-    private fun screenOffTile(sub: String) = tile("Apagar pantalla", sub, Icons.screenOff) {
+    /** Action sur place, sans chevron (lienzo : 88 px). */
+    private fun screenOffTile(sub: String) = tile("Apagar pantalla", sub, Icons.screenOff, chevron = false) {
         if (!CarBridge.setDisplay(false)) host.toast("Apagar pantalla no disponible en este firmware")
     }
 
-    private fun cableBtn() = Btn(c, "Desbloquear cable", Icons.unlock, 30, vertical = false, sub = "").apply { setOnClickListener { CarBridge.toggleCableLock() } }
+    private fun cableBtn() = Btn(c, "Desbloquear cable", Icons.unlock, 30, vertical = false, textSize = Ty.LABEL, sub = "").apply { setOnClickListener { CarBridge.toggleCableLock() } }
+
+    /** Bouton principal du lienzo : 96 px, icône et libellé centrés, 28 px. */
+    private fun primaryBtn(label: String, icon: Icon, onClick: () -> Unit) =
+        Btn(c, label, icon, 28, vertical = false, textSize = Ty.BODY, centered = true).apply { look = Look.PRIMARY; setOnClickListener { onClick() } }
 
     private fun bindCable(b: Btn, k: K, highlight: Boolean = false) {
         val locked = k.s.chargeLock != 2
@@ -259,6 +265,7 @@ class EnergyScreen(host: Host) : Screen(host) {
             // (1)+(5) lecturas principales y batería ahora
             addView(c.row(28).apply {
                 background = rounded(Pal.surface, Dim.CARD_R); setPadding(28, 12, 12, 12)
+                gravity = Gravity.CENTER_VERTICAL
                 fun readout(t: String, v: ValueText) = addView(c.col(0).apply {
                     addView(c.text(t, Ty.CAPTION, Pal.text2).apply { maxLines = 1 }); addView(v)
                 })
@@ -274,7 +281,7 @@ class EnergyScreen(host: Host) : Screen(host) {
                 }
                 packV = pack("Tensión"); packA = pack("Corriente"); packKw = pack("Potencia")
                 addView(View(c), lp(0, 1, 1f))
-                addView(tile("Plan de carga", "", Icons.calendar) { open(P.PLAN) }, lp(260, MATCH))
+                addView(tile("Plan de carga", null, Icons.calendar) { open(P.PLAN) }, lp(WRAP, Dim.TAP))
             }, lp(MATCH, 112))
 
             addView(c.row(Dim.GAP).apply {
@@ -413,14 +420,14 @@ class EnergyScreen(host: Host) : Screen(host) {
                         addView(c.label("Límite de carga"), lp(0, WRAP, 1f))
                         limitCaption = c.text("", Ty.CAPTION, Pal.text2); addView(limitCaption)
                     })
-                    limits = limitSeg(64); addView(limits, lp(MATCH, 64))
+                    limits = limitSeg(80); addView(limits, lp(MATCH, 80))
                 }
                 addView(limitRow)
                 addView(View(c), lp(MATCH, 0, 1f))
                 addView(c.row(12).apply {
-                    primary = Btn(c, "Detener carga", Icons.stop, 30, vertical = false, textSize = Ty.BODY).apply { setOnClickListener { CarBridge.stopCharge() } }
+                    primary = primaryBtn("Detener carga", Icons.stop) { CarBridge.stopCharge() }
                     cable = cableBtn()
-                    addView(primary, lp(0, Dim.TAP, 1f)); addView(cable, lp(0, Dim.TAP, 1f))
+                    addView(primary, lp(0, Dim.PRIMARY, 284f)); addView(cable, lp(0, Dim.PRIMARY, 308f))
                 })
             }, w(652))
             // (2) curva de carga
@@ -444,13 +451,13 @@ class EnergyScreen(host: Host) : Screen(host) {
                     addView(c.label("Corriente de carga"), lp(0, WRAP, 1f))
                     ampsCaption = c.text("", Ty.CAPTION, Pal.text2); addView(ampsCaption)
                 })
-                amps = ampsSeg(); addView(amps, lp(MATCH, Dim.TAP_MIN))
-                preheat = Btn(c, "Precalentar batería", Icons.climate, 30, vertical = false, textSize = Ty.BODY, sub = "", led = true).apply {
+                amps = ampsSeg(Dim.TAP); addView(amps, lp(MATCH, Dim.TAP))
+                preheat = Btn(c, "Precalentar batería", Icons.climate, 30, vertical = false, textSize = Ty.LABEL, sub = "", led = true).apply {
                     accent = Pal.heat
                     setOnClickListener { CarProps.setInt(CarProps.DRVNG_PTC_HEAT, if (on) 2 else 1, "réchauffage batterie"); on = !on }
                 }
-                addView(preheat, lp(MATCH, Dim.TAP))
-                addView(tile("Programar carga", "Horario de carga y V2L", Icons.calendar) { open(P.PLAN) }, lp(MATCH, Dim.TAP))
+                addView(preheat, lp(MATCH, Dim.PRIMARY))
+                addView(tile("Programar carga", "Horario de carga y V2L", Icons.calendar) { open(P.PLAN) }, lp(MATCH, Dim.PRIMARY))
                 addView(View(c), lp(MATCH, 0, 1f))
                 addView(screenOffTile("La carga continúa"), lp(MATCH, Dim.TAP))
             }, w(448))
@@ -508,11 +515,11 @@ class EnergyScreen(host: Host) : Screen(host) {
                 caption = c.text("", Ty.CAPTION, Pal.text2).apply { maxLines = 1 }; hero.side.addView(caption)
                 bar = BatteryBar(c); addView(bar, lp(MATCH, 32))
                 addView(View(c), lp(MATCH, 0, 1f))
-                cable = cableBtn(); addView(cable, lp(MATCH, Dim.TAP))
-                full = Btn(c, "Cargar hasta 100 %", Icons.energy, 30, vertical = false, sub = "Sube el límite solo para esta carga").apply {
+                cable = cableBtn(); addView(cable, lp(MATCH, Dim.PRIMARY))
+                full = Btn(c, "Cargar hasta 100 %", Icons.energy, 30, vertical = false, textSize = Ty.LABEL, sub = "Sube el límite y reanuda").apply {
                     setOnClickListener { ChargeGuard.setLimit(c, 100); CarBridge.startCharge() }
                 }
-                addView(full, lp(MATCH, Dim.TAP))
+                addView(full, lp(MATCH, Dim.PRIMARY))
             }, w(652))
             // (2) resumen de la sesión
             addView(c.card(gap = 12).apply {
@@ -531,8 +538,8 @@ class EnergyScreen(host: Host) : Screen(host) {
             // (3) después de cargar
             addView(c.card(gap = 12).apply {
                 addView(c.label("Después de cargar"))
-                addView(tile("Volver al inicio", "Pantalla de inicio", Icons.home) { host.go("home") }, lp(MATCH, Dim.TAP))
-                next = tile("Programar carga", "", Icons.calendar) { open(P.PLAN) }; addView(next, lp(MATCH, Dim.TAP))
+                addView(tile("Volver al inicio", "Pantalla de inicio", Icons.home) { host.go("home") }, lp(MATCH, Dim.PRIMARY))
+                next = tile("Programar carga", "", Icons.calendar) { open(P.PLAN) }; addView(next, lp(MATCH, Dim.PRIMARY))
                 addView(screenOffTile("El coche sigue enchufado"), lp(MATCH, Dim.TAP))
                 addView(View(c), lp(MATCH, 0, 1f))
                 keep = note(""); addView(keep)
@@ -588,11 +595,11 @@ class EnergyScreen(host: Host) : Screen(host) {
 
         override fun build(): View = c.row(Dim.GAP).apply {
             // (1) carga interrumpida
-            addView(c.card(gap = 12).apply {
+            addView(c.card(gap = 8).apply {
                 head = Head(this)
                 hero = Hero(this)
                 addView(c.col(4).apply {
-                    background = rounded(Pal.surface2, Dim.BTN_R); setPadding(20, 16, 20, 16)
+                    background = rounded(Pal.surface2, Dim.BTN_R); setPadding(20, 12, 20, 12)
                     addView(c.row(12).apply {
                         gravity = Gravity.CENTER_VERTICAL
                         addView(IconView(c, Icons.alert, 30).apply { color = Pal.alert })
@@ -605,8 +612,8 @@ class EnergyScreen(host: Host) : Screen(host) {
                 retry = Btn(c, "Reintentar carga", Icons.retry, 30, vertical = false, textSize = Ty.BODY, sub = "Vuelve a pedir la carga al coche").apply {
                     look = Look.PRIMARY; setOnClickListener { CarBridge.startCharge() }
                 }
-                addView(retry, lp(MATCH, Dim.TAP))
-                cable = cableBtn(); addView(cable, lp(MATCH, Dim.TAP))
+                addView(retry, lp(MATCH, Dim.PRIMARY))
+                cable = cableBtn(); addView(cable, lp(MATCH, Dim.PRIMARY))
             }, w(652))
             // (2) curva hasta el corte
             addView(c.card(gap = 12).apply {
@@ -639,7 +646,7 @@ class EnergyScreen(host: Host) : Screen(host) {
                     addView(c.label("Corriente de carga"), lp(0, WRAP, 1f))
                     addView(c.text("Sugerido: 16 A", Ty.CAPTION, Pal.action))
                 })
-                amps = ampsSeg(); addView(amps, lp(MATCH, Dim.TAP_MIN))
+                amps = ampsSeg(Dim.TAP); addView(amps, lp(MATCH, Dim.TAP))
             }, w(448))
         }
 
@@ -690,8 +697,8 @@ class EnergyScreen(host: Host) : Screen(host) {
                 eta = c.text("", Ty.CAPTION, Pal.text2).apply { maxLines = 1 }; hero.side.addView(eta)
                 bar = BatteryBar(c); addView(bar, lp(MATCH, 32))
                 addView(View(c), lp(MATCH, 0, 1f))
-                primary = Btn(c, "Detener V2L", Icons.stop, 30, vertical = false, textSize = Ty.BODY).apply {
-                    setOnClickListener { if (VehicleState.isDischarging(CarBridge.state.value)) CarBridge.stopV2L() else CarBridge.startV2L() }
+                primary = primaryBtn("Detener V2L", Icons.stop) {
+                    if (VehicleState.isDischarging(CarBridge.state.value)) CarBridge.stopV2L() else CarBridge.startV2L()
                 }
                 addView(primary, lp(MATCH, Dim.PRIMARY))
             }, w(652))
@@ -782,8 +789,8 @@ class EnergyScreen(host: Host) : Screen(host) {
                     block("Termina").let { endV = it.first; endC = it.second }
                 })
                 addView(View(c), lp(MATCH, 0, 1f))
-                now = Btn(c, "Cargar ahora", Icons.energy, 30, vertical = false, textSize = Ty.BODY).apply { setOnClickListener { CarBridge.startCharge() } }
-                addView(now, lp(MATCH, Dim.TAP))
+                now = primaryBtn("Cargar ahora", Icons.energy) { CarBridge.startCharge() }
+                addView(now, lp(MATCH, Dim.PRIMARY))
                 addView(c.row(12).apply {
                     cable = Btn(c, "Desbloquear", null, textSize = Ty.LABEL).apply { setOnClickListener { CarBridge.toggleCableLock() } }
                     back = Btn(c, "Consumo", null, textSize = Ty.LABEL).apply { setOnClickListener { open(if (manual == P.PLAN) null else P.SUMMARY) } }
@@ -824,14 +831,14 @@ class EnergyScreen(host: Host) : Screen(host) {
                             addView(c.label("Límite de carga"), lp(0, WRAP, 1f))
                             limitCaption = c.text("", Ty.CAPTION, Pal.text2); addView(limitCaption)
                         })
-                        limits = limitSeg(64); addView(limits, lp(MATCH, 64))
+                        limits = limitSeg(Dim.TAP_MIN); addView(limits, lp(MATCH, Dim.TAP_MIN))
                     }
                     addView(limitBox)
                     addView(c.row().apply {
                         addView(c.label("Corriente AC"), lp(0, WRAP, 1f))
                         ampsCaption = c.text("", Ty.CAPTION, Pal.text2); addView(ampsCaption)
                     })
-                    amps = ampsSeg(64); addView(amps, lp(MATCH, 64))
+                    amps = ampsSeg(Dim.TAP_MIN); addView(amps, lp(MATCH, Dim.TAP_MIN))
                 }, lp(MATCH, 0, 1f))
                 addView(c.card(pad = 20, gap = 10).apply {
                     addView(c.row(12).apply {
@@ -840,8 +847,8 @@ class EnergyScreen(host: Host) : Screen(host) {
                             addView(c.label("Descarga V2L"))
                             v2lText = c.text("", Ty.LABEL, Pal.text).apply { maxLines = 1 }; addView(v2lText)
                         }, lp(0, WRAP, 1f))
-                        v2lBtn = Btn(c, "Iniciar V2L", Icons.play, 28, vertical = false).apply { setOnClickListener { CarBridge.startV2L() } }
-                        addView(v2lBtn, lp(240, 64))
+                        v2lBtn = Btn(c, "Iniciar V2L", Icons.play, 26, vertical = false, centered = true).apply { setOnClickListener { CarBridge.startV2L() } }
+                        addView(v2lBtn, lp(236, Dim.TAP_MIN))
                     })
                     addView(c.row().apply {
                         addView(c.text("Detener la descarga al", Ty.LABEL, Pal.text2), lp(0, WRAP, 1f))
@@ -859,11 +866,11 @@ class EnergyScreen(host: Host) : Screen(host) {
             val value = c.text("--:--", Ty.VALUE, Pal.text, Ty.num).apply { gravity = Gravity.CENTER; maxLines = 1 }
             val box = c.col(8).apply {
                 addView(c.text(title, Ty.CAPTION, Pal.text2))
-                addView(c.row(10).apply {
+                addView(c.row(8).apply {
                     gravity = Gravity.CENTER_VERTICAL
-                    addView(Btn(c, null, Icons.minus, 36).apply { setOnClickListener { onStep(-15) } }, lp(80, 80))
+                    addView(Btn(c, null, Icons.minus, 36).apply { setOnClickListener { onStep(-15) } }, lp(72, Dim.TAP))
                     addView(value, lp(0, WRAP, 1f))
-                    addView(Btn(c, null, Icons.plus, 36).apply { setOnClickListener { onStep(15) } }, lp(80, 80))
+                    addView(Btn(c, null, Icons.plus, 36).apply { setOnClickListener { onStep(15) } }, lp(72, Dim.TAP))
                 })
             }
             return box to value

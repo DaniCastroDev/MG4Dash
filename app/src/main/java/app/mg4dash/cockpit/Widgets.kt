@@ -171,11 +171,16 @@ open class Btn(
     led: Boolean = false,
     radius: Float = Dim.BTN_R,
     iconEnd: Boolean = false,
+    /** Horizontal : icône et texte centrés (boutons principaux du lienzo). */
+    centered: Boolean = false,
+    /** Chevron « › » au bout : le bouton ouvre une autre vue. */
+    chevron: Boolean = false,
 ) : LinearLayout(c) {
     val iconView: IconView? = icon?.let { IconView(c, it, iconSize) }
     val labelView: TextView? = label?.let { c.text(it, textSize, Pal.text, Ty.uiMedium).apply { maxLines = 2; gravity = if (vertical) Gravity.CENTER else Gravity.START } }
     val subView: TextView? = sub?.let { c.text(it, Ty.CAPTION, Pal.text2).apply { maxLines = 1 } }
     private val ledView: View? = if (led) View(c) else null
+    private val chevronView: IconView? = if (chevron) IconView(c, Icons.chevronRight, 26, 3f) else null
     private val bg = GradientDrawable().apply { cornerRadius = radius }
     var look: Look = Look.NEUTRAL
         set(v) { field = v; paint() }
@@ -197,12 +202,14 @@ open class Btn(
             val texts = c.col(2).apply { gravity = if (vertical) Gravity.CENTER_HORIZONTAL else Gravity.START }
             labelView?.let { texts.addView(it) }
             subView?.let { texts.addView(it) }
-            addView(texts, lp(if (vertical) WRAP else 0, WRAP, if (vertical) 0f else 1f).apply {
+            val grow = !vertical && !centered
+            addView(texts, lp(if (grow) 0 else WRAP, WRAP, if (grow) 1f else 0f).apply {
                 if (iconView != null && !iconEnd) { if (vertical) topMargin = inner else leftMargin = inner }
             })
         }
         if (iconEnd) iconView?.let { addView(it, lp(WRAP, WRAP).apply { leftMargin = inner }) }
         ledView?.let { addView(it, lp(28, 5).apply { if (vertical) topMargin = 8 else leftMargin = inner }) }
+        chevronView?.let { addView(it, lp(WRAP, WRAP).apply { leftMargin = inner }) }
         if (!vertical) setPadding(20, 0, 20, 0)
         paint()
     }
@@ -228,6 +235,7 @@ open class Btn(
         labelView?.setTextColor(ink)
         subView?.setTextColor(if (look == Look.PRIMARY || look == Look.ALERT) ink else Pal.text2)
         ledView?.background = rounded(if (on) accent else Pal.line, 3f)
+        chevronView?.color = if (look == Look.PRIMARY || look == Look.ALERT) ink else Pal.text2
         isEnabled = look != Look.DISABLED
     }
 
