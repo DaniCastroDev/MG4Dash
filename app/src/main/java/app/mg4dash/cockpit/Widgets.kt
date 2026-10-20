@@ -406,8 +406,53 @@ class PowerGauge(c: Context, private val minKw: Float = -60f, private val maxKw:
     }
 }
 
-/** Histogramme avec ligne de moyenne facultative (consommation par km, énergie par jour). */
-class BarChart(c: Context) : View(c) {
+/**
+ * Graphique tactile : le doigt choisit un point (toucher ou glisser) ; au lâcher, la sélection reste
+ * [HOLD_MS] puis revient d'elle-même au résumé. [onSelect] reçoit l'indice, ou −1 au retour.
+ */
+abstract class TouchChart(c: Context) : View(c) {
+    var selected = -1
+        private set
+    var onSelect: ((Int) -> Unit)? = null
+    protected val tipText = Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Ty.num; textSize = c.pxf(22f) }
+    private val tipBg = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val tipRect = RectF()
+    private val clear = Runnable { pick(-1) }
+
+    /** Indice sous le doigt, −1 sans données. */
+    protected abstract fun indexAt(x: Float): Int
+
+    private fun pick(i: Int) { if (i != selected) { selected = i; invalidate(); onSelect?.invoke(i) } }
+
+    /** Données remplacées : l'indice choisi peut ne plus exister. */
+    protected fun dataChanged(size: Int) { if (selected >= size) { selected = -1; onSelect?.invoke(-1) } }
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(e: MotionEvent): Boolean {
+        when (e.actionMasked) {
+            MotionEvent.ACTION_DOWN -> { parent?.requestDisallowInterceptTouchEvent(true); removeCallbacks(clear); pick(indexAt(e.x)) }
+            MotionEvent.ACTION_MOVE -> pick(indexAt(e.x))
+            MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> postDelayed(clear, HOLD_MS)
+        }
+        return true
+    }
+
+    override fun onDetachedFromWindow() { removeCallbacks(clear); super.onDetachedFromWindow() }
+
+    /** Bulle de lecture centrée sur [cx], en haut du graphique. */
+    protected fun tip(canvas: Canvas, s: String, cx: Float, top: Float = 0f) {
+        val w = tipText.measureText(s) + 28f; val h = tipText.textSize + 18f
+        val l = (cx - w / 2).coerceIn(0f, (width - w).coerceAtLeast(0f))
+        tipRect.set(l, top, l + w, top + h)
+        tipBg.color = Pal.surface3; canvas.drawRoundRect(tipRect, 10f, 10f, tipBg)
+        tipText.color = Pal.text; canvas.drawText(s, l + 14f, top + h - 13f, tipText)
+    }
+
+    companion object { const val HOLD_MS = 4_000L }
+}
+
+/** Histogramme avec ligne de moyenne facultative (consommation par km, énergie par jour). Tactile. */
+class BarChart(c: Context) : TouchChart(c) {
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val txt = Paint(Paint.ANTI_ALIAS_FLAG).apply { typeface = Ty.num; textSize = c.pxf(20f) }
     private val dash = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 2f; pathEffect = android.graphics.DashPathEffect(floatArrayOf(6f, 6f), 0f) }
@@ -415,29 +460,37 @@ class BarChart(c: Context) : View(c) {
     var labels: List<String> = emptyList()
     var average: Float? = null
     var highlightLast = true
+    /** Couleur de la dernière barre (lienzo : blanc en conduite, bleu ailleurs). */
+    var lastColor = Pal.action
     var unitTop = ""
     fun set(values: List<Float>, labels: List<String> = emptyList(), average: Float? = null) {
-        this.values = values; this.labels = labels; this.average = average; invalidate()
+        this.values = values; this.labels = labels; this.average = average; dataChanged(values.size); invalidate()
     }
+    override fun indexAt(x: Float): Int = if (values.isEmpty() || width == 0) -1 else (x / (width.toFloat() / values.size)).toInt().coerceIn(0, values.lastIndex)
     override fun onDraw(canvas: Canvas) {
         if (values.isEmpty()) return
         val bottomPad = if (labels.isNotEmpty()) 30f else 4f
         val h = height - bottomPad; val w = width.toFloat()
         val max = (values.maxOrNull() ?: 1f).coerceAtLeast(1f) * 1.1f
         val slot = w / values.size; val bw = (slot * 0.62f).coerceAtLeast(2f)
+        paint.color = Pal.line; canvas.drawRect(0f, h - 1f, w, h, paint)
         values.forEachIndexed { i, v ->
             val x = i * slot + (slot - bw) / 2
-            paint.color = if (highlightLast && i == values.lastIndex) Pal.action else Pal.text3
-            canvas.drawRoundRect(x, h - h * v / max, x + bw, h, 3f, 3f, paint)
+            paint.color = when {
+                selected >= 0 -> if (i == selected) Pal.action else Pal.text3
+                highlightLast && i == values.lastIndex -> lastColor
+                else -> Pal.text3
+            }
+            canvas.drawRoundRect(x, h - h * v / max, x + bw, h - 1f, 3f, 3f, paint)
         }
         average?.let { a ->
             val y = h - h * a / max
             dash.color = Pal.text2
             canvas.drawLine(0f, y, w, y, dash)
         }
-        txt.color = Pal.text2
         labels.forEachIndexed { i, l ->
             if (l.isEmpty()) return@forEachIndexed
+            txt.color = if (i == selected) Pal.action else Pal.text2
             val tw = txt.measureText(l)
             canvas.drawText(l, (i * slot + slot / 2 - tw / 2).coerceIn(0f, w - tw), height - 4f, txt)
         }
@@ -447,8 +500,9 @@ class BarChart(c: Context) : View(c) {
 /**
  * Courbe de charge : batterie (%) et puissance (kW) dans le même graphique, sur le même axe de temps.
  * Axe de gauche en kW (couleur de la puissance), axe de droite en % (couleur de la batterie).
+ * Au doigt : curseur et bulle « heure · % · kW » du point choisi.
  */
-class ChargeCurve(c: Context) : View(c) {
+class ChargeCurve(c: Context) : TouchChart(c) {
     private val line = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 3f; strokeJoin = Paint.Join.ROUND; strokeCap = Paint.Cap.ROUND }
     private val area = Paint(Paint.ANTI_ALIAS_FLAG)
     private val grid = Paint().apply { strokeWidth = 1f }
@@ -459,14 +513,19 @@ class ChargeCurve(c: Context) : View(c) {
     var spanMin = 60f
     var startLabel = ""; var endLabel = ""
     var maxKw = 8f
+    /** Début de la session (heure de la bulle), 0 = inconnu. */
+    var startAt = 0L
+    private val left = 76f
     fun set(samples: List<Triple<Float, Float, Float>>, spanMin: Float, startLabel: String, endLabel: String, maxKw: Float) {
-        this.samples = samples; this.spanMin = spanMin; this.startLabel = startLabel; this.endLabel = endLabel; this.maxKw = maxKw; invalidate()
+        this.samples = samples; this.spanMin = spanMin; this.startLabel = startLabel; this.endLabel = endLabel; this.maxKw = maxKw
+        dataChanged(samples.size); invalidate()
     }
+    private fun xOf(t: Float) = left + (width - 2 * left) * (t / spanMin).coerceIn(0f, 1f)
+    override fun indexAt(x: Float): Int = if (samples.isEmpty()) -1 else samples.indices.minByOrNull { Math.abs(xOf(samples[it].first) - x) } ?: -1
     override fun onDraw(canvas: Canvas) {
-        val left = 76f; val right = width - 76f; val w = right - left
+        val right = width - left
         val top = 14f; val bot = height - 38f; val h = bot - top
         fun kwLabel(v: Float) = (if (v % 1f == 0f) v.toInt().toString() else Fmt.dec(v)) + " kW"
-        // quadrillage commun : 0, ½ et max
         for (f in listOf(0f, 0.5f, 1f)) {
             val y = bot - h * f
             grid.color = Pal.line; canvas.drawLine(left, y, right, y, grid)
@@ -479,31 +538,34 @@ class ChargeCurve(c: Context) : View(c) {
         canvas.drawText(startLabel, left, height - 6f, txt)
         canvas.drawText(endLabel, right - txt.measureText(endLabel), height - 6f, txt)
         if (samples.size < 2) return
-        fun x(t: Float) = left + w * (t / spanMin).coerceIn(0f, 1f)
         fun yKw(k: Float) = bot - h * (k / maxKw).coerceIn(0f, 1f)
         fun ySoc(s: Float) = bot - h * (s / 100f).coerceIn(0f, 1f)
-        // puissance (aire + ligne)
-        path.reset(); path.moveTo(x(samples[0].first), bot)
-        samples.forEach { (t, _, k) -> path.lineTo(x(t), yKw(k)) }
-        path.lineTo(x(samples.last().first), bot); path.close()
+        path.reset(); path.moveTo(xOf(samples[0].first), bot)
+        samples.forEach { (t, _, k) -> path.lineTo(xOf(t), yKw(k)) }
+        path.lineTo(xOf(samples.last().first), bot); path.close()
         area.color = Pal.energy; area.alpha = 36; canvas.drawPath(path, area)
         path.reset()
-        samples.forEachIndexed { i, (t, _, k) -> if (i == 0) path.moveTo(x(t), yKw(k)) else path.lineTo(x(t), yKw(k)) }
+        samples.forEachIndexed { i, (t, _, k) -> if (i == 0) path.moveTo(xOf(t), yKw(k)) else path.lineTo(xOf(t), yKw(k)) }
         line.color = Pal.energy; canvas.drawPath(path, line)
-        // batterie par-dessus
         path.reset()
-        samples.forEachIndexed { i, (t, soc, _) -> if (i == 0) path.moveTo(x(t), ySoc(soc)) else path.lineTo(x(t), ySoc(soc)) }
+        samples.forEachIndexed { i, (t, soc, _) -> if (i == 0) path.moveTo(xOf(t), ySoc(soc)) else path.lineTo(xOf(t), ySoc(soc)) }
         line.color = Pal.text; canvas.drawPath(path, line)
-        // points finaux
-        val last = samples.last()
+        val p = samples.getOrNull(selected) ?: samples.last()
+        val px = xOf(p.first)
+        if (selected >= 0) { grid.color = Pal.text2; canvas.drawRect(px - 1f, top, px + 1f, bot, grid) }
         area.alpha = 255
-        area.color = Pal.energy; canvas.drawCircle(x(last.first), yKw(last.third), 6f, area)
-        area.color = Pal.text; canvas.drawCircle(x(last.first), ySoc(last.second), 6f, area)
+        area.color = Pal.energy; canvas.drawCircle(px, yKw(p.third), 7f, area)
+        area.color = Pal.text; canvas.drawCircle(px, ySoc(p.second), 7f, area)
+        if (selected >= 0) {
+            val clock = if (startAt > 0) java.util.Calendar.getInstance().apply { timeInMillis = startAt + (p.first * 60_000L).toLong() }
+                .let { Fmt.clock(it.get(java.util.Calendar.HOUR_OF_DAY), it.get(java.util.Calendar.MINUTE)) + " · " } else ""
+            tip(canvas, clock + "${Math.round(p.second)} % · ${Fmt.dec(p.third)} kW", px, top)
+        }
     }
 }
 
-/** Mini courbe (consommation récente, sortie V2L). */
-class Sparkline(c: Context) : View(c) {
+/** Mini courbe (consommation récente, sortie V2L). Au doigt : point et bulle [label]. */
+class Sparkline(c: Context) : TouchChart(c) {
     private val line = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 3f; strokeJoin = Paint.Join.ROUND; strokeCap = Paint.Cap.ROUND }
     private val dash = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 2f; pathEffect = android.graphics.DashPathEffect(floatArrayOf(5f, 6f), 0f) }
     private val dot = Paint(Paint.ANTI_ALIAS_FLAG)
@@ -511,17 +573,25 @@ class Sparkline(c: Context) : View(c) {
     var values: List<Float> = emptyList()
     var color = Pal.text
     var average: Float? = null
-    fun set(v: List<Float>, avg: Float? = null) { values = v; average = avg; invalidate() }
+    /** Texte de la bulle pour un indice ; null : pas de bulle. */
+    var label: ((Int) -> String)? = null
+    fun set(v: List<Float>, avg: Float? = null) { values = v; average = avg; dataChanged(v.size); invalidate() }
+    private fun xOf(i: Int) = 6f + (width - 12f) * i / (values.size - 1).coerceAtLeast(1)
+    override fun indexAt(x: Float): Int = if (values.size < 2) -1 else Math.round((x - 6f) / (width - 12f) * (values.size - 1)).coerceIn(0, values.lastIndex)
     override fun onDraw(canvas: Canvas) {
         if (values.size < 2) return
+        val tipH = if (label != null) 44f else 0f
         val min = values.minOrNull()!! * 0.9f; val max = values.maxOrNull()!! * 1.1f
         val span = (max - min).coerceAtLeast(0.1f)
-        fun y(v: Float) = height - 6f - (height - 12f) * (v - min) / span
+        fun y(v: Float) = height - 6f - (height - 12f - tipH) * (v - min) / span
         average?.let { dash.color = Pal.text3; canvas.drawLine(0f, y(it), width.toFloat(), y(it), dash) }
         path.reset()
-        values.forEachIndexed { i, v -> val x = 6f + (width - 12f) * i / (values.size - 1); if (i == 0) path.moveTo(x, y(v)) else path.lineTo(x, y(v)) }
+        values.forEachIndexed { i, v -> if (i == 0) path.moveTo(xOf(i), y(v)) else path.lineTo(xOf(i), y(v)) }
         line.color = color; canvas.drawPath(path, line)
-        dot.color = color; canvas.drawCircle(width - 6f, y(values.last()), 5f, dot)
+        val i = if (selected >= 0) selected else values.lastIndex
+        if (selected >= 0) { dot.color = Pal.text2; canvas.drawRect(xOf(i) - 1f, tipH, xOf(i) + 1f, height.toFloat(), dot) }
+        dot.color = color; canvas.drawCircle(xOf(i), y(values[i]), if (selected >= 0) 7f else 5f, dot)
+        if (selected >= 0) label?.let { tip(canvas, it(i), xOf(i)) }
     }
 }
 

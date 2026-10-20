@@ -53,6 +53,8 @@ class DrivingScreen(host: Host) : Screen(host) {
     private lateinit var soc: ValueText
     private lateinit var range: ValueText
     private lateinit var cons: BarChart
+    private lateinit var consValue: ValueText
+    private lateinit var consWhen: android.widget.TextView
     private var period = 0   // 0 = desde la última carga, 1 = desde el arranque
     private lateinit var periods: Segmented
     private lateinit var usedTotal: ValueText
@@ -85,8 +87,23 @@ class DrivingScreen(host: Host) : Screen(host) {
                 range = ValueText(c, Ty.VALUE, Ty.LABEL); addView(range)
             })
             addView(View(c), lp(MATCH, 0, 1f))
-            addView(c.label("Consumo · últimos 10 km"))
-            cons = BarChart(c); addView(cons, lp(MATCH, 120))
+            // Consumo (lienzo) : moyenne des 10 derniers km, barres par km ; au doigt, le km choisi
+            addView(c.col(6).apply {
+                addView(c.row(10).apply {
+                    gravity = Gravity.CENTER_VERTICAL
+                    addView(c.label("Consumo"), lp(0, WRAP, 1f))
+                    consWhen = c.text("Media", Ty.CAPTION, Pal.text2); addView(consWhen)
+                    consValue = ValueText(c, Ty.TITLE, Ty.CAPTION); addView(consValue)
+                })
+                cons = BarChart(c).apply { lastColor = Pal.text; onSelect = { bindCons() } }
+                addView(cons, lp(MATCH, 72))
+                addView(c.row().apply {
+                    addView(c.text("Hace 10 km", Ty.CAPTION, Pal.text2), lp(0, WRAP, 1f))
+                    addView(View(c).apply { background = rounded(Pal.text, 1f) }, lp(20, 2))
+                    addView(c.text(" media", Ty.CAPTION, Pal.text2), lp(0, WRAP, 1f).apply { leftMargin = 4 })
+                    addView(c.text("Ahora", Ty.CAPTION, Pal.text2))
+                })
+            })
         }, w(560))
         addView(c.col(Dim.GAP).apply {
             // « Energía usada » du lienzo (Energy.dc.html) : par période, répartition et régénération
@@ -111,6 +128,21 @@ class DrivingScreen(host: Host) : Screen(host) {
                 }
             }, lp(MATCH, Dim.TAP))
         }, w(528))
+    }
+
+    private fun bindCons() {
+        val h = ChargeGuard.history.value.takeLast(10)
+        val avg = h.takeIf { it.isNotEmpty() }?.average()?.toFloat()
+        if (h != cons.values) cons.set(h, emptyList(), avg)
+        val sel = cons.selected.takeIf { it in h.indices }
+        if (sel != null) {
+            val ago = h.size - 1 - sel
+            consWhen.put(if (ago == 0) "Último km" else "Hace ${ago + 1} km")
+            consValue.set(Fmt.dec(h[sel]), "kWh/100 km", Pal.action)
+        } else {
+            consWhen.put("Media")
+            consValue.set(avg?.let { Fmt.dec(it) } ?: "—", "kWh/100 km")
+        }
     }
 
     private fun usedCard() = c.card(gap = 14).apply {
@@ -220,8 +252,7 @@ class DrivingScreen(host: Host) : Screen(host) {
         media.bind()
         soc.set(s.socPrecise?.let { Fmt.dec(it) } ?: s.batteryPercent?.toString() ?: "—", "%")
         range.set(s.rangeKm?.toString() ?: "—", "km")
-        val h = ChargeGuard.history.value.takeLast(10)
-        cons.set(h, emptyList(), h.takeIf { it.isNotEmpty() }?.average()?.toFloat())
+        bindCons()
         bindUsed()
         last = s
         val active = Adas.active(c)

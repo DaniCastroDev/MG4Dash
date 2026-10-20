@@ -235,6 +235,7 @@ class EnergyScreen(host: Host) : Screen(host) {
 
     private fun curveSet(curve: ChargeCurve, sess: ChargeLog.Session) {
         val pts = sess.points
+        curve.startAt = sess.startedAt
         val span = (pts.lastOrNull()?.first ?: 60f).coerceAtLeast(30f)
         curve.set(pts, span, sess.startedAt.takeIf { it > 0 }?.let { clockOf(it) } ?: "",
             if (sess.active) "Ahora" else sess.endedAt.takeIf { it > 0 }?.let { clockOf(it) } ?: "",
@@ -254,7 +255,9 @@ class EnergyScreen(host: Host) : Screen(host) {
     private inner class Summary : Page() {
         lateinit var soc: ValueText; lateinit var range: ValueText; lateinit var avg: ValueText
         lateinit var packV: ValueText; lateinit var packA: ValueText; lateinit var packKw: ValueText
-        lateinit var perKm: BarChart; lateinit var mean: ValueText
+        lateinit var perKm: BarChart; lateinit var mean: ValueText; lateinit var meanLabel: TextView
+        var hist: List<Float> = emptyList(); var histAvg: Float? = null
+        var dayVals: List<Float> = emptyList(); var dayNames: List<String> = emptyList()
         lateinit var periods: Segmented; var period = 0
         lateinit var usedTotal: ValueText; lateinit var usedKm: ValueText; lateinit var split: LinearLayout
         lateinit var driveV: ValueText; lateinit var climV: ValueText; lateinit var accV: ValueText
@@ -290,10 +293,14 @@ class EnergyScreen(host: Host) : Screen(host) {
                     addView(c.row(10).apply {
                         gravity = Gravity.CENTER_VERTICAL
                         addView(c.label("Consumo · últimos 50 km"), lp(0, WRAP, 1f))
-                        addView(c.text("Media", Ty.CAPTION, Pal.text2))
+                        meanLabel = c.text("Media", Ty.CAPTION, Pal.text2); addView(meanLabel)
                         mean = ValueText(c, Ty.TITLE, Ty.CAPTION); addView(mean)
                     })
-                    perKm = BarChart(c); addView(perKm, lp(MATCH, 0, 1f))
+                    perKm = BarChart(c).apply { onSelect = { bindMean() } }; addView(perKm, lp(MATCH, 0, 1f))
+                    addView(c.row().apply {
+                        addView(c.text("Hace 50 km", Ty.CAPTION, Pal.text2), lp(0, WRAP, 1f))
+                        addView(c.text("Ahora", Ty.CAPTION, Pal.text2))
+                    })
                 }, w(712))
                 // (3)+(4) energía usada por periodo
                 addView(c.card(gap = 14).apply {
@@ -325,7 +332,7 @@ class EnergyScreen(host: Host) : Screen(host) {
                     addView(c.label("Últimos 7 días"))
                     week = ValueText(c, Ty.VALUE, Ty.LABEL); addView(week)
                     weekCost = c.text("", Ty.CAPTION, Pal.text2).apply { maxLines = 1 }; addView(weekCost)
-                    days = BarChart(c); addView(days, lp(MATCH, 0, 1f).apply { topMargin = 8 })
+                    days = BarChart(c).apply { onSelect = { bindWeek() } }; addView(days, lp(MATCH, 0, 1f).apply { topMargin = 8 })
                 }, w(416))
             }, lp(MATCH, 0, 1f))
         }
@@ -368,24 +375,44 @@ class EnergyScreen(host: Host) : Screen(host) {
             val hist = ChargeGuard.history.value.takeLast(50)
             val a = hist.takeIf { it.isNotEmpty() }?.average()?.toFloat() ?: EnergyMonitor.sinceCharge.value.per100
             avg.set(a?.let { Fmt.dec(it) } ?: "—", "kWh/100 km")
-            mean.set(a?.let { Fmt.dec(it) } ?: "—", "kWh/100 km")
-            perKm.set(hist, emptyList(), a)
+            histAvg = a
+            if (hist != this.hist) { this.hist = hist; perKm.set(hist, emptyList(), a) }
+            bindMean()
             bindUsed()
             // 7 derniers jours civils, jours sans trajet à 0
             val byDay = EnergyMonitor.days.value.toMap()
             val fmt = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US)
             val cal = Calendar.getInstance()
-            val vals = ArrayList<Float>(); val labels = ArrayList<String>()
+            val vals = ArrayList<Float>(); val labels = ArrayList<String>(); val names = ArrayList<String>()
             cal.add(Calendar.DAY_OF_YEAR, -6)
             repeat(7) {
                 vals += (byDay[fmt.format(cal.time)] ?: 0f).coerceAtLeast(0f)
                 labels += "DLMXJVS"[cal.get(Calendar.DAY_OF_WEEK) - 1].toString()
+                names += listOf("Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado")[cal.get(Calendar.DAY_OF_WEEK) - 1]
                 cal.add(Calendar.DAY_OF_YEAR, 1)
             }
-            val sum = vals.sum()
-            week.set(Fmt.dec(sum), "kWh")
-            weekCost.put("≈ ${Fmt.dec(sum * price(), 2)} € · a ${Fmt.dec(price(), 2)} €/kWh")
-            days.set(vals, labels, null)
+            dayNames = names
+            if (vals != dayVals) { dayVals = vals; days.set(vals, labels, null) }
+            bindWeek()
+        }
+
+        fun bindMean() {
+            val sel = perKm.selected.takeIf { it in hist.indices }
+            if (sel != null) {
+                val ago = hist.size - 1 - sel
+                meanLabel.put(if (ago == 0) "Último km" else "Hace ${ago + 1} km")
+                mean.set(Fmt.dec(hist[sel]), "kWh/100 km", Pal.action)
+            } else {
+                meanLabel.put("Media")
+                mean.set(histAvg?.let { Fmt.dec(it) } ?: "—", "kWh/100 km")
+            }
+        }
+
+        fun bindWeek() {
+            val sel = days.selected.takeIf { it in dayVals.indices }
+            val v = if (sel != null) dayVals[sel] else dayVals.sum()
+            week.set(Fmt.dec(v), "kWh", if (sel != null) Pal.action else Pal.text)
+            weekCost.put((if (sel != null) dayNames[sel] + " · " else "") + "≈ ${Fmt.dec(v * price(), 2)} € · a ${Fmt.dec(price(), 2)} €/kWh")
         }
 
         override fun live() {
@@ -708,7 +735,11 @@ class EnergyScreen(host: Host) : Screen(host) {
                     addView(c.label("Salida · última hora"), lp(0, WRAP, 1f))
                     since = c.text("", Ty.CAPTION, Pal.text2); addView(since)
                 })
-                spark = Sparkline(c).apply { color = Pal.heat }; addView(spark, lp(MATCH, 0, 1f))
+                spark = Sparkline(c).apply {
+                    color = Pal.heat
+                    label = { i -> val ago = values.size - 1 - i; "${Fmt.dec(values[i])} kW · " + if (ago == 0) "ahora" else "hace $ago min" }
+                }
+                addView(spark, lp(MATCH, 0, 1f))
                 addView(c.row(16).apply {
                     delivered = stat(this, "Entregado"); now = stat(this, "Ahora")
                     max = stat(this, "Máximo"); spent = stat(this, "Gastado", weight = 0.8f)
@@ -745,7 +776,7 @@ class EnergyScreen(host: Host) : Screen(host) {
             primary.iconView?.icon = if (k.v2lOn) Icons.stop else Icons.play
             val v = ChargeLog.v2l.value
             since.put(if (v.startedAt > 0) "Desde las " + clockOf(v.startedAt) else "")
-            spark.set(v.points.takeLast(60).map { it.second })
+            v.points.takeLast(60).map { it.second }.let { if (it != spark.values) spark.set(it) }
             delivered.set(Fmt.dec(v.deliveredKwh), "kWh")
             max.set(Fmt.dec(v.points.maxOfOrNull { it.second } ?: 0f), "kW")
             spent.set(if (v.startedAt > 0) Math.round((v.startSoc - k.soc).coerceAtLeast(0f)).toString() else "—", "%")
