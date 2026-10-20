@@ -49,13 +49,20 @@ class Rail(c: Context, private val onNav: (Nav) -> Unit, private val onLocked: (
     private val items = ArrayList<Item>()
     private val aaDot = View(c)
     val clock = c.text("--:--", Ty.TITLE, Pal.text, Ty.num).apply { gravity = Gravity.CENTER; maxLines = 1 }
+    /** Température extérieure sous l'heure, comme sur le lienzo. */
+    val outside = c.text("", 22f, Pal.text2, Ty.uiMedium).apply { gravity = Gravity.CENTER; maxLines = 1 }
     private var locked = false
 
     init {
         orientation = VERTICAL
         gravity = Gravity.CENTER_HORIZONTAL
         setBackgroundColor(Pal.surface)
-        addView(View(c), lp(MATCH, Dim.FOG_SAFE))
+        // heure et température en haut (lienzo) : le bouton antibrouillard de MG n'apparaît pas en réalité
+        setPadding(0, 16, 0, 12)
+        addView(c.col(2).apply {
+            gravity = Gravity.CENTER
+            addView(clock, lp(MATCH, WRAP)); addView(outside, lp(MATCH, WRAP))
+        }, lp(MATCH, 60).apply { bottomMargin = 14 })
         add(Nav.HOME, "Inicio", Icons.home, false)
         add(Nav.CLIMATE, "Clima", Icons.climate, false)
         add(Nav.ENERGY, "Energía", Icons.energy, true)
@@ -63,8 +70,6 @@ class Rail(c: Context, private val onNav: (Nav) -> Unit, private val onLocked: (
         add(Nav.MEDIA, "Medios", Icons.media, true)
         add(Nav.AA, "Android\nAuto", Icons.phone, false)
         add(Nav.SETTINGS, "Ajustes", Icons.settings, true)
-        addView(View(c), lp(MATCH, 0, 1f))
-        addView(clock, lp(MATCH, WRAP).apply { bottomMargin = 14 })
     }
 
     private fun add(nav: Nav, label: String, icon: Icon, parkedOnly: Boolean) {
@@ -80,7 +85,7 @@ class Rail(c: Context, private val onNav: (Nav) -> Unit, private val onLocked: (
         }
         b.setOnClickListener { if (locked && parkedOnly) onLocked() else onNav(nav) }
         items.add(Item(nav, b, lock, parkedOnly))
-        addView(frame, lp(96, 78).apply { topMargin = if (items.size == 1) 0 else 6 })
+        addView(frame, lp(96, 78).apply { topMargin = if (items.size == 1) 0 else 12 })
     }
 
     fun select(nav: Nav) {

@@ -93,7 +93,6 @@ class StripView(c: Context, private val onRight: Boolean, private val onExpand: 
     init {
         // ligne d'état : 80 px laissés libres côté gauche pour le bouton antibrouillard MG
         strip.addView(c.row(14).apply {
-            if (!onRight) addView(View(c), lp(Dim.FOG_SAFE - 20, 1))
             addView(clock); addView(outside)
             addView(View(c), lp(0, 1, 1f))
             addView(IconView(c, Icons.battery, 30).apply { color = Pal.energy })

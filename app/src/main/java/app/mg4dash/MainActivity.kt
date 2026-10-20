@@ -29,6 +29,7 @@ import app.mg4dash.cockpit.Ty
 import app.mg4dash.cockpit.WRAP
 import app.mg4dash.cockpit.col
 import app.mg4dash.cockpit.lp
+import app.mg4dash.cockpit.put
 import app.mg4dash.cockpit.rounded
 import app.mg4dash.cockpit.row
 import app.mg4dash.cockpit.screens.AaScreen
@@ -168,6 +169,7 @@ class MainActivity : AppCompatActivity(), Host {
             }
         }
         climateBar.bind(s)
+        rail.outside.put(s.outsideTemp?.let { "${Math.round(it)} °C" } ?: "")
         current?.bind(s)
     }
 
@@ -176,7 +178,7 @@ class MainActivity : AppCompatActivity(), Host {
     private val clockTick = object : Runnable {
         override fun run() {
             val c = Calendar.getInstance()
-            rail.clock.text = "%02d:%02d".format(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE))
+            rail.clock.put("%02d:%02d".format(c.get(Calendar.HOUR_OF_DAY), c.get(Calendar.MINUTE)))
             main.postDelayed(this, 10_000)
         }
     }
