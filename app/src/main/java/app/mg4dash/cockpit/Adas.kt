@@ -53,10 +53,10 @@ object Adas {
 
     fun driveProfile(context: Context): Map<Drive, Int> {
         val sp = Prefs(context).raw
-        return Drive.values().associateWith { sp.getInt(it.key, -1) }
+        return Drive.values().associateWith { sp.getInt(key(context, it.key), -1) }
     }
 
-    fun setDrive(context: Context, d: Drive, value: Int) { Prefs(context).raw.edit().putInt(d.key, value).apply() }
+    fun setDrive(context: Context, d: Drive, value: Int) { Prefs(context).raw.edit().putInt(key(context, d.key), value).apply() }
 
     /** Valeur actuelle de la voiture pour un réglage de conduite. */
     fun driveNow(d: Drive): Int? {
@@ -86,13 +86,19 @@ object Adas {
         }
     }
 
+    // ── Deux perfiles : le 1 garde les clés d'origine, le 2 les mêmes préfixées « p2_ » ──
+    const val PROFILES = 2
+    fun active(context: Context): Int = Prefs(context).raw.getInt("adas_active", 0).coerceIn(0, PROFILES - 1)
+    fun setActive(context: Context, i: Int) { Prefs(context).raw.edit().putInt("adas_active", i.coerceIn(0, PROFILES - 1)).apply() }
+    private fun key(context: Context, base: String) = if (active(context) == 0) base else "p2_$base"
+
     fun profile(context: Context): Map<Item, Int> {
         val sp = Prefs(context).raw
-        return Item.values().associateWith { sp.getInt("adas_" + it.name, DEFAULT.getValue(it)) }
+        return Item.values().associateWith { sp.getInt(key(context, "adas_" + it.name), DEFAULT.getValue(it)) }
     }
 
     fun setProfile(context: Context, item: Item, value: Int) {
-        Prefs(context).raw.edit().putInt("adas_" + item.name, value).apply()
+        Prefs(context).raw.edit().putInt(key(context, "adas_" + item.name), value).apply()
     }
 
     /** Le profil est-il celui de la voiture en ce moment ? (null si illisible) */
@@ -117,14 +123,31 @@ object Adas {
         _state.value = _state.value.copy(current = cur)
     }
 
-    /** Applique le profil. Refusé en roulant (vitesse lue ≠ 0) ou si la vitesse est illisible. */
+    /** État de la voiture juste avant la dernière application, pour « Deshacer ». */
+    @Volatile private var undoDrive: Map<Drive, Int> = emptyMap()
+    @Volatile private var undoAdas: Map<Item, Int> = emptyMap()
+    val canUndo: Boolean get() = undoDrive.isNotEmpty() || undoAdas.isNotEmpty()
+
+    /** Applique le profil actif, à l'arrêt comme en roulant (choix du propriétaire). */
     fun apply(context: Context): CarBridge.Write {
-        val speed = CarBridge.state.value.speedKmh ?: return CarBridge.Write.SPEED_UNKNOWN
-        if (Math.abs(speed) >= 0.5f) return CarBridge.Write.MOVING
         if (manager == null) connect()
         val drive = driveProfile(context).filterValues { it != -1 }
         if (manager == null && drive.isEmpty()) return CarBridge.Write.UNAVAILABLE
         val wanted = if (manager != null) profile(context) else emptyMap()
+        undoDrive = drive.keys.mapNotNull { d -> driveNow(d)?.let { d to it } }.toMap()
+        undoAdas = wanted.keys.mapNotNull { k -> _state.value.current[k]?.let { k to it } }.toMap()
+        return write(drive, wanted)
+    }
+
+    /** Remet la voiture comme avant la dernière application. */
+    fun undo(): CarBridge.Write {
+        if (!canUndo) return CarBridge.Write.UNAVAILABLE
+        val d = undoDrive; val a = undoAdas
+        undoDrive = emptyMap(); undoAdas = emptyMap()
+        return write(d, a, mark = false)
+    }
+
+    private fun write(drive: Map<Drive, Int>, wanted: Map<Item, Int>, mark: Boolean = true): CarBridge.Write {
         _state.value = _state.value.copy(busy = true)
         scope.launch {
             // conduite d'abord (mode, régénération, un pedal), puis les aides
@@ -139,7 +162,7 @@ object Adas {
             }
             delay(800)
             refresh()
-            _state.value = _state.value.copy(busy = false, appliedAt = System.currentTimeMillis())
+            _state.value = _state.value.copy(busy = false, appliedAt = if (mark) System.currentTimeMillis() else 0L)
         }
         return CarBridge.Write.SENT
     }

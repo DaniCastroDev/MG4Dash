@@ -586,8 +586,7 @@ object CarBridge {
     fun setDriveMode(mode: Int): Write {
         if (mode !in driveModes && mode != 7) return Write.UNAVAILABLE
         if (BuildConfig.MOCK) { _state.value = _state.value.copy(driveMode = mode); return Write.SENT }
-        val speed = _state.value.speedKmh?.let { Math.abs(it) } ?: speedFromProps() ?: return Write.SPEED_UNKNOWN
-        if (speed >= 0.5f) return Write.MOVING
+        // Autorisé aussi en roulant (choix du propriétaire, 2026-10-20) : la voiture décide elle-même.
         holdDrive = mode to System.currentTimeMillis() + HOLD_MS
         _state.value = _state.value.copy(driveMode = mode)
         scope.launch {
