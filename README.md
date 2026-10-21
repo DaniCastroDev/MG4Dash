@@ -1,239 +1,171 @@
-# MG4Dash
+# MG4Dash · cockpit
 
-Full-screen launcher for the MG4 and its 1920 × 720 screen, developed on the SWI69 firmware (A9 family), with beta support for the other firmwares: a "dark glass" look, three home layouts, and Climate, Energy, Vehicle and Phone pages linked by a shared dock or a vertical bar.
+Full-screen launcher for the MG4 and its 1920 × 720 screen, built around Android Auto. This fork of [MG4Dash](https://github.com/Skittle6938/MG4Dash) replaces its home layouts with a single **cockpit** interface: a navigation rail on the left, a climate bar along the bottom, and one screen per area (Inicio, Clima, Energía, Vehículo, Medios, Android Auto, Ajustes). While Android Auto is on screen, a 640 px **strip** keeps the car's essentials next to the projection.
 
-Languages: English (default), French, German, Spanish, Italian and Dutch, following the car's system language. Units: km and kWh/100 km or miles and mi/kWh (following the car or set by hand), tyre pressure in bar, psi or kPa.
+- Developed and tested on the **SWI68** firmware (MT2712, Android 9). The firmware detection and car access of MG4Dash for the other firmwares are kept, but the cockpit has not been tried on them.
+- The cockpit is in **Spanish**. The original MG4Dash interface is still available from Ajustes › *Interfaz clásica*.
+- Current version: **1.1.12-cockpit.23**, on the [`cockpit`](https://github.com/DaniCastroDev/MG4Dash/tree/cockpit) branch.
 
-Current version: **1.1.0** ([releases](https://github.com/Skittle6938/MG4Dash/releases)).
+> Screenshots are rendered on a PC with simulated data (see [Screenshots](#screenshots)).
 
-> Screenshots are rendered on a PC with simulated data; the map excerpt is a fixed view of Paris (OpenStreetMap).
+## Inicio
+![Inicio](docs/screenshots/driving.png)
+One home screen, parked or driving, with nothing locked while moving.
 
-### Home
-![Home](docs/screenshots/home.png?v=14)
-Climate (temperature, fan, then two rows of buttons: power, A/C, AUTO, ECO, air directions, recirculation), energy (battery % to the tenth, range, estimated consumption, drive mode, KERS, Charge / Start V2L button), the map, Open-Meteo weather, a media card that follows the car's active audio source (DAB/FM radio, Bluetooth, USB, Android Auto) and a bottom-right widget with three pages (see below).
+- **Media**: the car's active source (FM, AM, DAB, Bluetooth, USB, Android Auto), a source selector, and the radio favourites of the current band, one tap to tune.
+- **Energy**: battery % to the tenth, range, live power on a two-way bar (regeneration ↔ consumption), and the consumption of the last 10 km against its average.
+- **Energy used**: since the last charge or since start-up, split into driving, climate and accessories, with the energy and range recovered by braking.
+- **Profiles**: *Perfil 1* and *Perfil 2* apply a set of driving settings with one tap (long press opens them).
 
-- **Media card**: swipe up / down to switch to the next available source (radio, Bluetooth, USB, Android Auto / CarPlay when connected); playback starts by itself. DAB+ stations show their slideshow image, or the station image cached by the radio.
-- **Weather**: swipe it, or tap its dots, to switch between hourly and daily forecasts, with coloured icons (and a moon on clear nights). The forecast follows the car's position (refreshed every 5 km, city name every 2 km); a fallback city can be set, or taken from the current position, in Settings › Weather. Without data connection it shows the outside temperature and retries until the connection and the position are back.
-- **Climate card**: the fan goes from off to maximum; long press fan minus jumps to the lowest speed. Long press the temperature to calibrate the displayed set point (−5° to +5°, display only, the car keeps its own value).
-- **Heated seats and steering wheel**: on equipped cars, a row of buttons sits above the temperature, each seat showing its level (0 to 3 heat arrows). Settings › Heated seats and steering wheel: Auto (detected), Yes or No.
-- **Media source menu**: tap the source name on the media card to pick radio, Bluetooth, USB or Android Auto / CarPlay.
-- **KERS gauge**: tap a segment to set the regeneration level (low, medium, high, adaptive); long press toggles one-pedal driving.
+## Clima
+![Clima](docs/screenshots/climate.png)
+Temperature (LO · 17 … 32 · HI) with + and − in a column, A/C and AUTO, fan speed 1–11, air direction, recirculation, heated seats and steering wheel where the car has them, and a shortcut to the stock climate app. The climate bar at the bottom of every screen gives the same essentials. The full-screen SAIC climate panel that opens when the climate turns on can be hidden (Ajustes › *Ocultar el panel de clima del sistema*).
 
-Long press the Android Auto button in the dock to make it open Android Auto, CarPlay or the app of your choice.
+## Energía
+One view per charge state, each with its own actions.
 
-### Bottom-right widget
-Swipe or tap it to switch between three pages, all readable at a glance while driving:
-- **Trip energy**: one big bar and the share of driving, climate control and accessories since start-up (details on the Energy page).
-- **Live power**: kW drawn from or recovered into the battery, refreshed every second, on a two-way bar from zero (scale following the battery model, with a 10 s peak marker), with the trip average, the battery voltage and current (green while regenerating).
-- **Phone**: three favourite contacts chosen from the phone book (tap to call, long press to change).
-
-| | |
+| Unplugged: summary | Plugged in, not charging |
 |---|---|
-| ![Live power](docs/screenshots/home_widget_power.png?v=14) | ![Phone favourites](docs/screenshots/home_widget_phone.png?v=14) |
+| ![Summary](docs/screenshots/energy.png) | ![Plugged in](docs/screenshots/energy_plugged.png) |
+| **Charging** | **Charge complete** |
+| ![Charging](docs/screenshots/energy_charging.png) | ![Charge complete](docs/screenshots/energy_done.png) |
 
-### Map home layout
-![Map layout](docs/screenshots/home_map_layout.png?v=14)
-A third layout (Settings › Home layout › Map), suggested in [issue #6](https://github.com/Skittle6938/MG4Dash/issues/6): weather with the date and time, climate on the left, a stack (energy, trip energy, live power, phone) above the media in the centre, and the map over the whole right column. Swipe the stack to change page; with the automatic option, it jumps back to the battery once when the car is plugged in. Speed, heading and altitude sit at the top left of the map; in heading-up mode the car is placed in the lower part to show more of the road ahead.
+- **Summary**: battery, range, average consumption over the last 50 km, battery voltage, current and power; consumption per km over the last 50 km, energy used since the last charge or start-up, and the last 7 days with their cost.
+- **Plugged in**: charge now, unlock the cable, charging schedule in 15-minute steps with tonight's plan, charge limit (40–100 %), AC current (6 A, 8 A, 16 A, max).
+- **Charging**: time left and end time, a charge curve with battery and power on two axes (touch it to read a point), power, energy added and its cost, stop charging, battery preheating, turn the screen off while charging continues.
+- **Charge complete**: session summary (energy added, cost, duration), unlock the cable, or raise the limit and resume.
 
-The map widget also has a **consumption** page and **3 rows of shortcuts** (button at its top right). Without data connection the map stays on screen as long as the area around the car is in the tile cache, and only then switches to consumption. Default zoom (14 to 18) and map colours (like the app, light or dark) are set in the launcher settings.
+![V2L](docs/screenshots/energy_v2l.png)
+**V2L**: output over the last hour, energy delivered, and the battery level at which the car stops the discharge (20–80 %).
 
-The consumption page has a period menu: since the last charge, current trip, last 1,000 km, or the last 12 months (one total and one point per month).
+The charts are touchable: tap or drag to read a value. Electricity prices (home and fast charging) and the battery size are set in Ajustes.
 
-| | |
+## Vehículo and Mi perfil
+| Vehicle | Profiles |
 |---|---|
-| ![Map layout, consumption](docs/screenshots/home_map_layout_consumption.png?v=14) | ![Map layout, shortcuts](docs/screenshots/home_map_layout_shortcuts.png?v=14) |
-| ![Consumption over 12 months](docs/screenshots/home_map_layout_consumption_year.png?v=14) | ![Heated seats row](docs/screenshots/home_heated_seats.png?v=14) |
+| ![Vehículo](docs/screenshots/vehicle.png) | ![Mi perfil](docs/screenshots/profiles.png) |
 
-### Vertical bar
-![Vertical bar](docs/screenshots/home_map_layout_vertical.png?v=14)
-Settings › Home layout › *Vertical bar on the left* (on by default on a fresh install): the dock becomes an icon bar on the left, with the space at the top for the MG fog light button. It applies at once to every home layout, every page and to Radio Dash.
+- **Vehículo**: tyre pressures and temperatures, odometer, drive mode, regeneration and one-pedal driving, ESC, and shortcuts to the 360° camera, the MG settings and the installed apps.
+- **Mi perfil**: two profiles that set, or leave unchanged, the drive mode, regeneration, one-pedal driving and the driver assistance settings (speed limit warning, lane keeping, driver monitoring, unsteady driving warning, rear traffic alert). EU rules switch the assistants back on at every start; a profile puts them back the way you want with one tap, also while driving.
 
-- **Settings**: tap for the launcher settings, long press for the car settings, double tap for Wi-Fi.
-- **Android Auto**: tap to open it, long press to choose Android Auto, CarPlay or another app.
-- **Energy**: tap for the Energy page, double tap to turn the screen off like the stock launcher (touch the screen to wake it), long press to switch the car off (never while moving).
-- **Vehicle**: tap for the Vehicle page, double tap to lock / unlock the doors, long press to turn ESC off / on (the icon stays red while it is off).
-- **Phone** and **Home**.
+## Medios
+![Medios](docs/screenshots/media.png)
+FM, AM and DAB through the car's own radio service, plus Bluetooth and USB: station text, the band with your favourites on it, seek and ±0.1 tuning, favourites and the station list (the favourites are the car's own), scan.
 
-| | |
+## Android Auto
+| Android Auto screen | Strip over Android Auto |
 |---|---|
-| ![Vertical bar, full layout](docs/screenshots/home_vertical_full.png?v=14) | ![Vertical bar, energy page](docs/screenshots/energy_vertical.png?v=14) |
+| ![Android Auto](docs/screenshots/android_auto.png) | ![Strip](docs/screenshots/strip.png) |
 
-Card titles are left out on every layout for a calmer screen; the media card keeps its source name, which opens the source menu.
+Android Auto runs in [DiAuto](https://github.com/DaniCastroDev/DiAuto-MG4). On SWI68 the car's Bluetooth stack refuses the RFCOMM channel wireless Android Auto starts with, so the path that works is DiAuto's **Headunit Server** mode: the phone joins the car's hotspot and runs Android Auto's head unit server (developer settings › *Start head unit server*), and DiAuto connects to it over Wi-Fi. The Android Auto screen walks through those steps.
 
-### Turn-by-turn on the map
-![Navigation banner](docs/screenshots/home_map_layout_nav.png?v=14)
-With [DiAuto](https://github.com/merthankaraman/DiAuto-MG4) (or another Headunit Revived-based Android Auto app that broadcasts `com.andrerinas.headunitrevived.NAVIGATION_UPDATE`), the next manoeuvre is shown over the home map: arrow, distance, street, time and distance left, arrival time. The stock Android Auto app does not receive this information from the phone, so it only works with these apps.
+While DiAuto is in front, MG4Dash draws the **strip** on one side: time, outside temperature, battery, a five-section bar, battery and power, assistants, and a compact climate control whose *Más* opens the full climate sheet over the projection. The side is set in Ajustes › *Lado de la franja*. DiAuto reads it from MG4Dash and leaves that side free by itself (a DiAuto build with this support is needed; with an older one, set 640 px in DiAuto › Ajustes › Gráficos › *Márgenes personalizados*).
 
-### Simple home layout
-![Simple home](docs/screenshots/home_simple.png?v=14)
-An alternative, calmer home screen for those who want fewer buttons and bigger text: three large panels (climate, battery, media), two configurable shortcuts and today's weather, with a reduced dock (Home, Phone, Android Auto, Settings). Choose it in the launcher settings, under "Home layout"; tap a panel to open the matching page.
-
-### Shortcuts and Home Assistant
-![Shortcuts](docs/screenshots/home_shortcuts.png?v=14)
-The button at the top right of the map swaps it for pages of shortcuts: apps or Home Assistant actions (scripts, automations, scenes, buttons, gate, garage door…). Tap an empty slot, or long press any slot, to change it. The Home Assistant address and token are set in the launcher settings.
-
-### Themes
-![Charcoal background, orange buttons](docs/screenshots/home_theme_charcoal_orange.png?v=14)
-Background (night blue, black, charcoal, dark green, dark burgundy) and button colour (blue, grey, red, green, orange) are chosen separately in the launcher settings and apply to every page. Battery green, heating orange, cooling cyan and alert red keep their meaning. Radio Dash follows the same theme.
-
-Light mode: dark, light or auto in the same settings. In auto, every page (and Radio Dash, even while it stays on screen) switches to dark when the car's lights come on, and back to light when they go off.
-
-![Light mode, home](docs/screenshots/home_light.png?v=14)
-
-| | |
+## Ajustes and Conexiones
+| Ajustes | Bluetooth and hotspot |
 |---|---|
-| ![Climate, light](docs/screenshots/climate_light.png?v=14) | ![Energy, light](docs/screenshots/energy_light.png?v=14) |
-| ![Simple home, light](docs/screenshots/home_simple_light.png?v=14) | ![Settings, light](docs/screenshots/settings_light.png?v=14) |
+| ![Ajustes](docs/screenshots/settings.png) | ![Conexiones](docs/screenshots/connections.png) |
 
-### Climate
-![Climate](docs/screenshots/climate.png?v=14)
-Temperature in 1° steps (LO → HI), fan speed, combinable air direction, AUTO, A/C, ECO, recirculation and front / rear defrost.
+- **Ajustes**: strip on/off and side, full screen, dark or light theme, hide the SAIC climate panel, home and fast-charging prices, battery size (51, 64 or 77 kWh gross), *Bluetooth y Wi-Fi*, Android settings, *Usar como inicio* (make MG4Dash the home screen) and *Interfaz clásica*.
+- **Conexiones**: paired phones with connect/disconnect and a preferred one, reconnect at start-up, pair another phone; the car's Wi-Fi hotspot on/off with its name and password.
 
-### Energy
-![Energy](docs/screenshots/energy.png?v=14)
-Charging (start / stop, charge limit on firmwares where the car applies it, AC current, time left, AC input voltage and current, reason when the car stops charging, charging cable lock), scheduled charging, V2L (adapter state, stop threshold, start / stop), battery heating while driving (same switch as the stock Energy app) and consumption (since the last charge, current trip, last 1,000 km or last 12 months: driving, climate, accessories, energy and range recovered by braking, consumption curve).
-
-### Vehicle
-![Vehicle](docs/screenshots/vehicle.png?v=14)
-Drive mode (including Eco, Snow and Custom where the car has them), regeneration (tap the gauge to change it; level 6 is one-pedal driving), driver assistance, tyre pressures and temperatures, and vehicle status, with a shortcut to MG4 Control.
-
-### Phone
-![Phone](docs/screenshots/phone.png?v=14)
-Recent calls, contacts with a search field and a keypad, from the phone connected over Bluetooth. Calls go through the hands-free (HFP) account, like the stock phone app, whose in-call screen is kept.
-
-### Battery health (estimated)
-Shown on the Vehicle page. While driving, MG4Dash measures the energy actually taken from the battery (regeneration deducted) and divides it by the drop in battery % over the same time. Only what MG4Dash sees with the screen on counts, so the drop adds up over several trips and days, without waiting for a charge; from a 15 % drop, that gives one dated measurement of the usable capacity. The average of the last 30 days, weighted by the % drop, is shown to one decimal with the distance it covers, against the usable capacity of a new battery of your model (51, 64 or 77 kWh, chosen in Settings › Energy). This is an estimate made by MG4Dash, not an official measurement, and the feature is still being tested.
-
-The car does not share the battery or motor temperature with the head unit, so MG4Dash cannot show them.
-
-### Launcher settings
-![Settings](docs/screenshots/settings.png?v=14)
-Grouped by category in one scrolling page. Each on/off option is a single button that lights up when it is on.
-
-| Section | Options |
+| Light theme |   |
 |---|---|
-| Home layout | Full, Simple or Map; vertical bar on the left; full screen (hides the SAIC side bar and banner); units (like the car, km · kWh/100 km, miles · mi/kWh); heated seats and steering wheel buttons (auto, yes, no); tyre pressure unit (auto, bar, psi, kPa); default map zoom; map colours; map layout stack back to the battery when plugged in |
-| Theme | background, button colour, light / dark / auto (follows the car's lights) |
-| Energy | usable battery capacity (read from the car, measured, or set by hand), battery model for the health estimate |
-| Home screen | replace the SAIC home, maintenance mode, briefly open the SAIC launcher at startup |
-| Update | check and install, include beta versions; Radio Dash update (SWI69 only) |
-| Weather | fallback city, or use my position |
-| Home Assistant | address, token, connection test |
-| Diagnostics | compatibility test, built-in log, energy data recorder |
+| ![Inicio, light](docs/screenshots/driving_light.png) | ![Energía, light](docs/screenshots/energy_light.png) |
 
-**Update**: Settings › Update › Check downloads the latest MG4Dash release from GitHub and installs it (internet connection needed); turn on *Include beta versions* to also get the betas. When a new official (non-beta) release is out, MG4Dash also offers it in a popup at startup: *Update*, *Later*, or *Don't notify me again for this release*.
+## Not yet confirmed on the car
 
-**Radio Dash**: on SWI69 with the matching radio app, Settings › Update also installs the latest [Radio Dash](https://github.com/Skittle6938/MG4-Radio-Dash) release (restart the head unit afterwards by holding Home about 20 s).
-
-## Compatibility (beta)
-
-MG4Dash detects the head unit firmware at startup (`ro.build.mt2712.version`) and picks the matching way to talk to the car, using what [MG4Control](https://github.com/SliDeeN/MG4Control) documented for each firmware:
-
-| Firmware | Car access | Status |
-|---|---|---|
-| SWI69 | `caradapter` service (climate, EV, settings, general) | tested by the author (daily use) |
-| SWI131, SWI132 | same as SWI69 | beta, not tested yet |
-| SWI68 | climate, charging, V2L, radio and driving assistance through the stock launcher's SDK (`AirConditionManager`, `VehicleChargingManager`, `VehicleControlManager` in `com.saicmotor.hmi.launcher`); battery, range, charge state, drive mode, KERS, speed and charge control through `CarPropertyManager` | beta, tested by users ([#19](https://github.com/Skittle6938/MG4Dash/issues/19)): radio, Eco / Snow modes, start / stop charging and cable lock confirmed |
-| SWI133 | same as SWI68, with battery, range and charge state read from the car properties (no EV service) | beta, user reports in [#13](https://github.com/Skittle6938/MG4Dash/issues/13) |
-| SWI165 | same as SWI68 | beta, user reports in [#20](https://github.com/Skittle6938/MG4Dash/issues/20) and [#21](https://github.com/Skittle6938/MG4Dash/issues/21) |
-
-All MG4 firmwares share the 1920 × 720 screen and the AOSP platform key, so the same APK installs on every one of them.
-
-Features a firmware does not expose are hidden instead of failing (for example the charge limit, only shown where the car applies it itself: MG4Dash cannot stop the charge for the car, it is shut down when the car is locked). The stock home screen and the stock energy and settings apps are found automatically. Radio Dash only works on SWI69.
-
-**Help support your firmware**: open Settings › Compatibility › Run the test, then scan the QR code with your phone. It opens a pre-filled [compatibility issue](https://github.com/Skittle6938/MG4Dash/issues/new?template=compatibility.md) with a short report (versions, which services answer, a few car readings: no position, VIN or account). Nothing is sent automatically.
+Built and unit-tested, but still to be checked on a real MG4:
+- Bluetooth connect / disconnect, the preferred phone and reconnecting at start-up.
+- Turning the car's hotspot on and off.
+- Switching the car's source to Bluetooth, the radio controls and favourites.
+- The order of the consumption list (newest assumed last).
+- CPU use of the live power readout (0.2 s refresh).
 
 ## Project layout
 
-- `app/src/main/java/app/mg4dash/`: the app (Kotlin)
-  - `car/CarBridge.kt`: vehicle access through `com.saicmotor.caradapter` (climate code 7, EV code 4, settings code 8, general code 1)
-  - `car/CarProps.kt`: BMS, charging and consumption properties through CarPropertyManager
-  - `car/LegacyCar.kt`: climate on the SWI68 / SWI165 / SWI133 firmwares (stock launcher SDK)
-  - `system/Firmware.kt`: firmware detection
-  - `settings/Compat.kt`: compatibility report and QR code
-  - `car/CarApi.kt`: binder clients written for MG4Dash (descriptors and transaction numbers observed on the car)
-  - `energy/ConsumptionEstimator.kt`: kWh/100 estimated from battery % and kilometres
-  - `energy/EnergyLogger.kt`: read-only CSV recorder of battery power, consumption counters and equipment states
-  - `media/MediaHub.kt`: active player, chosen from the car's audio source like the stock launcher
-  - `map/NavRepo.kt`: turn-by-turn data broadcast by DiAuto / Headunit Revived
-  - `shortcuts/Shortcuts.kt`: shortcut grid and Home Assistant REST calls
-  - `weather/WeatherRepo.kt`: Open-Meteo weather
-  - `system/HomeSwitcher.kt`: maintenance mode (gives the home screen back to the SAIC launcher)
-  - `LauncherApp.kt`: crash guard, after 3 crashes in 3 minutes the SAIC launcher becomes the home screen again
-- `app/src/car/`: car manifest (`sharedUserId=android.uid.system`)
-- `app/src/emulator/`: build without the system uid, with simulated data
-- `i18n/`: translations (`strings.psv`) and the generator of the `values-*/strings.xml` files
-- `keys/`: AOSP platform test certificate (public, the same one the car uses)
+- `app/src/main/java/app/mg4dash/`
+  - `MainActivity.kt`: the cockpit, one activity with the rail and the climate bar; screens are registered by key (`home`, `climate`, `energy`, `vehicle`, `adas`, `media`, `settings`, `connections`, `aa`).
+  - `cockpit/`: the UI kit (`Theme.kt` tokens and sizes, `Widgets.kt`, `Icons.kt`, `Shell.kt` rail and climate bar), `screens/` and `strip/` (`StripService` overlay over DiAuto, `StripView`, `StripProvider` for DiAuto).
+  - `car/`: car access. `CarBridge.kt` (polled per visible screen), `CarProps.kt` property ids, `LegacyCar.kt` stock launcher SDK on SWI68 / SWI165 / SWI133, `HvacOverlay.kt` (hides the SAIC climate panel), `MockCar.kt` simulated data.
+  - `media/`: `SaicRadio.kt` and `Radio.kt` (the car's radio service), `SaicMedia.kt` (Bluetooth / USB source), `MediaHub.kt` (active player).
+  - `system/`: `BtControl.kt` (Bluetooth), `Hotspot.kt` (tethering), `HomeSwitcher.kt` (home screen and maintenance mode), `Firmware.kt`.
+  - `ClassicActivity.kt`: the original MG4Dash interface.
+- `app/src/car/`: car manifest (`sharedUserId=android.uid.system`).
+- `app/src/emulator/`: build without the system uid, with simulated data.
+- `keys/`: AOSP platform test certificate (public, the same one the car uses).
 
 ## Signing key
 
-The private key is not in the repository. Download the AOSP platform test key (the one the SAIC apps are signed with):
+The private key is not in the repository. It is the AOSP platform test key the SAIC apps are signed with:
 
-```powershell
-$u = "https://android.googlesource.com/platform/build/+/refs/tags/android-9.0.0_r61/target/product/security/platform.pk8?format=TEXT"
-[IO.File]::WriteAllBytes("keys\platform.pk8", [Convert]::FromBase64String((Invoke-WebRequest $u -UseBasicParsing).Content))
+```bash
+curl -sL "https://android.googlesource.com/platform/build/+/refs/heads/main/target/product/security/platform.pk8?format=TEXT" | base64 -d > keys/platform.pk8
 ```
 
 ## Build
 
-```powershell
-.\sign_platform.ps1                       # signed car build → dist\MG4Dash-<version>.apk
-.\gradlew.bat testEmulatorDebugUnitTest   # screenshots 1920×720 → app\build\screenshots\
-py -3 i18n\gen.py                         # regenerate the translations after editing i18n\strings.psv
+```bash
+JAVA_HOME=$(/usr/libexec/java_home -v 17) sh ./gradlew --no-daemon assembleCarRelease
+BT=~/Library/Android/sdk/build-tools/36.0.0
+mkdir -p dist
+$BT/zipalign -f -p 4 app/build/outputs/apk/car/release/app-car-release-unsigned.apk dist/aligned.apk
+$BT/apksigner sign --key keys/platform.pk8 --cert keys/platform.x509.pem \
+  --v1-signing-enabled true --v2-signing-enabled true --v3-signing-enabled false \
+  --out dist/MG4Dash-<version>.apk dist/aligned.apk
 ```
+
+On Windows, `.\sign_platform.ps1` builds and signs in one go. Every delivery bumps `versionCode` and `versionName` (`1.1.12-cockpit.N`) in `app/build.gradle.kts`.
+
+### Emulator
+
+The `emulator` flavour (`app.mg4dash.emu`) runs with simulated data on a 1920 × 720, 160 dpi AVD:
+
+```bash
+adb shell am start -n app.mg4dash.emu/app.mg4dash.MainActivity --es screen energy
+adb shell am start -n app.mg4dash.emu/app.mg4dash.MainActivity --es mock startCharge
+```
+
+`screen`: `home`, `climate`, `energy`, `vehicle`, `adas`, `media`, `settings`, `connections`, `aa`. `mock`: `drive`, `plug`, `unplug`, `startCharge`, `stopCharge`, `chargeDone`, `chargeError`, `startV2L`, `stopV2L`, `strip`.
+
+### Screenshots
+
+```bash
+JAVA_HOME=$(/usr/libexec/java_home -v 17) sh ./gradlew testEmulatorDebugUnitTest --tests 'app.mg4dash.CockpitScreenshotTest'
+```
+
+writes the README screenshots to `app/build/screenshots/cockpit/` (Robolectric, 1920 × 720, simulated data); copy them to `docs/screenshots/`.
 
 ## Install on the car
 
-`adb install` is refused on this head unit; push the APK and install it as a system app update:
+Copy the signed APK to a USB stick and install it from the head unit's Files app, or with adb (a plain `adb install` is refused for a platform-signed app):
 
-```
+```bash
 adb push MG4Dash-<version>.apk /data/local/tmp/x.apk
 adb shell pm install -r -f /data/local/tmp/x.apk
 adb shell rm /data/local/tmp/x.apk
 ```
 
-1. Try it without changing the home screen: `adb shell am start -n app.mg4dash/.MainActivity`
-2. Make it the home screen: tap "Settings" in the dock > "Replace SAIC home". This only disables the SAIC home activity, whose HOME priority of 2 cannot be beaten otherwise.
-
-The SAIC launcher package (`com.saicmotor.launcher`) is never disabled: its service handles the camera, audio sources and some SystemUI commands.
+Then make it the home screen from Ajustes › *Usar como inicio*. This only disables the SAIC home activity, whose HOME priority cannot be beaten otherwise; the SAIC launcher package keeps running, since its service handles the camera, the audio sources and some SystemUI commands.
 
 ## Going back
 
-- Maintenance mode: tap "Settings" in the dock, then "Maintenance mode".
-- If MG4Dash no longer starts after an update ("ClassNotFoundException" or "oat_file ... Check failed" in logcat), stop it, recompile it while it is stopped, then make it the home screen again:
-  `adb shell am force-stop app.mg4dash`, `adb shell cmd package compile -m speed -f app.mg4dash`, `adb shell am force-stop app.mg4dash`, then `adb shell cmd package set-home-activity --user 0 app.mg4dash/.MainActivity`.
-  Compiling while MG4Dash runs (it relaunches itself right after an install) corrupts its compiled code: always force-stop first.
-- Note: `adb shell pm enable com.saicmotor.launcher/.view.MainActivity` is refused on this head unit (the shell may not change component state); only MG4Dash's Maintenance mode can re-enable the SAIC home. Until then, Android offers a launcher chooser.
-- Uninstall: `adb uninstall app.mg4dash`
-
-## Gestures
-
-- "Settings" in the dock or the vertical bar: tap for the launcher settings, long press for the car settings; double tap it in the vertical bar: Wi-Fi
-- Long press "Home" in the dock: list of installed apps
-- Long press the clock in the dock: clock or Wi-Fi settings button
-- Vertical bar: double tap Energy turns the screen off, long press Energy switches the car off (never while moving); double tap Vehicle locks / unlocks the doors, long press Vehicle turns ESC off / on
-- Long press "Android Auto" in the dock: Android Auto, CarPlay or another app
-- Tap or swipe the bottom-right widget (or the map layout stack): next page; long press a phone favourite to change it
-- Swipe the media card up / down: next audio source; tap its source name: source menu
-- Long press the set temperature: temperature calibration; long press fan minus: lowest fan speed
-- Swipe the weather card: hourly ↔ daily forecast
-- Tap a segment of the KERS gauge: regeneration level; long press: one-pedal driving
-- Button at the top right of the map: map → consumption → shortcuts; long press a shortcut to edit it
-- Map "recenter" button: resume following the car; press again to switch between north up and car heading up (green)
+- Maintenance mode gives the home screen back to the SAIC launcher: Ajustes › *Interfaz clásica*, then the classic settings › *Modo mantenimiento*. Before a firmware update, turn it on, so the car keeps a home screen if the update removes MG4Dash.
+- `adb shell pm enable com.saicmotor.launcher/.view.MainActivity` is refused on this head unit; only MG4Dash can re-enable the SAIC home.
+- If MG4Dash no longer starts after an update (`ClassNotFoundException` or `oat_file ... Check failed` in logcat): `adb shell am force-stop app.mg4dash`, `adb shell cmd package compile -m speed -f app.mg4dash`, `adb shell am force-stop app.mg4dash`, then `adb shell cmd package set-home-activity --user 0 app.mg4dash/.MainActivity`. Always force-stop first: compiling while it runs corrupts its compiled code.
+- Uninstall: `adb uninstall app.mg4dash`.
 
 ## Credits
 
-- [MG4Control](https://github.com/SliDeeN/MG4Control) (SliDeeN): documentation of the A9 carapi path, of the climate and air-direction ranges, and of the per-firmware car access used by the compatibility beta.
+- [MG4Dash](https://github.com/Skittle6938/MG4Dash) (Skittle6938): the launcher this cockpit is built on, its car access, firmware detection and the classic interface. If it is useful to you, you can support its author on [Ko-fi](https://ko-fi.com/skittle6938).
+- [MG4Control](https://github.com/SliDeeN/MG4Control) (SliDeeN): documentation of the A9 carapi path, of the climate and air-direction ranges, and of the per-firmware car access.
 - [MG4-Custom-Launcher](https://github.com/adammcdonagh/MG4-Custom-Launcher) (adammcdonagh): Bluetooth album art, the discovery of the AOSP test keys and the stock launcher SDK on SWI68.
 - [MG4_Simple_Launcher](https://github.com/Tommasov/MG4_Simple_Launcher) (Tommasov): notes on the vehicle adapter service of other firmwares.
-- Maps © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors (osmdroid), weather by [Open-Meteo](https://open-meteo.com/).
-
-## Support
-
-MG4Dash is free and will stay free. If it is useful to you and you want to help cover the AI subscription and the time spent on it, you can leave a few euros here: [Ko-fi](https://ko-fi.com/skittle6938). Entirely optional, thank you!
+- [DiAuto-MG4](https://github.com/merthankaraman/DiAuto-MG4) (merthankaraman): Android Auto on the MG4 head unit.
+- Weather by [Open-Meteo](https://open-meteo.com/), maps © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors in the classic interface.
 
 ## Licence
 
-MG4Dash is free software under the [GNU General Public License v3](COPYING) or later. This applies to every published version, including the releases before 0.10.0. Parts of the firmware detection and of the SWI68 / SWI165 / SWI133 climate code are adapted from [MG4Control](https://github.com/SliDeeN/MG4Control) (GPL v3; earlier MG4Control code under the MIT licence, notice kept in [licenses/MG4Control-MIT.txt](licenses/MG4Control-MIT.txt)).
+MG4Dash is free software under the [GNU General Public License v3](COPYING) or later. Parts of the firmware detection and of the SWI68 / SWI165 / SWI133 climate code are adapted from [MG4Control](https://github.com/SliDeeN/MG4Control) (GPL v3; earlier MG4Control code under the MIT licence, notice kept in [licenses/MG4Control-MIT.txt](licenses/MG4Control-MIT.txt)).
 
 Personal project, not affiliated with SAIC / MG. Use at your own risk.

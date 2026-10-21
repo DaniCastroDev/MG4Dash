@@ -63,7 +63,7 @@ class AaScreen(host: Host) : Screen(host) {
         addView(c.card().apply {
             addView(c.label("Franja con Android Auto"))
             addView(c.text("Con Android Auto conectado, el launcher muestra una franja de 640 px junto a la proyección.", Ty.LABEL, Pal.text2).apply { maxLines = 4 })
-            addView(c.text("En DiAuto › Ajustes › Márgenes, pon 640 px en el lado de la franja (izquierdo por defecto).", Ty.LABEL, Pal.text).apply { maxLines = 4 })
+            addView(c.text("DiAuto deja libre ese lado por su cuenta. Con una versión de DiAuto anterior, pon 640 px en Ajustes › Gráficos › Márgenes personalizados, en el lado de la franja.", Ty.LABEL, Pal.text).apply { maxLines = 4 })
             addView(View(c), lp(MATCH, 0, 1f))
             addView(Btn(c, "Ajustes de la franja", Icons.settings, 30, vertical = false).apply { setOnClickListener { host.go("settings") } }, lp(MATCH, Dim.TAP))
         }, w(744))
