@@ -331,6 +331,22 @@ object LegacyCar {
         catch (e: Exception) { Log.w(TAG, "setDriveMode($v) : ${(e.cause ?: e).message}"); false }
     }
 
+    /** Antibrouillard arrière lu par le même SDK (1 = allumé, voir [RearFog]) ; null si le SDK ne répond pas. */
+    fun rearFog(): Int? {
+        if (setting == null && retryDue(::lastSettingTry)) connectSetting()
+        val m = setting ?: return null
+        return try { Refl.m(m, "getLightRearFogSwitch").invoke(m) as? Int }
+        catch (e: Exception) { Log.w(TAG, "getLightRearFogSwitch : ${(e.cause ?: e).message}"); null }
+    }
+
+    /** Allume (1) ou éteint (2) l'antibrouillard arrière ; false si le SDK ne répond pas. */
+    fun setRearFog(v: Int): Boolean {
+        if (setting == null && retryDue(::lastSettingTry)) connectSetting()
+        val m = setting ?: return false
+        return try { Refl.m(m, "setLightRearFogSwitch", Int::class.javaPrimitiveType).invoke(m, v); true }
+        catch (e: Exception) { Log.w(TAG, "setLightRearFogSwitch($v) : ${(e.cause ?: e).message}"); false }
+    }
+
     /** Pour l'écran Compatibilité. */
     fun probe(): String = when {
         ac == null -> "absent"

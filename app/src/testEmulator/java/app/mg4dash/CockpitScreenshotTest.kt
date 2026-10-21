@@ -45,18 +45,23 @@ class CockpitScreenshotTest {
     @Test fun connections() = shoot("connections", "connections.png")
     @Test fun androidAuto() = shoot("aa", "android_auto.png")
     @Test fun drivingLight() = shoot("home", "driving_light.png", light = true)
+    @Test fun drivingFog() = shoot("home", "driving_fog.png", "fog")
     @Test fun energyLight() = shoot("energy", "energy_light.png", "plug", "startCharge", light = true)
 
     /**
      * La franja tal como se dibuja sobre DiAuto. La proyección no se puede capturar aquí: el resto
      * de la pantalla es un hueco rotulado del tamaño que DiAuto deja a Android Auto.
      */
-    @Test fun strip() {
+    @Test fun strip() = stripShot("strip.png", fogOn = false)
+    @Test fun stripFog() = stripShot("strip_fog.png", fogOn = true)
+
+    private fun stripShot(name: String, fogOn: Boolean) {
         val app: Context = RuntimeEnvironment.getApplication()
         app.getSharedPreferences("mg4launcher", Context.MODE_PRIVATE).edit().putInt("theme_mode", 1).commit()
         val activity = Robolectric.buildActivity(MainActivity::class.java).setup().get()
         idle()
         resetCar()
+        if (fogOn) { CarBridge.mock("fog"); idle() }
         val strip = StripView(activity, false) {}
         strip.tick()
         idle()
@@ -73,7 +78,7 @@ class CockpitScreenshotTest {
         canvas.drawText("Android Auto (DiAuto) · 1280 × 720", (Dim.STRIP + 1920) / 2f, 372f, paint)
         strip.draw(canvas)
         val dir = File("build/screenshots/cockpit").apply { mkdirs() }
-        File(dir, "strip.png").outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        File(dir, name).outputStream().use { bmp.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 
     private fun shoot(screen: String, name: String, vararg mock: String, light: Boolean = false) {

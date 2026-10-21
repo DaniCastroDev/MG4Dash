@@ -126,6 +126,9 @@ class ClimateBar(c: Context, private val onMore: () -> Unit) : LinearLayout(c) {
     private val wheel = tile(null, Icons.wheel).apply { accent = Pal.heat }
     private val seatR = seatTile(Icons.seatRight)
     private val more = Btn(c, null, Icons.chevronUp, 32).apply { look = Look.RAISED }
+    // Antiniebla trasera : fuera de « dimmable » (no depende del clima) y ámbar mientras está encendida.
+    private val fog = tile(null, Icons.rearFog).apply { accent = Pal.heat }
+    private val fogDivider = divider()
     private val dimmable = c.row(GAP)
     private val seatLBars get() = seatL.getChildAt(seatL.childCount - 1) as LevelBars
     private val seatRBars get() = seatR.getChildAt(seatR.childCount - 1) as LevelBars
@@ -168,6 +171,8 @@ class ClimateBar(c: Context, private val onMore: () -> Unit) : LinearLayout(c) {
         // passager : siège
         dimmable.addView(seatR, lp(0, Dim.TAP, 1f))
         addView(dimmable, lp(0, Dim.TAP, 1f))
+        addView(fogDivider, lp(1, 56).apply { leftMargin = GAP; rightMargin = GAP })
+        addView(fog, lp(FOG_W, Dim.TAP))
 
         auto.setOnClickListener { CarBridge.toggleAuto() }
         ac.setOnClickListener { CarBridge.toggleAc() }
@@ -176,6 +181,7 @@ class ClimateBar(c: Context, private val onMore: () -> Unit) : LinearLayout(c) {
         seatR.setOnClickListener { CarBridge.cycleSeatHeat(left = false) }
         wheel.setOnClickListener { CarBridge.toggleSteeringHeat() }
         more.setOnClickListener { onMore() }
+        fog.setOnClickListener { CarBridge.setRearFog(!fog.on) }
     }
 
     private fun divider() = View(context).apply { setBackgroundColor(Pal.line) }.also { it.layoutParams = lp(1, 56) }
@@ -209,7 +215,13 @@ class ClimateBar(c: Context, private val onMore: () -> Unit) : LinearLayout(c) {
         seatL.on = (s.seatHeatL ?: 0) > 0; seatLBars.level = s.seatHeatL ?: 0
         seatR.on = (s.seatHeatR ?: 0) > 0; seatRBars.level = s.seatHeatR ?: 0
         wheel.on = s.wheelHeat == 1
+        // sin respuesta del coche (otro firmware) el botón no aparece
+        val fogShown = s.rearFog != null
+        fog.visibility = if (fogShown) VISIBLE else GONE
+        fogDivider.visibility = fog.visibility
+        fog.on = s.rearFog == true
+        fog.look = if (fog.on) Look.HEAT else Look.RAISED
     }
 
-    companion object { private const val GAP = 12 }
+    companion object { private const val GAP = 12; private const val FOG_W = 120 }
 }

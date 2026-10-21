@@ -200,7 +200,7 @@ object CarBridge {
                     if (adapter == null) { if (Firmware.family != Firmware.Family.LEGACY) bind() } else resolveClients()
                 }
                 if (now - lastHvac >= if (fast) HVAC_FAST_MS else HVAC_SLOW_MS) { lastHvac = now; refreshHvac(); refreshHeating() }
-                if (now - lastEnergy >= if (fast) ENERGY_FAST_MS else ENERGY_SLOW_MS) { lastEnergy = now; refreshEnergy() }
+                if (now - lastEnergy >= if (fast) ENERGY_FAST_MS else ENERGY_SLOW_MS) { lastEnergy = now; refreshEnergy(); refreshRearFog() }
             } catch (e: Exception) {
                 Log.w(TAG, "poll : ${e.message}")
             }
@@ -229,6 +229,9 @@ object CarBridge {
         }
         holdDrive?.let { (v, until) ->
             if (now > until || s.driveMode == v) holdDrive = null else r = r.copy(driveMode = v)
+        }
+        holdFog?.let { (v, until) ->
+            if (now > until || s.rearFog == v) holdFog = null else r = r.copy(rearFog = v)
         }
         return r
     }
@@ -577,6 +580,30 @@ object CarBridge {
         if (BuildConfig.MOCK) { _state.value = _state.value.copy(chargeLock = if (cur == 2) 1 else 2); return }
         toggleChargeLock()
         scope.launch { delay(1500); refreshEnergy(); delay(3000); refreshEnergy() }
+    }
+
+    // ── Antibrouillard arrière (voir RearFog) : SDK réglages de l'ancien launcher, comme le mode de conduite ──
+
+    @Volatile private var holdFog: Pair<Boolean, Long>? = null
+
+    private fun refreshRearFog() {
+        if (Firmware.family == Firmware.Family.A9) return   // pas de voie connue sur A9 : bouton masqué
+        val on = RearFog.parse(LegacyCar.rearFog()) ?: return
+        _state.value = held(_state.value.copy(rearFog = on))
+    }
+
+    /** Allume ou éteint l'antibrouillard arrière, aussi en roulant : la voiture décide (feux requis). */
+    fun setRearFog(on: Boolean): Write {
+        if (_state.value.rearFog == null) return Write.UNAVAILABLE
+        if (BuildConfig.MOCK) { _state.value = _state.value.copy(rearFog = on); return Write.SENT }
+        holdFog = on to System.currentTimeMillis() + HOLD_MS
+        _state.value = _state.value.copy(rearFog = on)
+        scope.launch {
+            val ok = LegacyCar.setRearFog(RearFog.command(on))
+            Log.i(TAG, "SET antiniebla trasera = $on → $ok")
+            delay(800); refreshRearFog(); delay(1500); refreshRearFog()
+        }
+        return Write.SENT
     }
 
     // ── Mode de conduite : écrit seulement à l'arrêt (vitesse lue = 0), refusé si la vitesse est illisible ──

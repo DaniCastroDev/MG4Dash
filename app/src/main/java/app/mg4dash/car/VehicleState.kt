@@ -22,6 +22,8 @@ data class VehicleState(
     val outsideTemp: Float? = null,
     val defrostFront: Boolean? = null,
     val defrostRear: Boolean? = null,
+    /** Antibrouillard arrière ; null quand la voiture ne le commande pas depuis l'écran (bouton masqué). */
+    val rearFog: Boolean? = null,
     val ecoOn: Boolean? = null,
     /** Sièges chauffants (0 éteint, 1 à 3) et volant chauffant (0 / 1), versions équipées. */
     val seatHeatL: Int? = null,

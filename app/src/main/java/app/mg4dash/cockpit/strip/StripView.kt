@@ -86,15 +86,23 @@ class StripView(c: Context, private val onRight: Boolean, private val onExpand: 
     private var autoBtn: Btn? = null
     private val chargeText = c.text("", Ty.LABEL, Pal.text, Ty.uiMedium)
     private val vehText = c.text("", Ty.LABEL, Pal.text)
+    // antiniebla trasera : botón junto a « Asistentes » y, encendida, testigo ámbar en la línea de estado
+    // (visible en todas las pestañas, para no olvidarla puesta)
+    private val fogBtn = Btn(c, null, Icons.rearFog, 28).apply {
+        accent = Pal.heat
+        setOnClickListener { CarBridge.setRearFog(!on) }
+    }
+    private val fogLamp = IconView(c, Icons.rearFog, 30).apply { color = Pal.heat }
     // puissance en direct et heure (déclarées avant init : live() y est appelé)
     private val live = app.mg4dash.cockpit.LivePower()
     private var lastMinute = -1L
 
     init {
-        // ligne d'état : 80 px laissés libres côté gauche pour le bouton antibrouillard MG
+        // ligne d'état (le bouton antibrouillard de MG ne s'affiche pas : témoin propre, voir fogLamp)
         strip.addView(c.row(14).apply {
             addView(clock); addView(outside)
             addView(View(c), lp(0, 1, 1f))
+            addView(fogLamp)
             addView(IconView(c, Icons.battery, 30).apply { color = Pal.energy })
             addView(socTop)
             addView(app.mg4dash.cockpit.Pill(c, "Android Auto", Pal.energy), lp(WRAP, 40))
@@ -139,6 +147,7 @@ class StripView(c: Context, private val onRight: Boolean, private val onExpand: 
                 addView(context.col(2).apply { addView(context.text("Asistentes", Ty.CAPTION, Pal.text2)); addView(adas) }, lp(0, WRAP, 1f).apply { leftMargin = 12 })
                 setOnClickListener { Adas.apply(context) }
             }, lp(0, Dim.TAP_MIN, 1f))
+            addView(fogBtn, lp(Dim.TAP_MIN, Dim.TAP_MIN))
             addView(Btn(context, null, Icons.fullscreen, 28).apply {
                 setOnClickListener { context.startActivity(Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
             }, lp(Dim.TAP_MIN, Dim.TAP_MIN))
@@ -261,6 +270,10 @@ class StripView(c: Context, private val onRight: Boolean, private val onExpand: 
         seatR.on = (s.seatHeatR ?: 0) > 0; seatRBars.level = s.seatHeatR ?: 0
         wheel.on = s.wheelHeat == 1
         ac.on = s.acOn == true
+        fogBtn.visibility = if (s.rearFog != null) VISIBLE else GONE
+        fogBtn.on = s.rearFog == true
+        fogBtn.look = if (fogBtn.on) Look.HEAT else Look.NEUTRAL
+        fogLamp.visibility = if (s.rearFog == true) VISIBLE else GONE
         (sheet as? ClimateSheet)?.bind(s)
     }
 

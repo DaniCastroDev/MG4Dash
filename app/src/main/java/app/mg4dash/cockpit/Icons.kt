@@ -31,6 +31,8 @@ object Icons {
     val power = p("M16 5v10", "M9.6 9.2a9 9 0 1 0 12.8 0")
     val defrostFront = p("M4 11.5C8 8.5 12 7.5 16 7.5s8 1 12 4l-2.5 13c-3-1.3-6.3-2-9.5-2s-6.5.7-9.5 2Z", "M12 20c-1.2-1.5 1.2-3 0-4.5M16 19.5c-1.2-1.5 1.2-3 0-4.5M20 20c-1.2-1.5 1.2-3 0-4.5")
     val defrostRear = Icon(listOf(Icon.Part(rect(4f, 8f, 24f, 16f, 3f)), Icon.Part("M12 20c-1.2-1.5 1.2-3 0-4.5M16 19.5c-1.2-1.5 1.2-3 0-4.5M20 20c-1.2-1.5 1.2-3 0-4.5")))
+    /** Antiniebla trasera (símbolo ISO 7000) : lámpara a la derecha, haces a la izquierda cruzados por una onda. */
+    val rearFog = p("M20 8c5 0 8 3.6 8 8s-3 8-8 8Z", "M4 11h11M4 16h11M4 21h11", "M10 6.5c-2 3 2 6.5 0 9.5s2 6.5 0 9.5")
     val wheel = Icon(listOf(Icon.Part(circle(16f, 16f, 11f)), Icon.Part(circle(16f, 16f, 3f)), Icon.Part("M5 16h8M19 16h8M16 19v8")))
     private val seatD = listOf("M17.5 5h3a1.5 1.5 0 0 1 1.5 1.3l1.7 12.2a2 2 0 0 1-2 2.5H9a2 2 0 0 1 0-4h10.5L16 6.8A1.5 1.5 0 0 1 17.5 5Z", "M15 21v5M10.5 26h9")
     val seatLeft = Icon(seatD.map { Icon.Part(it) })

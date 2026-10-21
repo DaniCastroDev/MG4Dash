@@ -11,7 +11,7 @@ object MockCar {
         state.value = VehicleState(
             connected = true, hvacOn = true, acOn = true, autoOn = false, recirc = 1,
             fanSpeed = 4, fanDirection = 1, driverTemp = 21.5f, outsideTemp = 14.0f,
-            defrostFront = false, defrostRear = false, batteryPercent = 78, socPrecise = 78.4f, seatHeatL = 2, seatHeatR = 0, wheelHeat = 0, rangeKm = 284,
+            defrostFront = false, defrostRear = false, rearFog = false, batteryPercent = 78, socPrecise = 78.4f, seatHeatL = 2, seatHeatR = 0, wheelHeat = 0, rangeKm = 284,
             chargeStatus = 7, chargeCtrl = 2, dischargeCtrl = 2, chargeLock = 1, driveMode = 3, regenLevel = 2, onePedal = 0,
             odometerKm = 18342, speedKmh = 0f, ecoOn = false, steeringMode = 2, brakePedalMode = 0,
             enduranceMode = 0, lasMode = 3, fcwState = 2, fcwBrakeMode = 2, overSpeedSound = 1, speedLimitSound = 0,
@@ -46,6 +46,7 @@ object MockCar {
         state.value = when (label) {
             "power" -> s.copy(hvacOn = !(s.hvacOn ?: false))
             "ac" -> s.copy(acOn = !(s.acOn ?: false))
+            "fog" -> s.copy(rearFog = !(s.rearFog ?: false))
             "auto" -> s.copy(autoOn = !(s.autoOn ?: false))
             "recirc" -> s.copy(recirc = ((s.recirc ?: 0) + 1) % 3)
             "defrostFront" -> s.copy(defrostFront = !(s.defrostFront ?: false))
