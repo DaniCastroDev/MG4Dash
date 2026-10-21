@@ -29,6 +29,11 @@
     <uses-permission android:name="android.permission.OVERRIDE_WIFI_CONFIG" />
     <uses-permission android:name="android.permission.NETWORK_SETTINGS" />
 
+    <!-- Lectura de la franja (StripProvider) : solo apps firmadas con la misma clave, como DiAuto -->
+    <permission
+        android:name="app.mg4dash.permission.READ_COCKPIT_STRIP"
+        android:protectionLevel="signature" />
+
     <application
         android:name=".LauncherApp"
         android:allowBackup="false"
@@ -74,6 +79,13 @@
         <service
             android:name=".cockpit.strip.StripService"
             android:exported="false" />
+
+        <!-- Lado y ancho de la franja, para que DiAuto deje su margen en ese lado -->
+        <provider
+            android:name=".cockpit.strip.StripProvider"
+            android:authorities="${applicationId}.strip"
+            android:exported="true"
+            android:readPermission="app.mg4dash.permission.READ_COCKPIT_STRIP" />
 
         <activity
             android:name=".pages.ClimateActivity"

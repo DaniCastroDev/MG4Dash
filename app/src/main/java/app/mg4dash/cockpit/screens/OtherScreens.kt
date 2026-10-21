@@ -26,6 +26,7 @@ import app.mg4dash.cockpit.label
 import app.mg4dash.cockpit.lp
 import app.mg4dash.cockpit.put
 import app.mg4dash.cockpit.row
+import app.mg4dash.cockpit.strip.StripProvider
 import app.mg4dash.cockpit.strip.StripService
 import app.mg4dash.cockpit.text
 import app.mg4dash.cockpit.w
@@ -95,10 +96,10 @@ class SettingsScreen(host: Host) : Screen(host) {
         addView(c.card(gap = 12).apply {
             addView(c.label("Disposición"))
             addView(switch("Franja con Android Auto", "Muestra la franja de 640 px sobre DiAuto", { prefs.raw.getBoolean("strip_enabled", true) }) {
-                prefs.raw.edit().putBoolean("strip_enabled", it).apply(); StripService.sync(c)
+                prefs.raw.edit().putBoolean("strip_enabled", it).apply(); StripService.sync(c); StripProvider.changed(c)
             })
             addView(choice("Lado de la franja", listOf("Izquierda", "Derecha"), { if (prefs.raw.getBoolean("strip_right", false)) 1 else 0 }) {
-                prefs.raw.edit().putBoolean("strip_right", it == 1).apply()
+                prefs.raw.edit().putBoolean("strip_right", it == 1).apply(); StripProvider.changed(c)
             })
             addView(switch("Pantalla completa", "Oculta las barras del sistema", { prefs.fullscreen }) { prefs.fullscreen = it })
             addView(c.label("Tema"))
