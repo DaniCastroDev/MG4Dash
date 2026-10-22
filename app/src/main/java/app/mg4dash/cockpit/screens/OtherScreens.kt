@@ -127,6 +127,11 @@ class SettingsScreen(host: Host) : Screen(host) {
                 addView(Btn(c, "Usar como inicio", Icons.home, 30, vertical = false).apply { setOnClickListener { HomeSwitcher.replaceStock(c) } }, lp(0, Dim.TAP_MIN, 1f))
                 addView(Btn(c, "Interfaz clásica", Icons.apps, 30, vertical = false).apply { setOnClickListener { c.startActivity(Intent(c, ClassicActivity::class.java)) } }, lp(0, Dim.TAP_MIN, 1f))
             }, lp(MATCH, Dim.TAP_MIN))
+            // Vuelta a la interfaz de MG : su inicio pasa a ser el del coche (como el modo mantenimiento)
+            // hasta que se vuelva a elegir « Usar como inicio ».
+            addView(Btn(c, "Volver a la interfaz de MG", Icons.car, 30, vertical = false).apply {
+                setOnClickListener { if (!HomeSwitcher.switchToStock(c)) host.toast("No se pudo abrir la interfaz de MG", tone = Pal.alert) }
+            }, lp(MATCH, Dim.TAP_MIN))
             addView(View(c), lp(MATCH, 0, 1f))
             addView(c.text("Versión " + app.mg4dash.BuildConfig.VERSION_NAME, Ty.CAPTION, Pal.text2))
             // Diagnóstico de espacio : pantalla real, ventana disponible y fuente condensada presente
