@@ -195,6 +195,8 @@ class MainActivity : AppCompatActivity(), Host {
     override fun onResume() {
         super.onResume()
         Fullscreen.apply(this)
+        // Relance la franja si le système a arrêté son service (sans effet s'il tourne déjà).
+        app.mg4dash.cockpit.strip.StripService.sync(this)
         CarBridge.setForeground(true)
         main.post(clockTick)
         resumed = true

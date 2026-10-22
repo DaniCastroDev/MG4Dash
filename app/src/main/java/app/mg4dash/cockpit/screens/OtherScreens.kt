@@ -90,6 +90,15 @@ class SettingsScreen(host: Host) : Screen(host) {
     private val prefs by lazy { Prefs(c) }
     private lateinit var priceHome: TextView
     private lateinit var priceDc: TextView
+    private var stripStatus: TextView? = null
+
+    private fun refreshStripStatus() {
+        stripStatus?.text = app.mg4dash.cockpit.strip.StripStatus.describe(
+            android.os.SystemClock.elapsedRealtime(), prefs.raw.getBoolean("strip_enabled", true))
+    }
+
+    override fun onShow() { StripService.sync(c); refreshStripStatus() }
+    override fun bind(s: VehicleState) = refreshStripStatus()
 
     override fun build(): View = c.row(Dim.GAP).apply {
         gravity = Gravity.TOP
@@ -98,6 +107,9 @@ class SettingsScreen(host: Host) : Screen(host) {
             addView(switch("Franja con Android Auto", "Muestra la franja de 640 px sobre DiAuto", { prefs.raw.getBoolean("strip_enabled", true) }) {
                 prefs.raw.edit().putBoolean("strip_enabled", it).apply(); StripService.sync(c); StripProvider.changed(c)
             })
+            // Estado de la franja (servicio, lo que hay delante, último error) : sin ADB no se ve en otro sitio
+            stripStatus = c.text("", Ty.CAPTION, Pal.text2).apply { maxLines = 2 }
+            addView(stripStatus)
             addView(choice("Lado de la franja", listOf("Izquierda", "Derecha"), { if (prefs.raw.getBoolean("strip_right", false)) 1 else 0 }) {
                 prefs.raw.edit().putBoolean("strip_right", it == 1).apply(); StripProvider.changed(c)
             })
@@ -125,12 +137,12 @@ class SettingsScreen(host: Host) : Screen(host) {
             }, lp(MATCH, Dim.TAP_MIN))
             addView(c.row(12).apply {
                 addView(Btn(c, "Usar como inicio", Icons.home, 30, vertical = false).apply { setOnClickListener { HomeSwitcher.replaceStock(c) } }, lp(0, Dim.TAP_MIN, 1f))
-                addView(Btn(c, "Interfaz clásica", Icons.apps, 30, vertical = false).apply { setOnClickListener { c.startActivity(Intent(c, ClassicActivity::class.java)) } }, lp(0, Dim.TAP_MIN, 1f))
-            }, lp(MATCH, Dim.TAP_MIN))
-            // Vuelta a la interfaz de MG : su inicio pasa a ser el del coche (como el modo mantenimiento)
-            // hasta que se vuelva a elegir « Usar como inicio ».
-            addView(Btn(c, "Volver a la interfaz de MG", Icons.car, 30, vertical = false).apply {
-                setOnClickListener { if (!HomeSwitcher.switchToStock(c)) host.toast("No se pudo abrir la interfaz de MG", tone = Pal.alert) }
+                // Vuelta a la interfaz de MG : su inicio pasa a ser el del coche (como el modo mantenimiento)
+                // hasta « Usar como inicio » o un doble toque en su botón CarPlay.
+                addView(Btn(c, "Interfaz de MG", Icons.car, 30, vertical = false).apply {
+                    setOnClickListener { if (!HomeSwitcher.switchToStock(c)) host.toast("No se pudo abrir la interfaz de MG", tone = Pal.alert) }
+                }, lp(0, Dim.TAP_MIN, 1f))
+                addView(Btn(c, "Clásica", Icons.apps, 30, vertical = false).apply { setOnClickListener { c.startActivity(Intent(c, ClassicActivity::class.java)) } }, lp(0, Dim.TAP_MIN, 1f))
             }, lp(MATCH, Dim.TAP_MIN))
             addView(View(c), lp(MATCH, 0, 1f))
             addView(c.text("Versión " + app.mg4dash.BuildConfig.VERSION_NAME, Ty.CAPTION, Pal.text2))

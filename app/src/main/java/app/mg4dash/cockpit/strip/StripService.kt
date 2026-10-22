@@ -65,6 +65,7 @@ class StripService : Service() {
     /** Erreur dans la franja : on la retire et on la laisse coupée (l'accueil continue). */
     private fun fail(where: String, t: Throwable) {
         Log.e(TAG, "franja desactivada tras un error ($where)", t)
+        StripStatus.recordFailure(where, t)
         broken = true
         hide()
     }
@@ -80,11 +81,18 @@ class StripService : Service() {
     private val poll = object : Runnable {
         override fun run() {
             val sp = Prefs(this@StripService).raw
+            val onTop = projectionOnTop()
             val show = sp.getBoolean("strip_enabled", true) &&
-                (projectionOnTop() || (app.mg4dash.BuildConfig.MOCK && sp.getBoolean("mock_strip", false)))
+                (onTop || (app.mg4dash.BuildConfig.MOCK && sp.getBoolean("mock_strip", false)))
+            // Une erreur ne coupe la franja que jusqu'à la prochaine ouverture de DiAuto, sauf si elle
+            // revient à chaque fois (StripStatus.MAX_FAILURES) : avant, une seule la coupait jusqu'au
+            // redémarrage, sans rien montrer.
+            if (!onTop && broken && StripStatus.failures < StripStatus.MAX_FAILURES) broken = false
             try {
                 if (show && view == null && !broken) show() else if (!show && view != null) hide()
             } catch (t: Throwable) { fail("poll", t) }
+            StripStatus.lastPollMs = android.os.SystemClock.elapsedRealtime()
+            StripStatus.visible = view != null
             main.postDelayed(this, VISIBILITY_MS)
         }
     }
@@ -92,8 +100,9 @@ class StripService : Service() {
     @Suppress("DEPRECATION")
     private fun projectionOnTop(): Boolean = try {
         val top = am.getRunningTasks(1).firstOrNull()?.topActivity
+        StripStatus.top = top?.flattenToShortString()
         top != null && top.packageName.startsWith(DIAUTO_PKG) && top.className.endsWith(PROJECTION)
-    } catch (e: Exception) { false }
+    } catch (e: Exception) { StripStatus.top = "sin acceso a las tareas (${e.javaClass.simpleName})"; false }
 
     private fun show() {
         Pal.set(Prefs(this).themeMode != 2)
@@ -107,7 +116,7 @@ class StripService : Service() {
             PixelFormat.OPAQUE,
         ).apply { gravity = Gravity.TOP or (if (right) Gravity.END else Gravity.START); title = "MG4 cockpit strip" }
         try { wm.addView(v, p); view = v; params = p; Log.i(TAG, "franja visible") }
-        catch (e: Exception) { Log.w(TAG, "franja : ${e.message}"); return }
+        catch (e: Exception) { Log.w(TAG, "franja : ${e.message}"); StripStatus.error = "ventana: ${e.javaClass.simpleName} ${e.message ?: ""}"; return }
         CarBridge.setVisible("strip", true)
         // redessin à chaque changement (véhicule, médias, asistentes) ; puissance et heure à part, 0,2 s
         updates = ui.launch {
