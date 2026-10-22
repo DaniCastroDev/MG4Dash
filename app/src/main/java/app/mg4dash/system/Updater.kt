@@ -28,7 +28,14 @@ object Updater {
     /** Dernière release non bêta (GitHub ignore les pré-versions et les brouillons). */
     private const val API_STABLE = "https://api.github.com/repos/$REPO/releases/latest"
 
-    data class Release(val version: String, val url: String, val size: Long, val notes: String)
+    /** [sha256] : empreinte que GitHub calcule pour chaque fichier publié (champ « digest »), en hexadécimal. */
+    data class Release(val version: String, val url: String, val size: Long, val notes: String, val sha256: String? = null)
+
+    /** APK téléchargé incomplet ou différent de celui publié : il n'est pas installé. */
+    class BadDownload(message: String) : java.io.IOException(message)
+
+    /** Réponse HTTP autre que 200. */
+    class HttpError(val code: Int) : java.io.IOException("HTTP $code")
 
     /** Dernière release publiée (pré-versions comprises si [beta]), ou null s'il n'y en a pas. Réseau : hors du fil principal. */
     fun latest(beta: Boolean = true, api: String = API): Release? {
@@ -43,7 +50,10 @@ object Updater {
     }
 
     /** Dernière release non bêta, même plus ancienne que les dix dernières pré-versions. Réseau : hors du fil principal. */
-    fun latestStable(): Release? = parse(JSONObject(get(API_STABLE)))
+    fun latestStable(): Release? = try { parse(JSONObject(get(API_STABLE))) } catch (e: HttpError) {
+        // 404 : aucune release publiée (pas une panne)
+        if (e.code == 404) null else throw e
+    }
 
     private fun get(api: String): String {
         val c = URL(api).openConnection() as HttpURLConnection
@@ -51,19 +61,20 @@ object Updater {
             c.connectTimeout = 8000; c.readTimeout = 15000
             c.setRequestProperty("Accept", "application/vnd.github+json")
             c.setRequestProperty("User-Agent", "MG4Dash")
-            if (c.responseCode != 200) throw IllegalStateException("HTTP ${c.responseCode}")
+            if (c.responseCode != 200) throw HttpError(c.responseCode)
             return c.inputStream.bufferedReader().use { it.readText() }
         } finally { c.disconnect() }
     }
 
     /** Release avec son APK, ou null si elle n'en a pas. */
-    private fun parse(r: JSONObject): Release? {
+    internal fun parse(r: JSONObject): Release? {
         val assets = r.optJSONArray("assets") ?: return null
         for (j in 0 until assets.length()) {
             val a = assets.getJSONObject(j)
             if (a.getString("name").endsWith(".apk")) {
+                val digest = a.optString("digest").takeIf { it.startsWith("sha256:") }?.removePrefix("sha256:")?.lowercase()
                 return Release(r.getString("tag_name").trimStart('v'), a.getString("browser_download_url"),
-                    a.optLong("size"), r.optString("body"))
+                    a.optLong("size"), r.optString("body"), digest)
             }
         }
         return null
@@ -103,7 +114,7 @@ object Updater {
             c.setRequestProperty("User-Agent", "MG4Dash")
             val code = c.responseCode
             if (code in 300..399 && hops < 5) { url = URL(url, c.getHeaderField("Location")); c.disconnect(); hops++; continue }
-            if (code != 200) throw IllegalStateException("HTTP $code")
+            if (code != 200) throw HttpError(code)
             break
         }
         try {
@@ -120,8 +131,22 @@ object Updater {
                 }
             }
         } finally { c.disconnect() }
+        try { verify(out, r) } catch (e: BadDownload) { out.delete(); throw e }
         Log.i(TAG, "téléchargé ${r.version} (${out.length()} octets)")
         return out
+    }
+
+    /** Taille et SHA-256 identiques à ceux de la release (une coupure du réseau laisse un APK tronqué). */
+    fun verify(apk: File, r: Release) {
+        if (r.size > 0 && apk.length() != r.size) throw BadDownload("descarga incompleta (${apk.length()} de ${r.size} bytes)")
+        val want = r.sha256 ?: return
+        val md = java.security.MessageDigest.getInstance("SHA-256")
+        apk.inputStream().use { input ->
+            val buf = ByteArray(64 * 1024)
+            while (true) { val n = input.read(buf); if (n < 0) break; md.update(buf, 0, n) }
+        }
+        val got = md.digest().joinToString("") { "%02x".format(it) }
+        if (got != want) throw BadDownload("la descarga no coincide con la publicada")
     }
 
     /** Installe l'APK téléchargé ; MG4Dash est arrêté puis relancé par Android. */
@@ -150,13 +175,22 @@ object Updater {
         }
     }
 
+    /** Prévenu quand Android refuse l'installation (message système), pour que l'écran ne reste pas sur « Instalando… ». */
+    @Volatile var onInstallFailed: ((String) -> Unit)? = null
+
     /** Résultat de l'installation (journal). */
     class Result : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             val status = intent.getIntExtra(PackageInstaller.EXTRA_STATUS, -999)
             val msg = intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE)
             Log.i(TAG, "résultat de l'installation : $status $msg")
-            if (status != PackageInstaller.STATUS_SUCCESS) return
+            if (status == PackageInstaller.STATUS_PENDING_USER_ACTION) {
+                // Ne devrait pas arriver avec l'uid système ; sinon, Android demande une confirmation
+                @Suppress("DEPRECATION")
+                (intent.getParcelableExtra<Intent>(Intent.EXTRA_INTENT))?.let { context.startActivity(it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                return
+            }
+            if (status != PackageInstaller.STATUS_SUCCESS) { onInstallFailed?.invoke(msg ?: "código $status"); return }
             // Après une installation, la compilation faite par la voiture était parfois inutilisable
             // (ClassNotFoundException au démarrage) ; une recompilation « speed » la remplace.
             recompile(context)

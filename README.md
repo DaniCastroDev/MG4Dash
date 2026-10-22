@@ -148,6 +148,18 @@ adb shell rm /data/local/tmp/x.apk
 
 Then make it the home screen from Ajustes › *Usar como inicio*. This only disables the SAIC home activity, whose HOME priority cannot be beaten otherwise; the SAIC launcher package keeps running, since its service handles the camera, the audio sources and some SystemUI commands.
 
+### Updates from GitHub
+
+Once a version is installed, Ajustes › Sistema › *Buscar actualización* checks the latest release of this repository (pre-releases are ignored). If it is newer, a second tap on *Instalar <version>* downloads the APK, checks its size and the SHA-256 GitHub lists for it, installs it with `PackageInstaller` and restarts MG4Dash. The car needs Internet for this (its own SIM, or Wi-Fi).
+
+To publish a version, bump `versionCode` and `versionName`, commit and push `main`, then:
+
+```bash
+sh release.sh --publish notes.md
+```
+
+It builds and signs the APK like above and creates the release `v<version>` with that APK and `notes.md` as its notes; the first bullet of the notes is shown next to the button. Without `--publish`, it only builds and signs.
+
 ## Going back
 
 - Maintenance mode gives the home screen back to the SAIC launcher: Ajustes › *Interfaz clásica*, then the classic settings › *Modo mantenimiento*. Before a firmware update, turn it on, so the car keeps a home screen if the update removes MG4Dash.

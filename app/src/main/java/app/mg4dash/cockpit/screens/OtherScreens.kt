@@ -21,6 +21,7 @@ import app.mg4dash.cockpit.Segmented
 import app.mg4dash.cockpit.Ty
 import app.mg4dash.cockpit.WRAP
 import app.mg4dash.cockpit.card
+import app.mg4dash.cockpit.col
 import app.mg4dash.cockpit.header
 import app.mg4dash.cockpit.label
 import app.mg4dash.cockpit.lp
@@ -32,7 +33,15 @@ import app.mg4dash.cockpit.text
 import app.mg4dash.cockpit.w
 import app.mg4dash.media.MediaHub
 import app.mg4dash.system.HomeSwitcher
+import app.mg4dash.system.Log
 import app.mg4dash.system.Prefs
+import app.mg4dash.system.UpdateState
+import app.mg4dash.system.Updater
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 // Medios (radio y fuentes) : MediaScreen.kt
 
@@ -91,6 +100,9 @@ class SettingsScreen(host: Host) : Screen(host) {
     private lateinit var priceHome: TextView
     private lateinit var priceDc: TextView
     private var stripStatus: TextView? = null
+    private var update: UpdateState = UpdateState.Idle
+    private var updateStatus: TextView? = null
+    private var updateBtn: Btn? = null
 
     private fun refreshStripStatus() {
         stripStatus?.text = app.mg4dash.cockpit.strip.StripStatus.describe(
@@ -145,10 +157,74 @@ class SettingsScreen(host: Host) : Screen(host) {
                 addView(Btn(c, "Clásica", Icons.apps, 30, vertical = false).apply { setOnClickListener { c.startActivity(Intent(c, ClassicActivity::class.java)) } }, lp(0, Dim.TAP_MIN, 1f))
             }, lp(MATCH, Dim.TAP_MIN))
             addView(View(c), lp(MATCH, 0, 1f))
-            addView(c.text("Versión " + app.mg4dash.BuildConfig.VERSION_NAME, Ty.CAPTION, Pal.text2))
-            // Diagnóstico de espacio : pantalla real, ventana disponible y fuente condensada presente
-            addView(c.text("", Ty.CAPTION, Pal.text3).apply { maxLines = 2; post { text = screenInfo(this) } })
+            // Actualización desde las versiones publicadas en GitHub : un toque busca, el segundo instala
+            addView(c.row(16).apply {
+                addView(c.col(4).apply {
+                    updateStatus = c.text("", Ty.CAPTION, Pal.text2).apply { maxLines = 2 }
+                    addView(updateStatus)
+                    // Diagnóstico de espacio : pantalla real, ventana disponible y fuente condensada presente
+                    addView(c.text("", Ty.CAPTION, Pal.text3).apply {
+                        maxLines = 1; ellipsize = android.text.TextUtils.TruncateAt.END; post { text = screenInfo(this) }
+                    })
+                }, lp(0, WRAP, 1f))
+                updateBtn = Btn(c, "", Icons.download, 30, vertical = false).apply { setOnClickListener { onUpdateTap() } }
+                addView(updateBtn, lp(400, Dim.TAP_MIN))
+            }, lp(MATCH, WRAP))
+            showUpdate(update)
         }, w(884))
+    }
+
+    private fun showUpdate(s: UpdateState) {
+        update = s
+        updateStatus?.text = s.status(app.mg4dash.BuildConfig.VERSION_NAME)
+        updateBtn?.apply {
+            labelView?.text = s.button()
+            look = if (s is UpdateState.Available) Look.PRIMARY else Look.NEUTRAL
+            isEnabled = s.actionable
+            alpha = if (s.actionable) 1f else 0.6f
+        }
+    }
+
+    private fun onUpdateTap() {
+        val s = update
+        if (!s.actionable) return
+        val scope = (c as? LifecycleOwner)?.lifecycleScope ?: return
+        if (s is UpdateState.Available) scope.launch { install(s.release) }
+        else scope.launch { checkUpdate() }
+    }
+
+    private suspend fun checkUpdate() {
+        showUpdate(UpdateState.Checking)
+        showUpdate(try {
+            val r = withContext(Dispatchers.IO) { Updater.latestStable() }
+            when {
+                r == null -> UpdateState.NoRelease
+                Updater.isNewer(r.version) -> UpdateState.Available(r)
+                else -> UpdateState.UpToDate
+            }
+        } catch (e: Exception) {
+            Log.w("MàJ", "recherche : ${e.javaClass.simpleName} ${e.message}")
+            UpdateState.Failed(UpdateState.reason(e))
+        })
+    }
+
+    private suspend fun install(r: Updater.Release) {
+        showUpdate(UpdateState.Downloading(r.version, 0))
+        try {
+            var shown = 0
+            val apk = withContext(Dispatchers.IO) {
+                Updater.download(c, r) { pct ->
+                    // une mise à jour de l'écran par point de pourcentage, pas par bloc de 64 Ko
+                    if (pct != shown) { shown = pct; view.post { if (update is UpdateState.Downloading) showUpdate(UpdateState.Downloading(r.version, pct)) } }
+                }
+            }
+            showUpdate(UpdateState.Installing(r.version))
+            Updater.onInstallFailed = { msg -> view.post { showUpdate(UpdateState.Failed("Android no la instaló: $msg")) } }
+            withContext(Dispatchers.IO) { Updater.install(c, apk) }
+        } catch (e: Exception) {
+            Log.w("MàJ", "installation : ${e.javaClass.simpleName} ${e.message}")
+            showUpdate(UpdateState.Failed(UpdateState.reason(e)))
+        }
     }
 
     private fun screenInfo(v: View): String {
