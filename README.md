@@ -45,7 +45,7 @@ The charts are touchable: tap or drag to read a value. Electricity prices (home 
 |---|---|
 | ![Vehículo](docs/screenshots/vehicle.png) | ![Mi perfil](docs/screenshots/profiles.png) |
 
-- **Vehículo**: tyre pressures and temperatures, odometer, drive mode, regeneration and one-pedal driving, ESC, and shortcuts to the 360° camera, the MG settings and the installed apps.
+- **Vehículo**: tyre pressures and temperatures, odometer, drive mode, regeneration and one-pedal driving, the position of each window with *Abrir todas* / *Cerrar todas*, ESC, and shortcuts to the 360° camera, the MG settings and the installed apps. The windows use the open-all and close-all commands the SAIC launcher defines (4 and 3), sent to all four windows; they have not been tried on the car yet.
 - **Mi perfil**: two profiles that set, or leave unchanged, the drive mode, regeneration, one-pedal driving and the driver assistance settings (speed limit warning, lane keeping, driver monitoring, unsteady driving warning, rear traffic alert). EU rules switch the assistants back on at every start; a profile puts them back the way you want with one tap, also while driving.
 
 ## Medios

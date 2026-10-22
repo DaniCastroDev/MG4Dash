@@ -29,6 +29,8 @@ object Icons {
     val close = p("M9 9l14 14M23 9 9 23")
     val check = p("M7 16.5l6 6L25 10")
     val download = p("M16 5v15", "M9.5 13.5 16 20l6.5-6.5", "M6 26h20")
+    val arrowUp = p("M16 26V7", "M9 14l7-7 7 7")
+    val arrowDown = p("M16 6v19", "M9 18l7 7 7-7")
     val power = p("M16 5v10", "M9.6 9.2a9 9 0 1 0 12.8 0")
     val defrostFront = p("M4 11.5C8 8.5 12 7.5 16 7.5s8 1 12 4l-2.5 13c-3-1.3-6.3-2-9.5-2s-6.5.7-9.5 2Z", "M12 20c-1.2-1.5 1.2-3 0-4.5M16 19.5c-1.2-1.5 1.2-3 0-4.5M20 20c-1.2-1.5 1.2-3 0-4.5")
     val defrostRear = Icon(listOf(Icon.Part(rect(4f, 8f, 24f, 16f, 3f)), Icon.Part("M12 20c-1.2-1.5 1.2-3 0-4.5M16 19.5c-1.2-1.5 1.2-3 0-4.5M20 20c-1.2-1.5 1.2-3 0-4.5")))

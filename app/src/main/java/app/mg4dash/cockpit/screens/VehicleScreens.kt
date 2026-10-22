@@ -6,6 +6,7 @@ import android.widget.TextView
 import app.mg4dash.car.CarBridge
 import app.mg4dash.car.CarProps
 import app.mg4dash.car.VehicleState
+import app.mg4dash.car.Windows
 import app.mg4dash.cockpit.Adas
 import app.mg4dash.cockpit.Btn
 import app.mg4dash.cockpit.Dim
@@ -23,6 +24,7 @@ import app.mg4dash.cockpit.Ty
 import app.mg4dash.cockpit.WRAP
 import app.mg4dash.cockpit.card
 import app.mg4dash.cockpit.col
+import app.mg4dash.cockpit.header
 import app.mg4dash.cockpit.label
 import app.mg4dash.cockpit.lp
 import app.mg4dash.cockpit.put
@@ -42,6 +44,10 @@ class VehicleScreen(host: Host) : Screen(host) {
     private lateinit var esc: Btn
     private lateinit var adas: TextView
     private lateinit var odo: TextView
+    private lateinit var winSummary: TextView
+    private val winCells = ArrayList<TextView>()
+    private lateinit var winOpen: Btn
+    private lateinit var winClose: Btn
     private var escArmedUntil = 0L
 
     override fun build(): View = c.row(Dim.GAP).apply {
@@ -51,18 +57,37 @@ class VehicleScreen(host: Host) : Screen(host) {
             tyres = TyreView(c); addView(tyres, lp(MATCH, 0, 1f))
             odo = c.text("—", Ty.LABEL, Pal.text2); addView(odo)
         }, w(560))
-        addView(c.card().apply {
-            // réglages de conduite : se règlent dans « Mi perfil », appliqués avec les asistentes
-            addView(c.label("Modo de conducción"))
-            modeText = c.text("—", Ty.TITLE, Pal.text, Ty.uiMedium); addView(modeText)
-            addView(c.label("Regeneración"))
-            regenText = c.text("—", Ty.TITLE, Pal.text, Ty.uiMedium); addView(regenText)
-            addView(c.label("Conducción con un pedal"))
-            onePedalText = c.text("—", Ty.TITLE, Pal.text, Ty.uiMedium); addView(onePedalText)
-            addView(View(c), lp(MATCH, 0, 1f))
-            addView(Btn(c, "Cambiar en Mi perfil", Icons.chevronRight, 28, vertical = false, iconEnd = true).apply {
-                setOnClickListener { host.go("adas") }
-            }, lp(MATCH, Dim.TAP))
+        addView(c.col(Dim.GAP).apply {
+            addView(c.card(gap = 12).apply {
+                // réglages de conduite : se règlent dans « Mi perfil », appliqués avec les asistentes
+                addView(c.header("Conducción", Btn(c, "Mi perfil", Icons.chevronRight, 24, vertical = false, textSize = Ty.CAPTION, iconEnd = true).apply {
+                    setPadding(20, 0, 14, 0); setOnClickListener { host.go("adas") }
+                }, 56))
+                modeText = setting("Modo de conducción")
+                regenText = setting("Regeneración")
+                onePedalText = setting("Conducción con un pedal")
+            }, lp(MATCH, WRAP))
+            addView(c.card(gap = 12).apply {
+                // Ventanillas : les quatre à la fois, seules commandes nommées par la voiture (voir Windows)
+                winSummary = c.text("—", Ty.CAPTION, Pal.text2).apply { maxLines = 1; gravity = Gravity.CENTER_VERTICAL }
+                addView(c.header("Ventanillas", winSummary))
+                addView(c.row(8).apply {
+                    Windows.NAMES.forEach { n ->
+                        addView(c.col(2).apply {
+                            addView(c.text(n, Ty.CAPTION, Pal.text2).apply { maxLines = 1 })
+                            val v = c.text("—", Ty.LABEL, Pal.text, Ty.uiMedium).apply { maxLines = 1 }
+                            winCells.add(v); addView(v)
+                        }, lp(0, WRAP, 1f))
+                    }
+                })
+                addView(View(c), lp(MATCH, 0, 1f))
+                addView(c.row(12).apply {
+                    winOpen = Btn(c, "Abrir todas", Icons.arrowDown, 30, vertical = false, centered = true).apply { setOnClickListener { windows(true) } }
+                    addView(winOpen, lp(0, Dim.TAP_MIN, 1f))
+                    winClose = Btn(c, "Cerrar todas", Icons.arrowUp, 30, vertical = false, centered = true).apply { setOnClickListener { windows(false) } }
+                    addView(winClose, lp(0, Dim.TAP_MIN, 1f))
+                })
+            }, lp(MATCH, 0, 1f))
         }, w(640))
         addView(c.col(Dim.GAP).apply {
             addView(c.card().apply {
@@ -94,7 +119,29 @@ class VehicleScreen(host: Host) : Screen(host) {
         }, w(528))
     }
 
+    /** Ligne « réglage … valeur » de la carte Conducción ; renvoie la valeur. */
+    private fun android.widget.LinearLayout.setting(name: String): TextView {
+        val v = c.text("—", Ty.BODY, Pal.text, Ty.uiMedium).apply { maxLines = 1 }
+        addView(c.row(12).apply {
+            addView(c.text(name, Ty.LABEL, Pal.text2).apply { maxLines = 1 }, lp(0, WRAP, 1f))
+            addView(v)
+        }, lp(MATCH, WRAP))
+        return v
+    }
+
+    private fun windows(open: Boolean) {
+        when (CarBridge.setWindows(open)) {
+            CarBridge.Write.SENT -> host.toast(if (open) "Abriendo las ventanillas" else "Cerrando las ventanillas", "Para pararlas, usa los botones de la puerta")
+            else -> host.toast("Ventanillas no disponibles", "El coche no responde a las ventanillas", Pal.alert)
+        }
+    }
+
     override fun bind(s: VehicleState) {
+        val w = s.windows
+        winSummary.put(Windows.summary(w))
+        winCells.forEachIndexed { i, t -> t.put(Windows.cell(w?.getOrNull(i))) }
+        winOpen.isEnabled = w != null; winClose.isEnabled = w != null
+        winOpen.alpha = if (w != null) 1f else 0.5f; winClose.alpha = winOpen.alpha
         tyres.wheels = (0..3).map { i ->
             val kpa = CarProps.getInt(0x21401553 + i)?.takeIf { it in 50..600 }
             val t = CarProps.getInt(0x2140155b + i)?.takeIf { it in -40..120 }

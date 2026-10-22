@@ -200,7 +200,7 @@ object CarBridge {
                     if (adapter == null) { if (Firmware.family != Firmware.Family.LEGACY) bind() } else resolveClients()
                 }
                 if (now - lastHvac >= if (fast) HVAC_FAST_MS else HVAC_SLOW_MS) { lastHvac = now; refreshHvac(); refreshHeating() }
-                if (now - lastEnergy >= if (fast) ENERGY_FAST_MS else ENERGY_SLOW_MS) { lastEnergy = now; refreshEnergy(); refreshRearFog() }
+                if (now - lastEnergy >= if (fast) ENERGY_FAST_MS else ENERGY_SLOW_MS) { lastEnergy = now; refreshEnergy(); refreshRearFog(); refreshWindows() }
             } catch (e: Exception) {
                 Log.w(TAG, "poll : ${e.message}")
             }
@@ -602,6 +602,27 @@ object CarBridge {
             val ok = LegacyCar.setRearFog(RearFog.command(on))
             Log.i(TAG, "SET antiniebla trasera = $on → $ok")
             delay(800); refreshRearFog(); delay(1500); refreshRearFog()
+        }
+        return Write.SENT
+    }
+
+    // ── Ventanillas (voir Windows) : relues avec l'énergie, puis chaque demi-seconde pendant leur course ──
+
+    private fun refreshWindows() {
+        if (BuildConfig.MOCK || Firmware.family == Firmware.Family.A9) return
+        val p = LegacyCar.windows() ?: return
+        if (p != _state.value.windows) _state.value = _state.value.copy(windows = p)
+    }
+
+    /** Ouvre ou ferme les quatre vitres, aussi en roulant : comme les commandes de porte, la voiture décide. */
+    fun setWindows(open: Boolean): Write {
+        if (_state.value.windows == null) return Write.UNAVAILABLE
+        if (BuildConfig.MOCK) { _state.value = _state.value.copy(windows = List(4) { if (open) 100 else 0 }); return Write.SENT }
+        scope.launch {
+            val ok = LegacyCar.windowCommand(Windows.command(open))
+            Log.i(TAG, "SET ventanillas ${if (open) "abrir" else "cerrar"} → $ok")
+            // une vitre met 3 à 4 s pour sa course : on suit sa position jusqu'au bout
+            repeat(16) { delay(500); refreshWindows() }
         }
         return Write.SENT
     }

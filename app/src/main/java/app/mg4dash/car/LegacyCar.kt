@@ -347,6 +347,29 @@ object LegacyCar {
         catch (e: Exception) { Log.w(TAG, "setLightRearFogSwitch($v) : ${(e.cause ?: e).message}"); false }
     }
 
+    // ── Ventanillas (voir Windows) : le même VehicleControlManager que l'ESC ──
+
+    /** Positions des quatre vitres en % (ordre de [Windows.GETTERS]) ; null si le SDK ne répond pas. */
+    fun windows(): List<Int?>? {
+        connectControl()
+        val m = control ?: return null
+        val p = Windows.GETTERS.map { g ->
+            try { Windows.percent((Refl.m(m, g).invoke(m) as? Number)?.toFloat()) }
+            catch (e: Exception) { Log.w(TAG, "$g : ${(e.cause ?: e).message}"); null }
+        }
+        return p.takeIf { it.any { v -> v != null } }
+    }
+
+    /** Envoie [command] (0–7, voir [Windows]) aux quatre vitres ; true si toutes l'ont reçue. */
+    fun windowCommand(command: Int): Boolean {
+        connectControl()
+        val m = control ?: return false
+        return Windows.SETTERS.map { s ->
+            try { Refl.m(m, s, Float::class.javaPrimitiveType).invoke(m, command.toFloat()); true }
+            catch (e: Exception) { Log.w(TAG, "$s($command) : ${(e.cause ?: e).message}"); false }
+        }.all { it }
+    }
+
     /** Pour l'écran Compatibilité. */
     fun probe(): String = when {
         ac == null -> "absent"
