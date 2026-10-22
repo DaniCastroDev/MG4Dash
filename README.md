@@ -46,7 +46,7 @@ The charts are touchable: tap or drag to read a value. Electricity prices (home 
 | ![Vehículo](docs/screenshots/vehicle.png) | ![Mi perfil](docs/screenshots/profiles.png) |
 
 - **Vehículo**: tyre pressures and temperatures, odometer, ESC, *Conducción y asistentes* (drive mode, regeneration and one-pedal driving, changed in Mi perfil), shortcuts to the 360° camera, the MG settings and the installed apps, and the **windows**: each one's position with its own down and up arrows (a tap goes all the way, a long press moves while held, a tap while it moves stops it), *Abrir todas* / *Cerrar todas*, and *Cerrar al salir del coche*. Once you have driven above 15 km/h, in P, opening the driver's door or locking the car starts a 5 s countdown with a beep, which you can cancel on screen; then the windows close with the automatic close command (the one with anti-pinch), and any that did not move are held up. The window commands (0 stop, 1 up, 2 down, 3 auto up, 4 auto down) come from [WinClose](https://github.com/Skittle6938/winclose) and the door signal from EVHardware; none of it has been tried on the car yet.
-- **Mi perfil**: two profiles that set, or leave unchanged, the drive mode, regeneration, one-pedal driving and the driver assistance settings (speed limit warning, lane keeping, driver monitoring, unsteady driving warning, rear traffic alert). EU rules switch the assistants back on at every start; a profile puts them back the way you want with one tap, also while driving.
+- **Mi perfil**: two profiles that set, or leave unchanged, the drive mode, regeneration, one-pedal driving, steering weight (light, normal or sport) and the driver assistance settings (speed limit warning, lane keeping, driver monitoring, unsteady driving warning, rear traffic alert). EU rules switch the assistants back on at every start; a profile puts them back the way you want with one tap, or with a steering wheel star (a double tap on the right one by default), also while driving.
 
 ## Medios
 ![Medios](docs/screenshots/media.png)
@@ -66,7 +66,10 @@ While DiAuto is in front, MG4Dash draws the **strip** on one side: time, outside
 |---|---|
 | ![Ajustes](docs/screenshots/settings.png) | ![Conexiones](docs/screenshots/connections.png) |
 
-- **Ajustes**: strip on/off and side, full screen, dark or light theme, hide the SAIC climate panel, home and fast-charging prices, battery size (51, 64 or 77 kWh gross), *Bluetooth y Wi-Fi*, Android settings, *Usar como inicio* (make MG4Dash the home screen) and *Interfaz clásica*.
+- **Ajustes**: strip on/off and side, full screen, dark or light theme, hide the SAIC climate panel, home and fast-charging prices, battery size (51, 64 or 77 kWh gross), *Volante y luces*, *Bluetooth y Wi-Fi*, Android settings, *Usar como inicio* (make MG4Dash the home screen), *Interfaz de MG*, *Clásica* and *Buscar actualización*.
+- **Volante y luces**: what each steering wheel star does on a tap, a double tap or a long press (apply my profile, heated steering wheel, heated driver or passenger seat, close the windows, rear fog light, next regeneration level, next drive mode, open Energía or Clima). MG's own star function still runs: set both stars to *Disable* in the MG settings so only MG4Dash's action happens. Also automatic high beam, welcome lights when approaching and on unlocking, *Acompáñame a casa*, and towing mode, with the values the MG settings app sends (1 on, 0 off).
+
+![Volante y luces](docs/screenshots/car_settings.png)
 - **Conexiones**: paired phones with connect/disconnect and a preferred one, reconnect at start-up, pair another phone; the car's Wi-Fi hotspot on/off with its name and password.
 
 | Light theme |   |

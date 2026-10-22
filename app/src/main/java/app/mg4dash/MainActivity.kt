@@ -85,6 +85,7 @@ class MainActivity : AppCompatActivity(), Host {
         screens["settings"] = SettingsScreen(this)
         screens["connections"] = ConnectionsScreen(this)
         screens["aa"] = AaScreen(this)
+        screens["car"] = app.mg4dash.cockpit.screens.CarSettingsScreen(this)
 
         val root = FrameLayout(this).apply { setBackgroundColor(Pal.bg) }
         val shell = row()

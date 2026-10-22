@@ -142,8 +142,9 @@ class SettingsScreen(host: Host) : Screen(host) {
             addView(choice("Batería (kWh brutos)", listOf("51", "64", "77"), { listOf(51, 64, 77).indexOf(prefs.batteryModel).coerceAtLeast(0) }) { prefs.batteryModel = listOf(51, 64, 77)[it] })
             addView(c.label("Sistema"))
             addView(c.row(12).apply {
-                addView(Btn(c, "Bluetooth y Wi-Fi", Icons.bluetooth, 30, vertical = false, chevron = true).apply { setOnClickListener { host.go("connections") } }, lp(0, Dim.TAP_MIN, 1f))
-                addView(Btn(c, "Ajustes de Android", Icons.settings, 30, vertical = false, chevron = true).apply {
+                addView(Btn(c, "Volante y luces", Icons.car, 30, vertical = false).apply { setOnClickListener { host.go("car") } }, lp(0, Dim.TAP_MIN, 1f))
+                addView(Btn(c, "Bluetooth y Wi-Fi", Icons.bluetooth, 30, vertical = false).apply { setOnClickListener { host.go("connections") } }, lp(0, Dim.TAP_MIN, 1f))
+                addView(Btn(c, "Android", Icons.settings, 30, vertical = false).apply {
                     setOnClickListener { if (!Launch.androidSettings(c)) host.toast("Los ajustes de Android no están disponibles", tone = Pal.alert) }
                 }, lp(0, Dim.TAP_MIN, 1f))
             }, lp(MATCH, Dim.TAP_MIN))

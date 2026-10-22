@@ -62,6 +62,7 @@ class AdasScreen(host: Host) : Screen(host) {
         Adas.Drive.MODE to "Eco, Normal, Sport o Nieve",
         Adas.Drive.REGEN to "Frenada al soltar el acelerador",
         Adas.Drive.ONE_PEDAL to "",
+        Adas.Drive.STEERING to "Peso del volante",
     )
 
     override fun build(): View = c.row(Dim.GAP).apply {
@@ -113,7 +114,7 @@ class AdasScreen(host: Host) : Screen(host) {
         addView(matchBox, lp(MATCH, Dim.PRIMARY))
 
         addView(View(c), lp(MATCH, 0, 1f))
-        addView(c.text("La normativa de la UE vuelve a activar los asistentes en cada arranque: aplica tu perfil con un toque, también en marcha.", Ty.LABEL, Pal.text2).apply { maxLines = 5 })
+        addView(c.text("La normativa de la UE vuelve a activar los asistentes en cada arranque: aplica tu perfil aquí o con la estrella del volante, también en marcha.", Ty.LABEL, Pal.text2).apply { maxLines = 5 })
     }
 
     private fun result(r: CarBridge.Write, ok: String) {
@@ -202,5 +203,6 @@ class AdasScreen(host: Host) : Screen(host) {
         }
     }
 
-    private companion object { const val ROW_H = 58 }
+    // 52 : neuf lignes depuis la dirección (2026-10-22) dans la hauteur de l'écran
+    private companion object { const val ROW_H = 52 }
 }

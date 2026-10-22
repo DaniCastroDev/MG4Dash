@@ -42,6 +42,7 @@ class CockpitScreenshotTest {
     @Test fun profiles() = shoot("adas", "profiles.png")
     @Test fun media() = shoot("media", "media.png")
     @Test fun settings() = shoot("settings", "settings.png")
+    @Test fun carSettings() = shoot("car", "car_settings.png")
     @Test fun connections() = shoot("connections", "connections.png")
     @Test fun androidAuto() = shoot("aa", "android_auto.png")
     @Test fun drivingLight() = shoot("home", "driving_light.png", light = true)

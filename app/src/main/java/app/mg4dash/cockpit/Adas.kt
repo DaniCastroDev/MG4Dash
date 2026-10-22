@@ -49,6 +49,8 @@ object Adas {
         MODE("Modo de conducción", "drive_mode", listOf(-1 to "Sin cambiar", 2 to "Eco", 3 to "Normal", 4 to "Sport", 6 to "Nieve")),
         REGEN("Regeneración", "drive_regen", listOf(-1 to "Sin cambiar", 0 to "Baja", 1 to "Media", 2 to "Alta", 3 to "Adaptativa")),
         ONE_PEDAL("Conducción con un pedal", "drive_one_pedal", listOf(-1 to "Sin cambiar", 1 to "Activada", 0 to "Desactivada")),
+        // setSteeringLevel de l'appli Réglages d'origine (DrivingSettingsViewModel) : 1 confort, 2 normal, 3 sport
+        STEERING("Dirección", "drive_steering", listOf(-1 to "Sin cambiar", 1 to "Ligera", 2 to "Normal", 3 to "Deportiva")),
     }
 
     fun driveProfile(context: Context): Map<Drive, Int> {
@@ -61,10 +63,13 @@ object Adas {
     /** Valeur actuelle de la voiture pour un réglage de conduite. */
     fun driveNow(d: Drive): Int? {
         val s = CarBridge.state.value
-        return when (d) { Drive.MODE -> s.driveMode; Drive.REGEN -> s.regenLevel?.takeIf { it in 0..3 }; Drive.ONE_PEDAL -> s.onePedal }
+        return when (d) {
+            Drive.MODE -> s.driveMode; Drive.REGEN -> s.regenLevel?.takeIf { it in 0..3 }; Drive.ONE_PEDAL -> s.onePedal
+            Drive.STEERING -> _state.value.steering
+        }
     }
 
-    data class State(val current: Map<Item, Int?> = emptyMap(), val appliedAt: Long = 0L, val busy: Boolean = false)
+    data class State(val current: Map<Item, Int?> = emptyMap(), val appliedAt: Long = 0L, val busy: Boolean = false, val steering: Int? = null)
     private val _state = MutableStateFlow(State())
     val state: StateFlow<State> = _state
 
@@ -109,6 +114,12 @@ object Adas {
         return driveOk && profile(context).all { (k, v) -> cur[k] == null || cur[k] == v }
     }
 
+    /** Lecture d'un réglage du même VehicleSettingManager (voir CarSettings). Hors du fil principal. */
+    fun readInt(name: String): Int? { if (manager == null) connect(); return call(name) }
+
+    /** Écriture d'un réglage du même VehicleSettingManager ; false s'il ne répond pas. */
+    fun writeInt(name: String, v: Int): Boolean { if (manager == null) connect(); return call(name, v) != null }
+
     private fun call(name: String, vararg args: Int): Int? {
         val m = manager ?: return null
         return try {
@@ -120,7 +131,7 @@ object Adas {
     fun refresh() {
         if (manager == null) connect()
         val cur = Item.values().associateWith { call(it.getter)?.takeIf { v -> v >= 0 } }
-        _state.value = _state.value.copy(current = cur)
+        _state.value = _state.value.copy(current = cur, steering = call("getSteeringLevel")?.takeIf { it in 1..3 })
     }
 
     /** État de la voiture juste avant la dernière application, pour « Deshacer ». */
@@ -154,6 +165,7 @@ object Adas {
             drive[Drive.MODE]?.let { if (driveNow(Drive.MODE) != it) { CarBridge.setDriveMode(it); delay(600) } }
             drive[Drive.REGEN]?.let { if (driveNow(Drive.REGEN) != it) { CarBridge.setRegenLevel(it); delay(600) } }
             drive[Drive.ONE_PEDAL]?.let { if (driveNow(Drive.ONE_PEDAL) != it) { CarBridge.toggleOnePedal(); delay(600) } }
+            drive[Drive.STEERING]?.let { if (driveNow(Drive.STEERING) != it) { call("setSteeringLevel", it); Log.i(TAG, "STEERING → $it"); delay(400) } }
             for ((item, v) in wanted) {
                 if (_state.value.current[item] == v) continue
                 call(item.setter, v)
