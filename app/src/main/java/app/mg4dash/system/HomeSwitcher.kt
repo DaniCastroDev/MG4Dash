@@ -81,6 +81,8 @@ object HomeSwitcher {
     /** Mode Entretien : réactive l'accueil SAIC, le rend préféré, puis l'ouvre. */
     fun switchToStock(context: Context): Boolean {
         Prefs(context).valetMode = true
+        // Pour revenir sans ouvrir les Fichiers : double appui sur CarPlay dans l'accueil SAIC.
+        ReturnService.enable(context)
         val ok = try {
             context.packageManager.setComponentEnabledSetting(
                 STOCK, PackageManager.COMPONENT_ENABLED_STATE_DEFAULT, PackageManager.DONT_KILL_APP,

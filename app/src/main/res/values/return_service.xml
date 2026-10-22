@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="return_service_label">MG4Dash: volver desde la interfaz de MG</string>
+    <string name="return_service_description">Doble toque en el botón CarPlay del inicio de MG para volver a MG4Dash. Solo ve los toques del inicio de MG.</string>
+</resources>
