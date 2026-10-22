@@ -199,7 +199,13 @@ class ClimateBar(c: Context, private val onMore: () -> Unit) : LinearLayout(c) {
 
     fun bind(s: VehicleState) {
         val on = s.hvacOn != false
-        dimmable.alpha = if (on) 1f else 0.55f
+        // Solo se atenúa el clima apagado : asientos y volante calefactados funcionan sin él, y « ^ »
+        // abre la pantalla de clima en cualquier caso.
+        val climateAlpha = if (on) 1f else 0.55f
+        for (i in 0 until dimmable.childCount) {
+            val v = dimmable.getChildAt(i)
+            v.alpha = if (v === seatL || v === wheel || v === seatR || v === more) 1f else climateAlpha
+        }
         val t = s.driverTemp
         Fmt.temp(t).let { (v, u) -> temp.set(v, u) }
         val fan = s.fanSpeed
