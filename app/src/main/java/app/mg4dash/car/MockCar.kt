@@ -48,6 +48,7 @@ object MockCar {
             "ac" -> s.copy(acOn = !(s.acOn ?: false))
             "fog" -> s.copy(rearFog = !(s.rearFog ?: false))
             "windows" -> s.copy(windows = if (Windows.allClosed(s.windows)) listOf(100, 40, 0, 0) else listOf(0, 0, 0, 0))
+            "exitCountdown" -> s.copy(windowCountdown = 4, windowExit = "Cerrando en 4 s · en P · puerta abierta")
             "auto" -> s.copy(autoOn = !(s.autoOn ?: false))
             "recirc" -> s.copy(recirc = ((s.recirc ?: 0) + 1) % 3)
             "defrostFront" -> s.copy(defrostFront = !(s.defrostFront ?: false))

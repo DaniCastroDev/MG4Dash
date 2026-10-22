@@ -102,6 +102,11 @@ class Prefs(context: Context) {
         set(v) = sp.edit().putBoolean("warmup_stock", v).apply()
 
     /** Cache le panneau clim plein écran de la SystemUI qui s'ouvre à chaque mise en marche de la clim. */
+    /** Ventanillas : cerrar al salir del coche (voir car/WindowExit). */
+    var windowsAutoClose: Boolean
+        get() = sp.getBoolean("windows_auto_close", false)
+        set(v) = sp.edit().putBoolean("windows_auto_close", v).apply()
+
     var hideStockHvac: Boolean
         get() = sp.getBoolean("hide_stock_hvac", true)
         set(v) = sp.edit().putBoolean("hide_stock_hvac", v).apply()

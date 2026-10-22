@@ -47,6 +47,7 @@ class CockpitScreenshotTest {
     @Test fun drivingLight() = shoot("home", "driving_light.png", light = true)
     @Test fun drivingFog() = shoot("home", "driving_fog.png", "fog")
     @Test fun vehicleWindows() = shoot("vehicle", "vehicle_windows.png", "windows")
+    @Test fun windowExitCountdown() = shoot("vehicle", "window_exit.png", "windows", "exitCountdown")
     @Test fun energyLight() = shoot("energy", "energy_light.png", "plug", "startCharge", light = true)
 
     /**

@@ -201,6 +201,7 @@ object CarBridge {
                 }
                 if (now - lastHvac >= if (fast) HVAC_FAST_MS else HVAC_SLOW_MS) { lastHvac = now; refreshHvac(); refreshHeating() }
                 if (now - lastEnergy >= if (fast) ENERGY_FAST_MS else ENERGY_SLOW_MS) { lastEnergy = now; refreshEnergy(); refreshRearFog(); refreshWindows() }
+                exitTick()
             } catch (e: Exception) {
                 Log.w(TAG, "poll : ${e.message}")
             }
@@ -614,17 +615,152 @@ object CarBridge {
         if (p != _state.value.windows) _state.value = _state.value.copy(windows = p)
     }
 
-    /** Ouvre ou ferme les quatre vitres, aussi en roulant : comme les commandes de porte, la voiture décide. */
-    fun setWindows(open: Boolean): Write {
-        if (_state.value.windows == null) return Write.UNAVAILABLE
-        if (BuildConfig.MOCK) { _state.value = _state.value.copy(windows = List(4) { if (open) 100 else 0 }); return Write.SENT }
-        scope.launch {
-            val ok = LegacyCar.windowCommand(Windows.command(open))
-            Log.i(TAG, "SET ventanillas ${if (open) "abrir" else "cerrar"} → $ok")
-            // une vitre met 3 à 4 s pour sa course : on suit sa position jusqu'au bout
-            repeat(16) { delay(500); refreshWindows() }
+    // Une vitre bouge tant que sa commande tenue arrive : un travail par vitre, qui l'envoie toutes
+    // les 120 ms jusqu'à son échéance puis envoie l'arrêt. L'échéance se déplace sans relancer le
+    // travail : un toque l'allonge à la course complète, un relâchement la ramène à maintenant.
+    private val windowJobs = arrayOfNulls<kotlinx.coroutines.Job>(4)
+    private val windowOpen = BooleanArray(4)
+    private val windowUntil = LongArray(4)
+
+    private fun now() = android.os.SystemClock.elapsedRealtime()
+
+    /** Met la vitre [i] en mouvement pour [ms] au plus (toque : course complète ; doigt posé : [Windows.HOLD_MAX_MS]). */
+    fun moveWindow(i: Int, open: Boolean, ms: Long = Windows.TRAVEL_MS): Write {
+        if (i !in Windows.ALL || _state.value.windows == null) return Write.UNAVAILABLE
+        if (BuildConfig.MOCK) {
+            _state.value = _state.value.copy(windows = _state.value.windows?.toMutableList()?.also { it[i] = if (open) 100 else 0 })
+            return Write.SENT
+        }
+        synchronized(windowUntil) {
+            windowUntil[i] = now() + ms
+            if (windowJobs[i]?.isActive == true && windowOpen[i] == open) return Write.SENT
+            windowJobs[i]?.cancel()
+            windowOpen[i] = open
+            windowJobs[i] = scope.launch {
+                var n = 0
+                try {
+                    while (isActive && now() < synchronized(windowUntil) { windowUntil[i] }) {
+                        LegacyCar.windowCommand(i, Windows.hold(open))
+                        if (++n % 4 == 0) refreshWindows()
+                        delay(Windows.PULSE_MS)
+                    }
+                } finally {
+                    kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+                        LegacyCar.windowCommand(i, Windows.STOP); delay(300); refreshWindows()
+                    }
+                }
+            }
         }
         return Write.SENT
+    }
+
+    /** Doigt levé après [heldMs] : un toque continue jusqu'au bout de sa course, un appui long s'arrête là. */
+    fun releaseWindow(i: Int, heldMs: Long) {
+        if (i !in Windows.ALL) return
+        synchronized(windowUntil) {
+            windowUntil[i] = if (heldMs < Windows.TAP_MS) now() + Windows.TRAVEL_MS - heldMs else 0L
+        }
+    }
+
+    /** La vitre [i] reçoit une commande tenue en ce moment. */
+    fun windowMoving(i: Int): Boolean = i in Windows.ALL && windowJobs[i]?.isActive == true
+
+    /** Arrête la vitre [i] (l'arrêt part à la fin du travail en cours). */
+    fun stopWindow(i: Int) { if (i in Windows.ALL) synchronized(windowUntil) { windowUntil[i] = 0L } }
+
+    fun moveAllWindows(open: Boolean): Write =
+        Windows.ALL.map { moveWindow(it, open) }.firstOrNull { it != Write.SENT } ?: Write.SENT
+
+    // ── Cerrar al salir (voir WindowExit) ──
+
+    private val exit = WindowExit()
+    private const val DOOR_OPEN_STS = 0x2640c623   // DLOCK_DOOR_OPEN_STS, zone porte ; 1 = ouverte
+    private const val DOOR_DRIVER = 0x1            // avant gauche (conduite à gauche)
+    @Volatile private var driverDoor: Boolean? = null
+    @Volatile private var doorListening = false
+    private var lastExitTick = 0L
+    private var exitWake: android.os.PowerManager.WakeLock? = null
+    private var beeper: android.media.ToneGenerator? = null
+
+    private fun exitTick() {
+        // émulateur : l'état simulé (MockCar « exitCountdown ») reste tel quel
+        if (BuildConfig.MOCK) return
+        val ctx = appContext ?: return
+        val t = now()
+        if (t - lastExitTick < 1_000L) return
+        lastExitTick = t
+        val enabled = app.mg4dash.system.Prefs(ctx).windowsAutoClose && _state.value.windows != null
+        if (enabled && !BuildConfig.MOCK) {
+            if (!doorListening) doorListening = CarProps.listen(DOOR_OPEN_STS) { area, v ->
+                if (area == DOOR_DRIVER) driverDoor = (v as? Int)?.let { it == 1 }
+            }
+            // sur SWI132/133 la porte se lit aussi à la demande ; sur SWI68, seulement par l'abonnement
+            CarProps.readIntArea(DOOR_OPEN_STS, DOOR_DRIVER)?.let { driverDoor = it == 1 }
+        }
+        val input = WindowExit.Input(
+            nowMs = t, enabled = enabled, speedKmh = _state.value.speedKmh,
+            gear = if (enabled && !BuildConfig.MOCK) LegacyCar.gear() else null,
+            driverDoorOpen = driverDoor,
+            locked = if (enabled && !BuildConfig.MOCK) doorsLocked() else null,
+        )
+        when (exit.step(input)) {
+            WindowExit.Action.COUNTDOWN -> { Log.i(TAG, "cerrar al salir : ${(exit.state as? WindowExit.State.Countdown)?.reason}"); holdAwake(true) }
+            WindowExit.Action.CANCEL -> { Log.i(TAG, "cerrar al salir : annulé"); holdAwake(false) }
+            WindowExit.Action.CLOSE -> closeOnExit()
+            WindowExit.Action.NONE -> {}
+        }
+        val left = (exit.state as? WindowExit.State.Countdown)?.let { ((it.untilMs - t + 999) / 1000).toInt().coerceAtLeast(0) }
+        if (left != null) beep()
+        val text = exit.describe(input)
+        if (text != _state.value.windowExit || left != _state.value.windowCountdown)
+            _state.value = _state.value.copy(windowExit = text, windowCountdown = left)
+    }
+
+    /** Annule le compte à rebours (bouton à l'écran). */
+    fun cancelWindowExit() {
+        if (exit.cancel()) { Log.i(TAG, "cerrar al salir : annulé à l'écran"); holdAwake(false) }
+        _state.value = _state.value.copy(windowCountdown = null)
+    }
+
+    /**
+     * Montée automatique sur les quatre vitres (celle de la clé : avec l'anti-pincement), puis
+     * maintien pour celles qui n'ont pas bougé : sur SWI133, seule la vitre conducteur obéit à la
+     * montée automatique (WinClose).
+     */
+    private fun closeOnExit() {
+        Log.i(TAG, "cerrar al salir : fermeture")
+        val before = _state.value.windows
+        scope.launch {
+            try {
+                Windows.ALL.forEach { LegacyCar.windowCommand(it, Windows.AUTO_UP) }
+                delay(4_000); refreshWindows()
+                val after = _state.value.windows
+                Windows.ALL.filter { i ->
+                    val b = before?.getOrNull(i); val a = after?.getOrNull(i)
+                    a != null && a > 0 && (b == null || a >= b)
+                }.forEach { moveWindow(it, open = false) }
+                delay(Windows.TRAVEL_MS + 500)
+            } finally { holdAwake(false) }
+        }
+    }
+
+    private fun holdAwake(on: Boolean) {
+        val ctx = appContext ?: return
+        try {
+            if (on) {
+                if (exitWake == null) exitWake = (ctx.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager)
+                    .newWakeLock(android.os.PowerManager.PARTIAL_WAKE_LOCK, "mg4dash:windows")
+                exitWake?.takeIf { !it.isHeld }?.acquire(30_000L)
+            } else exitWake?.takeIf { it.isHeld }?.release()
+        } catch (e: Exception) { Log.w(TAG, "wake lock : ${e.message}") }
+    }
+
+    /** Un bip par seconde pendant le compte à rebours : prévient qui a la main sur une vitre. */
+    private fun beep() {
+        try {
+            val b = beeper ?: android.media.ToneGenerator(android.media.AudioManager.STREAM_NOTIFICATION, 80).also { beeper = it }
+            b.startTone(android.media.ToneGenerator.TONE_PROP_BEEP, 200)
+        } catch (e: Exception) { Log.w(TAG, "bip : ${e.message}") }
     }
 
     // ── Mode de conduite : écrit seulement à l'arrêt (vitesse lue = 0), refusé si la vitesse est illisible ──

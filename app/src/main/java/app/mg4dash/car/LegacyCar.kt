@@ -360,14 +360,28 @@ object LegacyCar {
         return p.takeIf { it.any { v -> v != null } }
     }
 
-    /** Envoie [command] (0–7, voir [Windows]) aux quatre vitres ; true si toutes l'ont reçue. */
-    fun windowCommand(command: Int): Boolean {
+    /** Envoie [command] (0–7, voir [Windows]) à la vitre [index] (ordre de [Windows.SETTERS]). */
+    fun windowCommand(index: Int, command: Int): Boolean {
         connectControl()
         val m = control ?: return false
-        return Windows.SETTERS.map { s ->
-            try { Refl.m(m, s, Float::class.javaPrimitiveType).invoke(m, command.toFloat()); true }
-            catch (e: Exception) { Log.w(TAG, "$s($command) : ${(e.cause ?: e).message}"); false }
-        }.all { it }
+        val name = Windows.SETTERS.getOrNull(index) ?: return false
+        return try { Refl.m(m, name, Float::class.javaPrimitiveType).invoke(m, command.toFloat()); true }
+        catch (e: Exception) { Log.w(TAG, "$name($command) : ${(e.cause ?: e).message}"); false }
+    }
+
+    // ── Marche : VehicleConditionManager du même SDK (getCarGear, 1 = P, voir WindowExit) ──
+    private const val CONDITION_CLASS = "com.saicmotor.sdk.vehiclesettings.manager.VehicleConditionManager"
+    @Volatile private var condition: Any? = null
+    @Volatile private var lastConditionTry = 0L
+
+    /** Marche brute, ou null si le SDK ne répond pas (le service répond -1 sans signal). */
+    fun gear(): Int? {
+        if (condition == null && retryDue(::lastConditionTry)) {
+            val ctx = appContext ?: return null
+            condition = sdkManager(ctx, CONDITION_CLASS) { condition = it }
+        }
+        val m = condition ?: return null
+        return try { (Refl.m(m, "getCarGear").invoke(m) as? Int)?.takeIf { it > 0 } } catch (_: Exception) { null }
     }
 
     /** Pour l'écran Compatibilité. */

@@ -178,6 +178,7 @@ class MainActivity : AppCompatActivity(), Host {
             else if (driving) { main.removeCallbacks(recheck); main.postDelayed(recheck, 3000 - (now - stillSince) + 50) }
         }
         climateBar.bind(s)
+        exitCountdown(s.windowCountdown)
         rail.outside.put(s.outsideTemp?.let { "${Math.round(it)} °C" } ?: "")
         current?.bind(s)
     }
@@ -249,4 +250,28 @@ class MainActivity : AppCompatActivity(), Host {
     }
 
     private val clearToast = Runnable { toastLayer.removeAllViews() }
+
+    // « Cerrar al salir » : compte à rebours au-dessus de tout, avec Cancelar (voir car/WindowExit)
+    private var exitCard: LinearLayout? = null
+    private var exitTitle: android.widget.TextView? = null
+
+    private fun exitCountdown(left: Int?) {
+        if (left == null) { exitCard?.let { toastLayer.removeView(it) }; return }
+        val card = exitCard ?: row(16).apply {
+            background = rounded(Pal.surface3, 20f)
+            setPadding(24, 18, 18, 18)
+            elevation = 12f
+            addView(IconView(this@MainActivity, Icons.arrowUp, 36).apply { color = Pal.heat })
+            exitTitle = text("", Ty.BODY, Pal.text, Ty.uiMedium)
+            addView(col(4).apply {
+                addView(exitTitle)
+                addView(text("Cuidado con las manos en las ventanillas", Ty.CAPTION, Pal.text2))
+            }, lp(0, WRAP, 1f))
+            addView(app.mg4dash.cockpit.Btn(this@MainActivity, "Cancelar", Icons.close, 28, vertical = false).apply {
+                setPadding(20, 0, 20, 0); setOnClickListener { CarBridge.cancelWindowExit() }
+            }, lp(WRAP, app.mg4dash.cockpit.Dim.TAP_MIN))
+        }.also { exitCard = it }
+        if (card.parent == null) toastLayer.addView(card, FrameLayout.LayoutParams(860, WRAP, Gravity.TOP or Gravity.CENTER_HORIZONTAL).apply { topMargin = 24; leftMargin = Dim.RAIL / 2 })
+        exitTitle?.put("Cerrando las ventanillas en $left s")
+    }
 }

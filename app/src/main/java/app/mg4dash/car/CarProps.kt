@@ -141,6 +141,43 @@ object CarProps {
         } catch (_: Throwable) { null }
     }
 
+    /**
+     * Abonnement aux changements de [id], toutes zones : sur SWI68, certaines propriétés SAIC (la
+     * porte ouverte) ne se lisent pas à la demande et n'arrivent qu'ainsi (EVHardware). [cb] reçoit
+     * la zone et la valeur. false tant que le service véhicule n'est pas prêt : on réessaie plus tard.
+     */
+    fun listen(id: Int, cb: (area: Int, value: Any?) -> Unit): Boolean {
+        if (BuildConfig.MOCK) return false
+        val m = cpm ?: return false
+        val cl = appContext?.classLoader ?: return false
+        return try {
+            val iface = Class.forName("android.car.hardware.property.CarPropertyManager\$CarPropertyEventListener")
+            // Proxy défini par le chargeur de l'appli : android.car est dans le chargeur de démarrage
+            val proxy = java.lang.reflect.Proxy.newProxyInstance(cl, arrayOf(iface)) { p, method, args ->
+                when (method.name) {
+                    "onChangeEvent" -> {
+                        args?.getOrNull(0)?.let { v ->
+                            try { cb(v.javaClass.getMethod("getAreaId").invoke(v) as Int, v.javaClass.getMethod("getValue").invoke(v)) }
+                            catch (e: Exception) { Log.w(TAG, "événement 0x${Integer.toHexString(id)} : ${e.message}") }
+                        }
+                        null
+                    }
+                    "hashCode" -> System.identityHashCode(p)
+                    "equals" -> p === args?.getOrNull(0)
+                    "toString" -> "CarProps.listen(0x${Integer.toHexString(id)})"
+                    else -> null
+                }
+            }
+            // rate 5 et non 0 : une propriété déclarée CONTINUOUS ne publie rien à 0
+            val ok = m.javaClass.getMethod("registerListener", iface, Int::class.javaPrimitiveType, Float::class.javaPrimitiveType)
+                .invoke(m, proxy, id, 5f) as? Boolean ?: true
+            Log.i(TAG, "abonnement 0x${Integer.toHexString(id)} → $ok")
+            ok
+        } catch (e: Throwable) {
+            Log.w(TAG, "abonnement 0x${Integer.toHexString(id)} : ${(e.cause ?: e).message}"); false
+        }
+    }
+
     /** Lecture réelle sur une zone précise (ex. 0x1000000, zone globale des mesures batterie). */
     fun readFloatArea(id: Int, area: Int): Float? {
         if (BuildConfig.MOCK) return null

@@ -7,15 +7,18 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** Ventanillas : lo que el coche lee (0–100 %) y lo que se le manda (comandos 3 y 4 del launcher de MG). */
+/** Ventanillas : lo que el coche lee (0–100 %) y lo que se le manda (0 parar, 1 subir, 2 bajar, 3 subir auto). */
 class WindowsTest {
 
     @Test
-    fun `abrir y cerrar usan los comandos del launcher de MG`() {
-        assertEquals(4, Windows.command(open = true))
-        assertEquals(3, Windows.command(open = false))
+    fun `comandos del servicio de ventanillas`() {
+        assertEquals(1, Windows.hold(open = false))
+        assertEquals(2, Windows.hold(open = true))
+        assertEquals(0, Windows.STOP)
+        assertEquals(3, Windows.AUTO_UP)
         assertEquals(4, Windows.SETTERS.size)
         assertEquals(Windows.GETTERS.size, Windows.SETTERS.size)
+        assertTrue(Windows.TAP_MS < Windows.TRAVEL_MS && Windows.TRAVEL_MS < Windows.HOLD_MAX_MS)
     }
 
     @Test

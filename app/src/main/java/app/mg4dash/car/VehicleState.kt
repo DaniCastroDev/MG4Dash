@@ -26,6 +26,9 @@ data class VehicleState(
     val rearFog: Boolean? = null,
     /** Ventanillas en % (conductor, acompañante, trasera izq., trasera der.) ; null sin lectura. Voir [Windows]. */
     val windows: List<Int?>? = null,
+    /** « Cerrar al salir » : ligne d'état ([WindowExit.describe]) et secondes restantes du compte à rebours. */
+    val windowExit: String = "",
+    val windowCountdown: Int? = null,
     val ecoOn: Boolean? = null,
     /** Sièges chauffants (0 éteint, 1 à 3) et volant chauffant (0 / 1), versions équipées. */
     val seatHeatL: Int? = null,
