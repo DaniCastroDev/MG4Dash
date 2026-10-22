@@ -4,7 +4,7 @@ Full-screen launcher for the MG4 and its 1920 × 720 screen, built around Androi
 
 - Developed and tested on the **SWI68** firmware (MT2712, Android 9). The firmware detection and car access of MG4Dash for the other firmwares are kept, but the cockpit has not been tried on them.
 - The cockpit is in **Spanish**. The original MG4Dash interface is still available from Ajustes › *Interfaz clásica*.
-- Current version: **1.1.12-cockpit.28**, on the `main` branch.
+- Current version: **1.1.12-cockpit.29**, on the `main` branch.
 
 > Screenshots are rendered on a PC with simulated data (see [Screenshots](#screenshots)).
 
